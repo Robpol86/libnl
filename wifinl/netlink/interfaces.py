@@ -18,12 +18,10 @@ NLMSG_MIN_TYPE = NetlinkMessages.NLMSG_MIN_TYPE
 class Message(object):
     def __init__(self, type_, flags=0, seq=-1, payload=None):
         self.type_, self.flags, self.seq, self.pid, payload = type_, flags, seq, -1, (payload or list())
-        try:
-            iter(payload)
-        except TypeError:
-            self.payload = payload
-        else:
+        if hasattr(payload, '__iter__') and hasattr(iter(payload).next(), 'dump'):
             self.payload = ''.join(a.dump() for a in payload)
+        else:
+            self.payload = payload
 
     def send(self, connection):
         self.pid = connection.pid

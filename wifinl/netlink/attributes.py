@@ -1,7 +1,11 @@
+"""Generic Netlink attributes.
+
+Inspired by http://git.sipsolutions.net/?p=pynl80211.git;a=blob;f=netlink.py and  http://lwn.net/Articles/208755/
+"""
 import struct
 
 
-class Attr(object):
+class NetlinkAttribute(object):
     def __init__(self, type_, data, *values):
         self.type_ = type_
         self.data = struct.pack(data, *values) if values else data
@@ -26,48 +30,48 @@ class Attr(object):
     def str(self):
         return self.data
 
-    def nulstr(self):
+    def null_str(self):
         return self.data.split('\0')[0]
 
     def nested(self):
         return parse(self.data)
 
 
-class StrAttr(Attr):
+class NLAString(NetlinkAttribute):
     def __init__(self, type_, data):
-        super(StrAttr, self).__init__(type_, '{0}s'.format(len(data)), data)
+        super(NLAString, self).__init__(type_, '{0}s'.format(len(data)), data)
 
 
-class NulStrAttr(Attr):
+class NLANullString(NetlinkAttribute):
     def __init__(self, type_, data):
-        super(NulStrAttr, self).__init__(type_, '{0}sB'.format(len(data)), data, 0)
+        super(NLANullString, self).__init__(type_, '{0}sB'.format(len(data)), data, 0)
 
 
-class U32Attr(Attr):
+class NLAUnsigned32bitInt(NetlinkAttribute):
     def __init__(self, type_, data):
-        super(U32Attr, self).__init__(type_, 'I', data)
+        super(NLAUnsigned32bitInt, self).__init__(type_, 'I', data)
 
 
-class U8Attr(Attr):
+class NLAUnsigned8bitInt(NetlinkAttribute):
     def __init__(self, type_, data):
-        super(U8Attr, self).__init__(type_, 'B', data)
+        super(NLAUnsigned8bitInt, self).__init__(type_, 'B', data)
 
 
-class Nested(object):
-    def __init__(self, type_, attrs):
+class NLANested(object):
+    def __init__(self, type_, attributes):
         self.type_ = type_
-        self.attrs = attrs
+        self.attributes = attributes
 
     def dump(self):
-        contents = ''.join(a.dump() for a in self.attrs)
+        contents = ''.join(a.dump() for a in self.attributes)
         hdr = struct.pack('HH', len(contents) + 4, self.type_)
         return hdr + contents
 
 
 def parse(data):
-    attrs = dict()
+    attributes = dict()
     while len(data):
         attr_len, attr_type = struct.unpack('HH', data[:4])
-        attrs[attr_type] = Attr(attr_type, data[4:attr_len])
+        attributes[attr_type] = NetlinkAttribute(attr_type, data[4:attr_len])
         data = data[((attr_len + 3) & ~3):]
-    return attrs
+    return attributes

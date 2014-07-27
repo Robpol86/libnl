@@ -2,7 +2,7 @@ import os
 import socket
 import struct
 
-from wifinl.netlink.attr import NulStrAttr, parse
+from wifinl.netlink.attributes import NLANullString, parse
 from wifinl.netlink.enums import ControllerAttr, ControllerCmd, NetlinkFlags, NetlinkMessages
 
 CTRL_ATTR_FAMILY_ID = ControllerAttr.CTRL_ATTR_FAMILY_ID
@@ -87,8 +87,8 @@ class Controller(object):
         self.connection = connection
 
     def get_family_id(self, family):
-        attr = NulStrAttr(CTRL_ATTR_FAMILY_NAME, family)
-        message = GenericNetlinkMessage(NLMSG_MIN_TYPE, CTRL_CMD_GETFAMILY, [attr], NLM_F_REQUEST)
+        attribute = NLANullString(CTRL_ATTR_FAMILY_NAME, family)
+        message = GenericNetlinkMessage(NLMSG_MIN_TYPE, CTRL_CMD_GETFAMILY, [attribute], NLM_F_REQUEST)
         message.send(self.connection)
         message_recv = self.connection.recv()
         #gnlh = GenericNetlinkHeader(*struct.unpack('BBxx', message_recv.payload[:4]))

@@ -1,3 +1,5 @@
+"""Linux Netlink interfacing classes."""
+
 import os
 import socket
 import struct

@@ -28,7 +28,7 @@ class Message(object):
     def send(self, connection):
         self.pid = connection.pid
         if self.seq == -1:
-            self.seq = connection.seq()
+            self.seq = connection.seq
 
         hdr = struct.pack('IHHII', len(self.payload) + 16, self.type_, self.flags, self.seq, self.pid)
         connection.send(hdr + self.payload)
@@ -43,7 +43,12 @@ class Connection(object):
 
         self.pid, self.groups = self.descriptor.getsockname()
         self.unexpected = unexpected
-        self.seq = 0
+        self._seq_counter = 0
+
+    @property
+    def seq(self):
+        self._seq_counter += 1
+        return self._seq_counter
 
     def send(self, message):
         self.descriptor.send(message)
@@ -60,10 +65,6 @@ class Connection(object):
                 raise OSError(error_number, 'Netlink error: {0} ({1})'.format(os.strerror(error_number), error_number))
 
         return message
-
-    def seq(self):
-        self.seq += 1
-        return self.seq
 
 
 class GenericNetlinkHeader(object):

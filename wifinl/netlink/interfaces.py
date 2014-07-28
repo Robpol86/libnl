@@ -1,18 +1,18 @@
-"""Linux Netlink interfacing classes."""
+"""Transport interfacing classes for the Linux Netlink and Linux Generic Netlink APIs."""
 
 import os
 import socket
 import struct
 
 from wifinl.netlink.attributes import NLANullString, parse
-from wifinl.netlink.enums import ControllerAttr, ControllerCmd, NetlinkFlags, NetlinkMessages
+from wifinl.netlink.enums import ControllerAttr, ControllerCmd, MessageFlags, MessageTypes
 
 CTRL_ATTR_FAMILY_ID = ControllerAttr.CTRL_ATTR_FAMILY_ID
 CTRL_ATTR_FAMILY_NAME = ControllerAttr.CTRL_ATTR_FAMILY_NAME
 CTRL_CMD_GETFAMILY = ControllerCmd.CTRL_CMD_GETFAMILY
-NLM_F_REQUEST = NetlinkFlags.NLM_F_REQUEST
-NLMSG_ERROR = NetlinkMessages.NLMSG_ERROR
-NLMSG_MIN_TYPE = NetlinkMessages.NLMSG_MIN_TYPE
+NLM_F_REQUEST = MessageFlags.NLM_F_REQUEST
+NLMSG_ERROR = MessageTypes.NLMSG_ERROR
+NLMSG_MIN_TYPE = MessageTypes.NLMSG_MIN_TYPE
 
 
 class Message(object):

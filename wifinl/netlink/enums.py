@@ -1,10 +1,14 @@
-"""Linux Netlink enums for the 3.4 kernel. Obtained values from C header files."""
+"""Linux Netlink enums/constants. Obtained values from C header files.
+
+Not all of these may be used.
+"""
 
 
-class Netlink(object):
-    """Netlink constants.
+class NetlinkProtocols(object):
+    """Netlink protocol names to numbers.
 
-    From: http://lxr.free-electrons.com/source/include/uapi/linux/netlink.h#L8
+    http://www.carisma.slowglass.com/~tgr/libnl/doc/core.html#core_netlink_fundamentals
+    http://lxr.free-electrons.com/source/include/uapi/linux/netlink.h#L8
     """
     NETLINK_ROUTE = 0  # Routing/device hook.
     NETLINK_UNUSED = 1  # Unused number.
@@ -25,22 +29,31 @@ class Netlink(object):
     NETLINK_GENERIC = 16
 
 
-class NetlinkFlags(object):
-    """Netlink flags values.
+class MessageFlags(object):
+    """Netlink message flags.
 
-    From: http://lxr.free-electrons.com/source/include/uapi/linux/netlink.h#L50
+    http://www.carisma.slowglass.com/~tgr/libnl/doc/core.html#core_msg_flags
+    http://lxr.free-electrons.com/source/include/uapi/linux/netlink.h#L50
     """
     NLM_F_REQUEST = 1  # It is request message.
     NLM_F_MULTI = 2  # Multipart message, terminated by NLMSG_DONE.
     NLM_F_ACK = 4  # Reply with ack, with zero or error code.
     NLM_F_ECHO = 8  # Echo this request.
     NLM_F_DUMP_INTR = 16  # Dump was inconsistent due to sequence change.
+    NLM_F_ROOT = 0x100  # Specify tree root.
+    NLM_F_MATCH = 0x200  # Return all matching.
+    NLM_F_DUMP = NLM_F_ROOT | NLM_F_MATCH  # Return a list of all objects.
+    NLM_F_REPLACE = 0x100  # Override existing.
+    NLM_F_EXCL = 0x200  # Do not touch, if it exists.
+    NLM_F_CREATE = 0x400  # Create, if it does not exist.
+    NLM_F_APPEND = 0x800  # Add to end of list.
 
 
-class NetlinkMessages(object):
-    """Netlink messages.
+class MessageTypes(object):
+    """Netlink message types.
 
-    From: http://lxr.free-electrons.com/source/include/uapi/linux/netlink.h#L92
+    http://www.carisma.slowglass.com/~tgr/libnl/doc/core.html#core_msg_types
+    http://lxr.free-electrons.com/source/include/uapi/linux/netlink.h#L92
     """
     NLMSG_NOOP = 0x1  # Nothing
     NLMSG_ERROR = 0x2  # Error

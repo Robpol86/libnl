@@ -22,23 +22,27 @@
 #include <linux/nl80211.h>
 
 
-void interface() {
-    struct rtgenmsg rt_hdr = { .rtgen_family = AF_UNSPEC, };
-    struct nl_sock *sk;
-    sk = nl_socket_alloc();
-    
-    nl_connect(sk, NETLINK_ROUTE);
-    int ret = nl_send_simple(sk, RTM_GETLINK, NLM_F_DUMP, &rt_hdr, sizeof(rt_hdr));
-    printf("nl_send_simple returned %d\n", ret);
+static int callback(struct nl_msg *msg, void *arg) {
+    printf("Got something.\n");
+    //struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));  // TODO I don't know what this does yet.
+    //struct nlattr *tb_msg[CTRL_ATTR_MAX+1];  // TODO this too.
+    //printf("%s\n", nla_get_string(msg));
+    return 0;
 }
 
-
 int main() {
-    printf("NL80211_CMD_GET_WIPHY: %d\n", NL80211_CMD_GET_WIPHY);
-    printf("NLM_F_REQUEST: %d\n", NLM_F_REQUEST);
-    printf("NLM_F_DUMP: 0x%04x\n", NLM_F_DUMP);
+    // Open socket to kernel.
+    struct nl_sock *socket = nl_socket_alloc();  // Allocate new netlink socket in memory.
+    nl_connect(socket, NETLINK_ROUTE);  // Create file descriptor and bind socket.
 
-    interface();
+    // Send request for all network interfaces.
+    struct rtgenmsg rt_hdr = { .rtgen_family = AF_PACKET, };
+    int ret = nl_send_simple(socket, RTM_GETLINK, NLM_F_REQUEST | NLM_F_DUMP, &rt_hdr, sizeof(rt_hdr));
+    printf("nl_send_simple returned %d\n", ret);
+
+    // Retrieve the kernel's answer.
+    nl_socket_modify_cb(socket, NL_CB_VALID, NL_CB_CUSTOM, callback, NULL);
+    nl_recvmsgs_default(socket);
 
     return 0;
 }

@@ -49,7 +49,7 @@ static int callback(struct nl_msg *msg, void *arg) {
         hdr = RTA_NEXT(hdr, remaining);
     }
 
-    return 0;
+    return NL_OK;
 }
 
 int main() {

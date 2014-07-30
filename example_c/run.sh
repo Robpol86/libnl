@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
+#export NLDBG=2
 
-gcc -o /tmp/list_wifi_interfaces list_wifi_interfaces.c /usr/lib/libnl.so
-NLDBG=2 /tmp/list_wifi_interfaces
+gcc -o /tmp/program list_network_interfaces.c /usr/lib/libnl.so
+
+/tmp/program
 

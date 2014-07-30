@@ -13,20 +13,42 @@
  *      http://lwn.net/Articles/208755/
  *      http://www.carisma.slowglass.com/~tgr/libnl/doc/core.html
  *      http://stackoverflow.com/questions/3299386/
+ *      http://iijean.blogspot.com/2010/03/howto-get-list-of-network-interfaces-in.html
+ *      https://github.com/ruslanti/rubicon/blob/master/stats/stats.c
+ *
+ * Expected output:
+ *      pi@raspberrypi ~/workspace/wifinl/example_c $ ./run.sh
+ *      nl_send_simple returned 20
+ *      Found network interface 1: lo
+ *      Found network interface 2: eth0
+ *      Found network interface 3: wlan0
+ *      pi@raspberrypi ~/workspace/wifinl/example_c $
  *
  */
 #include <stdio.h>
 #include <netlink/netlink.h>
-#include <netlink/socket.h>
 #include <netlink/genl/genl.h>
-#include <linux/nl80211.h>
 
 
 static int callback(struct nl_msg *msg, void *arg) {
-    printf("Got something.\n");
-    //struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));  // TODO I don't know what this does yet.
-    //struct nlattr *tb_msg[CTRL_ATTR_MAX+1];  // TODO this too.
-    //printf("%s\n", nla_get_string(msg));
+    struct nlmsghdr *nlh = nlmsg_hdr(msg);
+    struct ifinfomsg *iface = NLMSG_DATA(nlh);
+    struct rtattr *hdr = IFLA_RTA(iface);
+    int remaining = nlmsg_len(nlh) - NLMSG_LENGTH(sizeof(*iface));
+
+    //printf("Got something.\n");
+    //nl_msg_dump(msg, stdout);
+
+    while (RTA_OK(hdr, remaining)) {
+        //printf("Loop\n");
+
+        if (hdr->rta_type == IFLA_IFNAME) {
+            printf("Found network interface %d: %s\n", iface->ifi_index, (char *) RTA_DATA(hdr));
+        }
+
+        hdr = RTA_NEXT(hdr, remaining);
+    }
+
     return 0;
 }
 

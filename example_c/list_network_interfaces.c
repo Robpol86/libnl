@@ -1,5 +1,5 @@
 /*
- * "Staging" code before porting it to Python. Lists wireless interfaces on the host through nl80211.
+ * "Staging" code before porting it to Python. Lists network interfaces on the host through libnl (netlink).
  *
  * I don't know C so it was hard to get a Python application to talk to the kernel by looking at C code, trying to
  * resolve header files and variable origins/values in my head.

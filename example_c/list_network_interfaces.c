@@ -9,6 +9,9 @@
  *
  * None of this code is used by the Python library/module.
  *
+ * Raspbian prerequisites:
+ *      sudo apt-get install libnl-3-dev
+ *
  * Resources:
  *      http://lwn.net/Articles/208755/
  *      http://www.carisma.slowglass.com/~tgr/libnl/doc/core.html
@@ -34,7 +37,7 @@ static int callback(struct nl_msg *msg, void *arg) {
     struct nlmsghdr *nlh = nlmsg_hdr(msg);
     struct ifinfomsg *iface = NLMSG_DATA(nlh);
     struct rtattr *hdr = IFLA_RTA(iface);
-    int remaining = nlmsg_len(nlh) - NLMSG_LENGTH(sizeof(*iface));
+    int remaining = nlh->nlmsg_len - NLMSG_LENGTH(sizeof(*iface));
 
     //printf("Got something.\n");
     //nl_msg_dump(msg, stdout);

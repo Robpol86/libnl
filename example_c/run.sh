@@ -2,7 +2,6 @@
 set -e
 #export NLDBG=2
 
-gcc -o /tmp/program list_network_interfaces.c /usr/lib/libnl.so
+gcc $(pkg-config --cflags --libs libnl-3.0) -o /tmp/program list_network_interfaces.c
 
 /tmp/program
-

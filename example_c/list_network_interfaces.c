@@ -20,12 +20,10 @@
  *      https://github.com/ruslanti/rubicon/blob/master/stats/stats.c
  *
  * Expected output:
- *      pi@raspberrypi ~/workspace/wifinl/example_c $ ./run.sh
  *      nl_send_simple returned 20
  *      Found network interface 1: lo
  *      Found network interface 2: eth0
  *      Found network interface 3: wlan0
- *      pi@raspberrypi ~/workspace/wifinl/example_c $
  *
  */
 #include <netlink/netlink.h>

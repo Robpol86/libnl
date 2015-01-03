@@ -28,7 +28,6 @@
  *      pi@raspberrypi ~/workspace/wifinl/example_c $
  *
  */
-#include <stdio.h>
 #include <netlink/netlink.h>
 #include <netlink/genl/genl.h>
 

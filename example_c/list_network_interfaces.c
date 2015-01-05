@@ -10,7 +10,7 @@
  * None of this code is used by the Python library/module.
  *
  * Raspbian prerequisites:
- *      sudo apt-get install libnl-3-dev
+ *      sudo apt-get install libnl-genl-3-dev
  *
  * Resources:
  *      http://lwn.net/Articles/208755/

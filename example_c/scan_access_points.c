@@ -3,6 +3,8 @@
  *
  * Only works on network interfaces whose drivers are compatible with Netlink. Test this by running `iw list`.
  *
+ * Since only privileged users may submit NL80211_CMD_TRIGGER_SCAN, you'll have to run the compiled program as root.
+ *
  * I don't know C so it was hard to get a Python application to talk to the kernel by looking at C code, trying to
  * resolve header files and variable origins/values in my head.
  *
@@ -19,8 +21,24 @@
  *      http://stackoverflow.com/questions/21601521/how-to-use-the-libnl-library-to-trigger-nl80211-commands
  *      http://stackoverflow.com/questions/23760780/how-to-send-single-channel-scan-request-to-libnl-and-receive-single-
  *
- * Expected output:
- *      TODO
+ * Expected output (as root):
+ *      NL80211_CMD_TRIGGER_SCAN sent 36 bytes to the kernel.
+ *      Waiting for scan to complete...
+ *      Got NL80211_CMD_NEW_SCAN_RESULTS.
+ *      Scan is done.
+ *      NL80211_CMD_GET_SCAN sent 28 bytes to the kernel.
+ *      47:be:34:f0:bb:be, 2457 MHz, NETGEAR16
+ *      6b:db:ed:85:ef:42, 2432 MHz, NETGEAR31
+ *      d8:06:ef:a7:f9:80, 2412 MHz, ATT912
+ *      a7:0d:af:0a:19:08, 2462 MHz, ATT185
+ *
+ * Expected output (without root):
+ *      NL80211_CMD_TRIGGER_SCAN sent 36 bytes to the kernel.
+ *      Waiting for scan to complete...
+ *      error_handler() called.
+ *      WARNING: err has a value of -1.
+ *      ERROR: nl_recvmsgs() returned -28 (Operation not permitted).
+ *      do_scan_trigger() failed with -28.
  *
  */
 #include <errno.h>
@@ -165,34 +183,28 @@ void mac_addr_n2a(char *mac_addr, unsigned char *arg) {
     }
 }
 
-/*
+
 void print_ssid(unsigned char *ie, int ielen) {
-    // TODO Broken.
-    char ssid;
+    uint8_t len;
+    uint8_t *data;
     int i;
-    int l = 0;
-    uint8_t data;
+
     while (ielen >= 2 && ielen >= ie[1]) {
-        if (ie[0] != 0) {
-            ielen -= ie[1] + 2;
-			ie += ie[1] + 2;
-			continue;
-        }
-        data = ie + 2;
-        for (i = 0; i < ie[1] && l < 32; i++) {
-            if (isprint(data[i])) {
-                ssid[l] = data[i];
-                l++;
-            } else {
-                sprintf(ssid+l, "\\x%.2x", data[i]);
-                l += 4;
+        if (ie[0] == 0 && ie[1] >= 0 && ie[1] <= 32) {
+            len = ie[1];
+            data = ie + 2;
+            for (i = 0; i < len; i++) {
+                if (isprint(data[i]) && data[i] != ' ' && data[i] != '\\') printf("%c", data[i]);
+                else if (data[i] == ' ' && (i != 0 && i != len -1)) printf(" ");
+                else printf("\\x%.2x", data[i]);
             }
-	    }
-	    break;
+            break;
+        }
+        ielen -= ie[1] + 2;
+        ie += ie[1] + 2;
     }
-    printf(ssid);
 }
-*/
+
 
 static int callback_trigger(struct nl_msg *msg, void *arg) {
     // Called by the kernel when the scan is done or has been aborted.
@@ -254,8 +266,7 @@ static int callback_dump(struct nl_msg *msg, void *arg) {
     mac_addr_n2a(mac_addr, nla_data(bss[NL80211_BSS_BSSID]));
     printf("%s, ", mac_addr);
     printf("%d MHz, ", nla_get_u32(bss[NL80211_BSS_FREQUENCY]));
-    //print_ssid(nla_data(bss[NL80211_BSS_INFORMATION_ELEMENTS]), nla_len(bss[NL80211_BSS_INFORMATION_ELEMENTS]));
-    // TODO print ssid.
+    print_ssid(nla_data(bss[NL80211_BSS_INFORMATION_ELEMENTS]), nla_len(bss[NL80211_BSS_INFORMATION_ELEMENTS]));
     printf("\n");
 
     return NL_SKIP;

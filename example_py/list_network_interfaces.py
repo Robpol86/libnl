@@ -8,8 +8,8 @@ Requires:
 pip install pyroute2 docopt
 
 Usage:
-    list_network_interfaces print
-    list_network_interfaces -h | --help
+    list_network_interfaces.py print
+    list_network_interfaces.py -h | --help
 """
 
 from __future__ import print_function

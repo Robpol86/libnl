@@ -1,24 +1,22 @@
-wifinl
+wifipy
 ======
 
-A pure python nl80211-based library for wifi adapters. Communicates with the driver directly.
-
-Linux only.
+A pure python library for wifi adapters. Communicates with the driver/kernel directly.
 
 Work in progress, unfinished and unpublished.
 
-.. image:: https://img.shields.io/travis/Robpol86/wifinl/master.svg?style=flat-square
-   :target: https://travis-ci.org/Robpol86/wifinl
+.. image:: https://img.shields.io/travis/Robpol86/wifipy/master.svg?style=flat-square
+   :target: https://travis-ci.org/Robpol86/wifipy
    :alt: Build Status
 
-.. image:: https://img.shields.io/codecov/c/github/Robpol86/wifinl/master.svg?style=flat-square
-   :target: https://codecov.io/github/Robpol86/wifinl
+.. image:: https://img.shields.io/codecov/c/github/Robpol86/wifipy/master.svg?style=flat-square
+   :target: https://codecov.io/github/Robpol86/wifipy
    :alt: Coverage Status
 
-.. image:: https://img.shields.io/pypi/v/wifinl.svg?style=flat-square
-   :target: https://pypi.python.org/pypi/wifinl/
+.. image:: https://img.shields.io/pypi/v/wifipy.svg?style=flat-square
+   :target: https://pypi.python.org/pypi/wifipy/
    :alt: Latest Version
 
-.. image:: https://img.shields.io/pypi/dm/wifinl.svg?style=flat-square
-   :target: https://pypi.python.org/pypi/wifinl/
+.. image:: https://img.shields.io/pypi/dm/wifipy.svg?style=flat-square
+   :target: https://pypi.python.org/pypi/wifipy/
    :alt: Downloads

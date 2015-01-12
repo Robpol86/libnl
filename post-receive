@@ -1,0 +1,7 @@
+#!/bin/bash
+while read oldrev newrev ref; do
+    branch=$(echo $ref |cut -d/ -f3)
+    export GIT_WORK_TREE=checkout/$branch
+    [ ! -e $GIT_WORK_TREE ] && mkdir -p $GIT_WORK_TREE
+    git checkout -f $branch
+done

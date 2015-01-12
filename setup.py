@@ -11,10 +11,10 @@ import subprocess
 import setuptools.command.sdist
 from setuptools.command.test import test
 
-DESCRIPTION = 'A pure python nl80211-based library for wifi adapters. Communicates with the driver directly.'
+DESCRIPTION = 'A pure python library for wifi adapters. Communicates with the driver/kernel directly.'
 HERE = os.path.abspath(os.path.dirname(__file__))
 KEYWORDS = 'netlink nl80211 wifi'
-NAME = 'wifinl'
+NAME = 'wifipy'
 NAME_FILE = NAME
 PACKAGE = True
 REQUIRES_INSTALL = []

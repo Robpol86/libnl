@@ -1,7 +1,7 @@
 """Issue nl80211 commands to the wireless device."""
 
-from wifinl.netlink.enums import NetlinkProtocols, MessageFlags, NL80211Cmd
-from wifinl.netlink.interfaces import Connection, Controller, GenericNetlinkMessage
+from wifipy.netlink.enums import NetlinkProtocols, MessageFlags, NL80211Cmd
+from wifipy.netlink.interfaces import Connection, Controller, GenericNetlinkMessage
 
 CONNECTION = Connection(NetlinkProtocols.NETLINK_GENERIC)
 CONTROLLER = Controller(CONNECTION)

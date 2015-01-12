@@ -4,8 +4,8 @@ import os
 import socket
 import struct
 
-from wifinl.netlink.attributes import NLANullString, parse
-from wifinl.netlink.enums import ControllerAttr, ControllerCmd, MessageFlags, MessageTypes
+from wifipy.netlink.attributes import NLANullString, parse
+from wifipy.netlink.enums import ControllerAttr, ControllerCmd, MessageFlags, MessageTypes
 
 CTRL_ATTR_FAMILY_ID = ControllerAttr.CTRL_ATTR_FAMILY_ID
 CTRL_ATTR_FAMILY_NAME = ControllerAttr.CTRL_ATTR_FAMILY_NAME

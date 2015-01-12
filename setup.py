@@ -43,6 +43,8 @@ def get_metadata(main_file):
     if not all(everything.values()):
         raise ValueError('Failed to obtain metadata from package/module.')
 
+    everything.update(dict(packages=[NAME_FILE]) if PACKAGE else dict(py_modules=[NAME_FILE]))
+
     return everything
 
 
@@ -117,7 +119,6 @@ ALL_DATA = dict(
     ],
 
     keywords=KEYWORDS,
-    py_modules=[NAME_FILE],
     zip_safe=True,
 
     install_requires=REQUIRES_INSTALL,

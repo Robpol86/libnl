@@ -42,8 +42,6 @@
  *
  */
 #include <errno.h>
-#include <netlink/errno.h>
-#include <netlink/netlink.h>
 #include <netlink/genl/genl.h>
 #include <linux/nl80211.h>
 
@@ -51,12 +49,6 @@
 struct trigger_results {
     int done;
     int aborted;
-};
-
-
-struct handler_args {  // For family_handler() and nl_get_multicast_id().
-    const char *group;
-    int id;
 };
 
 
@@ -88,82 +80,6 @@ static int ack_handler(struct nl_msg *msg, void *arg) {
 static int no_seq_check(struct nl_msg *msg, void *arg) {
     // Callback for NL_CB_SEQ_CHECK.
     return NL_OK;
-}
-
-
-static int family_handler(struct nl_msg *msg, void *arg) {
-    // Callback for NL_CB_VALID within nl_get_multicast_id(). From http://sourcecodebrowser.com/iw/0.9.14/genl_8c.html.
-    struct handler_args *grp = arg;
-    struct nlattr *tb[CTRL_ATTR_MAX + 1];
-    struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
-    struct nlattr *mcgrp;
-    int rem_mcgrp;
-
-    nla_parse(tb, CTRL_ATTR_MAX, genlmsg_attrdata(gnlh, 0), genlmsg_attrlen(gnlh, 0), NULL);
-
-    if (!tb[CTRL_ATTR_MCAST_GROUPS]) return NL_SKIP;
-
-    nla_for_each_nested(mcgrp, tb[CTRL_ATTR_MCAST_GROUPS], rem_mcgrp) {  // This is a loop.
-        struct nlattr *tb_mcgrp[CTRL_ATTR_MCAST_GRP_MAX + 1];
-
-        nla_parse(tb_mcgrp, CTRL_ATTR_MCAST_GRP_MAX, nla_data(mcgrp), nla_len(mcgrp), NULL);
-
-        if (!tb_mcgrp[CTRL_ATTR_MCAST_GRP_NAME] || !tb_mcgrp[CTRL_ATTR_MCAST_GRP_ID]) continue;
-        if (strncmp(nla_data(tb_mcgrp[CTRL_ATTR_MCAST_GRP_NAME]), grp->group,
-                nla_len(tb_mcgrp[CTRL_ATTR_MCAST_GRP_NAME]))) {
-            continue;
-                }
-
-        grp->id = nla_get_u32(tb_mcgrp[CTRL_ATTR_MCAST_GRP_ID]);
-        break;
-    }
-
-    return NL_SKIP;
-}
-
-
-int nl_get_multicast_id(struct nl_sock *sock, const char *family, const char *group) {
-    // From http://sourcecodebrowser.com/iw/0.9.14/genl_8c.html.
-    struct nl_msg *msg;
-    struct nl_cb *cb;
-    int ret, ctrlid;
-    struct handler_args grp = { .group = group, .id = -ENOENT, };
-
-    msg = nlmsg_alloc();
-    if (!msg) return -ENOMEM;
-
-    cb = nl_cb_alloc(NL_CB_DEFAULT);
-    if (!cb) {
-        ret = -ENOMEM;
-        goto out_fail_cb;
-    }
-
-    ctrlid = genl_ctrl_resolve(sock, "nlctrl");
-
-    genlmsg_put(msg, 0, 0, ctrlid, 0, 0, CTRL_CMD_GETFAMILY, 0);
-
-    ret = -ENOBUFS;
-    NLA_PUT_STRING(msg, CTRL_ATTR_FAMILY_NAME, family);
-
-    ret = nl_send_auto_complete(sock, msg);
-    if (ret < 0) goto out;
-
-    ret = 1;
-
-    nl_cb_err(cb, NL_CB_CUSTOM, error_handler, &ret);
-    nl_cb_set(cb, NL_CB_ACK, NL_CB_CUSTOM, ack_handler, &ret);
-    nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, family_handler, &grp);
-
-    while (ret > 0) nl_recvmsgs(sock, cb);
-
-    if (ret == 0) ret = grp.id;
-
-    nla_put_failure:
-        out:
-            nl_cb_put(cb);
-        out_fail_cb:
-            nlmsg_free(msg);
-            return ret;
 }
 
 
@@ -281,7 +197,7 @@ int do_scan_trigger(struct nl_sock *socket, int if_index, int driver_id) {
     struct nl_msg *ssids_to_scan;
     int err;
     int ret;
-    int mcid = nl_get_multicast_id(socket, "nl80211", "scan");
+    int mcid = genl_ctrl_resolve_grp(socket, "nl80211", "scan");
     nl_socket_add_membership(socket, mcid);  // Without this, callback_trigger() won't be called.
 
     // Allocate the messages and callback handler.

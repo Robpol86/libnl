@@ -3,7 +3,8 @@ wifipy
 
 A pure python library for wifi adapters. Communicates with the driver/kernel directly.
 
-Work in progress, unfinished and unpublished.
+Work in progress, unfinished and unpublished. API can and will change without notice or documentation until 0.1.0 is
+reached.
 
 .. image:: https://img.shields.io/travis/Robpol86/wifipy/master.svg?style=flat-square
    :target: https://travis-ci.org/Robpol86/wifipy

@@ -1,9 +1,16 @@
-"""Code similar to socket.c from libnl."""
+"""Port of Netlink Socket (lib/socket.c) C library.
+http://www.infradead.org/~tgr/libnl/doc/api/socket_8c_source.html
+
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation version 2.1
+of the License.
+"""
 
 from socket import AF_NETLINK, SOCK_DGRAM, socket
 
-NETLINK_ADD_MEMBERSHIP = 1
-NETLINK_DROP_MEMBERSHIP = 2
+from wifipy.netlink.netlink import NETLINK_ADD_MEMBERSHIP, NETLINK_DROP_MEMBERSHIP
+
 SOL_NETLINK = 270
 
 

@@ -10,8 +10,8 @@ of the License.
 from ctypes import sizeof
 from resource import getpagesize
 
-from wifipy.netlink.netlink import NLMSG_ALIGN, NLMSG_HDRLEN, nlmsghdr
-from wifipy.netlink.types import nl_msg
+from wifipy.backends.netlink.netlink import NLMSG_ALIGN, NLMSG_HDRLEN, nlmsghdr
+from wifipy.backends.netlink.types import nl_msg
 
 PAGESIZE = getpagesize()
 

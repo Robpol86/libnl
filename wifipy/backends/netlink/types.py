@@ -9,8 +9,8 @@ of the License.
 
 from ctypes import c_int, c_size_t, Structure
 
-from wifipy.misc import ucred
-from wifipy.netlink.netlink import nlmsghdr, sockaddr_nl
+from wifipy.backends.netlink.misc import ucred
+from wifipy.backends.netlink.netlink import nlmsghdr, sockaddr_nl
 
 
 class nl_msg(Structure):

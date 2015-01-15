@@ -54,4 +54,4 @@ def genl_ctrl_resolve_grp(sk, family_name, grp_name):
     Returns:
     Numeric group identifier (integer).
     """
-    pass
+    family = genl_family()

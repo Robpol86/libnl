@@ -1,4 +1,4 @@
-"""Port of hashtable.h C library.
+"""Netlink hashtable Utilities (netlink/hashtable.h).
 https://github.com/thom311/libnl/blob/master/include/netlink/hashtable.h
 
 This library is free software; you can redistribute it and/or

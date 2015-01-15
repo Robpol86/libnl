@@ -1,4 +1,4 @@
-"""Port of types.h C library.
+"""Netlink Types (netlink-private/types.h).
 https://github.com/thom311/libnl/blob/master/include/netlink-private/types.h
 
 This library is free software; you can redistribute it and/or
@@ -9,6 +9,7 @@ of the License.
 
 from ctypes import c_char, c_int, c_size_t, c_uint, c_uint16, c_uint32, POINTER, Structure
 
+from wifipy.backends.netlink.cache_api import nl_cache_ops
 from wifipy.backends.netlink.hashtable import nl_hash_table
 from wifipy.backends.netlink.list import nl_list_head
 from wifipy.backends.netlink.misc import ucred
@@ -48,7 +49,7 @@ class genl_family(Structure):
     """https://github.com/thom311/libnl/blob/master/include/netlink-private/types.h#L783"""
     _fields_ = NLHDR_COMMON + [
         ('gf_id', c_uint16),
-        ('gf_name[GENL_NAMSIZ]', c_char),
+        ('gf_name', c_char),
         ('gf_version', c_uint32),
         ('gf_hdrsize', c_uint32),
         ('gf_maxattr', c_uint32),

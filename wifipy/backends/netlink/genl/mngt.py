@@ -1,7 +1,5 @@
-"""Port of Generic Netlink Management (netlink/genl/mngt.h) C library.
+"""Generic Netlink Management (netlink/genl/mngt.h).
 https://github.com/thom311/libnl/blob/master/include/netlink/genl/mngt.h
-
-Ported by @Robpol86 <https://github.com/Robpol86>.
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -18,8 +16,9 @@ from wifipy.backends.netlink.list import nl_list_head
 
 class genl_cmd(Structure):
     """Definition of a Generic Netlink command.
-    This structure is used to define the list of available commands on the receiving side.
     https://github.com/thom311/libnl/blob/master/include/netlink/genl/mngt.h#L87
+
+    This structure is used to define the list of available commands on the receiving side.
 
     Fields:
     c_id -- Numeric command identifier (required).

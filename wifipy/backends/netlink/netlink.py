@@ -1,4 +1,4 @@
-"""Port of netlink.h C library.
+"""netlink.h.
 https://github.com/thom311/libnl/blob/master/include/linux-private/linux/netlink.h
 
 This library is free software; you can redistribute it and/or
@@ -36,21 +36,38 @@ NETLINK_DROP_MEMBERSHIP = 2
 
 
 class sockaddr_nl(Structure):
+    """https://github.com/thom311/libnl/blob/master/include/linux-private/linux/netlink.h#L31
+
+    Fields:
+    nl_family -- AF_NETLINK.
+    nl_pad -- zero.
+    nl_pid -- port ID.
+    nl_groups -- multicast groups mask.
+    """
     _fields_ = [
-        ('nl_family', c_ushort),  # AF_NETLINK (sa_family_t = typedef c_ushort).
-        ('nl_pad', c_ushort),  # Zero.
-        ('nl_pid', c_uint32),  # Port ID.
-        ('nl_groups', c_uint32),  # Multicast groups mask.
+        ('nl_family', c_ushort),
+        ('nl_pad', c_ushort),
+        ('nl_pid', c_uint32),
+        ('nl_groups', c_uint32),
     ]
 
 
 class nlmsghdr(Structure):
+    """https://github.com/thom311/libnl/blob/master/include/linux-private/linux/netlink.h#L38
+
+    Fields:
+    nlmsg_len -- length of message including header.
+    nlmsg_type -- message content.
+    nlmsg_flags -- additional flags.
+    nlmsg_seq -- sequence number.
+    nlmsg_pid -- sending process port ID.
+    """
     _fields_ = [
-        ('nlmsg_len', c_uint32),  # Length of message including header.
-        ('nlmsg_type', c_uint16),  # Message content.
-        ('nlmsg_flags', c_uint16),  # Additional flags.
-        ('nlmsg_seq', c_uint32),  # Sequence number.
-        ('nlmsg_pid', c_uint32),  # Sending process port ID.
+        ('nlmsg_len', c_uint32),
+        ('nlmsg_type', c_uint16),
+        ('nlmsg_flags', c_uint16),
+        ('nlmsg_seq', c_uint32),
+        ('nlmsg_pid', c_uint32),
     ]
 
 

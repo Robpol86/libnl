@@ -1,7 +1,5 @@
-"""Port of Netlink Attributes (netlink/attr.h) C library.
+"""Netlink Attributes (netlink/attr.h).
 https://github.com/thom311/libnl/blob/master/include/netlink/attr.h
-
-Ported by @Robpol86 <https://github.com/Robpol86>.
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -27,11 +25,10 @@ class nla_policy(Structure):
     https://github.com/thom311/libnl/blob/master/include/netlink/attr.h#L60
 
     Fields:
-    type -- Type of attribute or NLA_UNSPEC.
-    minlen -- Minimal length of payload required.
-    maxlen -- Maximal length of payload allowed.
+    type -- type of attribute or NLA_UNSPEC.
+    minlen -- minimal length of payload required.
+    maxlen -- maximal length of payload allowed.
     """
-    pass
     _fields_ = [
         ('type', c_uint16),
         ('minlen', c_uint16),

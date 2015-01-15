@@ -1,4 +1,4 @@
-"""Misc code not defined in Netlink."""
+"""Misc code not defined in Netlink but used by it."""
 
 from ctypes import c_int32, c_uint32, Structure
 

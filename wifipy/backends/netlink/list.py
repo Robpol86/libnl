@@ -1,4 +1,4 @@
-"""Port of list.h C library.
+"""Netlink List Utilities (netlink/list.h).
 https://github.com/thom311/libnl/blob/master/include/netlink/list.h
 
 This library is free software; you can redistribute it and/or

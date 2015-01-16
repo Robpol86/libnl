@@ -1,5 +1,6 @@
 """Netlink Messages Interface (lib/msg.c).
 https://github.com/thom311/libnl/blob/master/lib/msg.c
+https://github.com/thom311/libnl/blob/master/include/netlink/msg.h
 
 Netlink message construction/parsing interface.
 
@@ -15,8 +16,10 @@ from resource import getpagesize
 from libnl.linux_private.netlink import NLMSG_ALIGN, NLMSG_HDRLEN, nlmsghdr
 from libnl.types import nl_msg
 
-
 default_msg_size = None
+NL_AUTO_PORT = 0
+NL_AUTO_PID = NL_AUTO_PORT
+NL_AUTO_SEQ = 0
 
 
 def init_msg_size():

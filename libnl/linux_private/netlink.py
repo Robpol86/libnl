@@ -7,7 +7,7 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-from ctypes import c_uint, c_uint16, c_uint32, c_ushort, sizeof, Structure
+from ctypes import c_int, c_uint, c_uint16, c_uint32, c_ushort, sizeof, Structure
 
 
 NLM_F_REQUEST = 1  # It is request message.
@@ -29,10 +29,6 @@ NLM_F_REPLACE = 0x100  # Override existing.
 NLM_F_EXCL = 0x200  # Do not touch, if it exists.
 NLM_F_CREATE = 0x400  # Create, if it does not exist.
 NLM_F_APPEND = 0x800  # Add to end of list.
-
-
-NETLINK_ADD_MEMBERSHIP = 1
-NETLINK_DROP_MEMBERSHIP = 2
 
 
 class sockaddr_nl(Structure):
@@ -76,3 +72,27 @@ NLMSG_ALIGN = lambda len_: (len_ + NLMSG_ALIGNTO.value - 1) & ~(NLMSG_ALIGNTO.va
 NLMSG_HDRLEN = NLMSG_ALIGN(sizeof(nlmsghdr))
 NLMSG_LENGTH = lambda len_: len_ + NLMSG_ALIGN(NLMSG_HDRLEN)
 NLMSG_SPACE = lambda len_: NLMSG_ALIGN(NLMSG_LENGTH(len_))
+#define NLMSG_DATA(nlh)  ((void*)(((char*)nlh) + NLMSG_LENGTH(0)))
+#define NLMSG_NEXT(nlh,len)	 ((len) -= NLMSG_ALIGN((nlh)->nlmsg_len), (struct nlmsghdr*)(((char*)(nlh)) + NLMSG_ALIGN((nlh)->nlmsg_len)))
+#define NLMSG_OK(nlh,len) ((len) >= (int)sizeof(struct nlmsghdr) && (nlh)->nlmsg_len >= sizeof(struct nlmsghdr) && (nlh)->nlmsg_len <= (len))
+#define NLMSG_PAYLOAD(nlh,len) ((nlh)->nlmsg_len - NLMSG_SPACE((len)))
+NLMSG_NOOP = 0x1  # Nothing.
+NLMSG_ERROR = 0x2  # Error.
+NLMSG_DONE = 0x3  # End of a dump.
+NLMSG_OVERRUN = 0x4  # Data lost.
+NLMSG_MIN_TYPE = 0x10  # < 0x10: reserved control messages.
+
+
+class nlmsgerr(Structure):
+    """https://github.com/thom311/libnl/blob/master/include/linux-private/linux/netlink.h#L95"""
+    _fields_ = [
+        ('error', c_int),
+        ('msg', nlmsghdr),
+    ]
+
+
+NETLINK_ADD_MEMBERSHIP = 1
+NETLINK_DROP_MEMBERSHIP = 2
+NETLINK_PKTINFO = 3
+NETLINK_BROADCAST_ERROR = 4
+NETLINK_NO_ENOBUFS = 5

@@ -14,7 +14,8 @@ of the License.
 
 from libnl.errno import NLE_OBJ_NOTFOUND
 from libnl.genl.family import genl_family_alloc
-from libnl.msg import nlmsg_alloc
+from libnl.linux_private.genetlink import GENL_ID_CTRL
+from libnl.msg import nlmsg_alloc, NL_AUTO_PORT, NL_AUTO_SEQ
 from libnl.netlink_private.netlink import BUG
 from libnl.nl import nl_send_auto_complete
 

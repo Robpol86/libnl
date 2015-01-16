@@ -12,8 +12,8 @@ of the License.
 from ctypes import sizeof
 from resource import getpagesize
 
-from wifipy.backends.netlink.netlink import NLMSG_ALIGN, NLMSG_HDRLEN, nlmsghdr
-from wifipy.backends.netlink.types import nl_msg
+from libnl.backends.netlink.netlink import NLMSG_ALIGN, NLMSG_HDRLEN, nlmsghdr
+from libnl.backends.netlink.types import nl_msg
 
 default_msg_size = None
 

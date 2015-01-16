@@ -20,7 +20,7 @@ import sys
 
 from docopt import docopt
 
-from wifipy.backends.netlink.genl.ctrl import genl_ctrl_resolve
+from libnl.backends.netlink.genl.ctrl import genl_ctrl_resolve
 
 OPTIONS = docopt(__doc__) if __name__ == '__main__' else dict()
 

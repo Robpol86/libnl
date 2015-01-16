@@ -12,7 +12,7 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-from wifipy.backends.netlink.types import genl_family
+from libnl.backends.netlink.types import genl_family
 
 
 def genl_ctrl_probe_by_name(sk, name):

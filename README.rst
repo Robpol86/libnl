@@ -1,23 +1,23 @@
-wifipy
-======
+libnl
+=====
 
-A pure python library for wifi adapters. Communicates with the driver/kernel directly.
+Python port of the netlink protocol library suite.
 
 Work in progress, unfinished and unpublished. API can and will change without notice or documentation until 0.1.0 is
 reached.
 
-.. image:: https://img.shields.io/travis/Robpol86/wifipy/master.svg?style=flat-square
-   :target: https://travis-ci.org/Robpol86/wifipy
+.. image:: https://img.shields.io/travis/Robpol86/libnl/master.svg?style=flat-square
+   :target: https://travis-ci.org/Robpol86/libnl
    :alt: Build Status
 
-.. image:: https://img.shields.io/codecov/c/github/Robpol86/wifipy/master.svg?style=flat-square
-   :target: https://codecov.io/github/Robpol86/wifipy
+.. image:: https://img.shields.io/codecov/c/github/Robpol86/libnl/master.svg?style=flat-square
+   :target: https://codecov.io/github/Robpol86/libnl
    :alt: Coverage Status
 
-.. image:: https://img.shields.io/pypi/v/wifipy.svg?style=flat-square
-   :target: https://pypi.python.org/pypi/wifipy/
+.. image:: https://img.shields.io/pypi/v/libnl.svg?style=flat-square
+   :target: https://pypi.python.org/pypi/libnl/
    :alt: Latest Version
 
-.. image:: https://img.shields.io/pypi/dm/wifipy.svg?style=flat-square
-   :target: https://pypi.python.org/pypi/wifipy/
+.. image:: https://img.shields.io/pypi/dm/libnl.svg?style=flat-square
+   :target: https://pypi.python.org/pypi/libnl/
    :alt: Downloads

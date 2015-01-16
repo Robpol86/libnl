@@ -9,9 +9,9 @@ of the License.
 
 from ctypes import c_char_p, c_int, c_uint, POINTER, Structure
 
-from wifipy.backends.netlink.attr import nla_policy
-from wifipy.backends.netlink.cache_api import nl_cache_ops
-from wifipy.backends.netlink.list import nl_list_head
+from libnl.backends.netlink.attr import nla_policy
+from libnl.backends.netlink.cache_api import nl_cache_ops
+from libnl.backends.netlink.list import nl_list_head
 
 
 class genl_cmd(Structure):

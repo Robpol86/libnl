@@ -11,7 +11,7 @@ of the License.
 
 from socket import AF_NETLINK, SOCK_DGRAM, socket
 
-from wifipy.backends.netlink.netlink import NETLINK_ADD_MEMBERSHIP, NETLINK_DROP_MEMBERSHIP
+from libnl.backends.netlink.netlink import NETLINK_ADD_MEMBERSHIP, NETLINK_DROP_MEMBERSHIP
 
 SOL_NETLINK = 270
 

@@ -12,7 +12,11 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-from libnl.types import genl_family
+from libnl.errno import NLE_OBJ_NOTFOUND
+from libnl.genl.family import genl_family_alloc
+from libnl.msg import nlmsg_alloc
+from libnl.netlink_private.netlink import BUG
+from libnl.nl import nl_send_auto_complete
 
 
 def genl_ctrl_probe_by_name(sk, name):
@@ -32,7 +36,75 @@ def genl_ctrl_probe_by_name(sk, name):
     Returns:
     Generic netlink family object or None if no match was found.
     """
-    ret = genl_family_alloc()  # TODO
+    ret = genl_family_alloc()
+    if not ret:
+        return None
+    genl_family_set_name(ret, name)
+
+    msg = nlmsg_alloc()
+    if not msg:
+        genl_family_put(ret)
+        return None
+
+    orig = nl_socket_get_cb(sk)
+    if not orig:
+        nlmsg_free(msg)
+        genl_family_put(ret)
+        return None
+
+    cb = nl_cb_clone(orig)
+    nl_cb_put(orig)
+    if not cb:
+        nlmsg_free(msg)
+        genl_family_put(ret)
+        return None
+
+    if not genlmsg_put(msg, NL_AUTO_PORT, NL_AUTO_SEQ, GENL_ID_CTRL, 0, 0, CTRL_CMD_GETFAMILY, 1):
+        nl_cb_put(cb)
+        nlmsg_free(msg)
+        genl_family_put(ret)
+        raise BUG
+
+    if nla_put_string(msg, CTRL_ATTR_FAMILY_NAME, name) < 0:
+        nl_cb_put(cb)
+        nlmsg_free(msg)
+        genl_family_put(ret)
+        return None
+
+    if nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, probe_response, ret) < 0:
+        nl_cb_put(cb)
+        nlmsg_free(msg)
+        genl_family_put(ret)
+        return None
+
+    if nl_send_auto_complete(sk, msg) < 0:
+        nl_cb_put(cb)
+        nlmsg_free(msg)
+        genl_family_put(ret)
+        return None
+
+    if nl_recvmsgs(sk, cb) < 0:
+        nl_cb_put(cb)
+        nlmsg_free(msg)
+        genl_family_put(ret)
+        return None
+
+    # If search was successful, request may be ACKed after data.
+    if wait_for_ack(sk) < 0:
+        nl_cb_put(cb)
+        nlmsg_free(msg)
+        genl_family_put(ret)
+        return None
+
+    if genl_family_get_id(ret) != 0:
+        nlmsg_free(msg)
+        nl_cb_put(cb)
+        return ret
+
+    nl_cb_put(cb)
+    nlmsg_free(msg)
+    genl_family_put(ret)
+    return None
 
 
 def genl_ctrl_resolve(sk, name):
@@ -49,7 +121,12 @@ def genl_ctrl_resolve(sk, name):
     Returns:
     The numeric family identifier or a negative error code.
     """
-    pass  # TODO
+    family = genl_ctrl_probe_by_name(sk, name)
+    if not family:
+        return -NLE_OBJ_NOTFOUND
+    err = genl_family_get_id(family)
+    genl_family_put(family)
+    return int(err)
 
 
 def genl_ctrl_resolve_grp(sk, family_name, grp_name):
@@ -66,4 +143,9 @@ def genl_ctrl_resolve_grp(sk, family_name, grp_name):
     Returns:
     Numeric group identifier or a negative error code.
     """
-    family = genl_family()  # TODO
+    family = genl_ctrl_probe_by_name(sk, family_name)
+    if not family:
+        return -NLE_OBJ_NOTFOUND
+    err = genl_ctrl_grp_by_name(family, grp_name)
+    genl_family_put(family)
+    return int(err)

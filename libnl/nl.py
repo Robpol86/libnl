@@ -113,3 +113,4 @@ def nl_send_auto(sk, msg):
     """
     nl_complete_msg()  # TODO
     nl_send()
+nl_send_auto_complete = nl_send_auto

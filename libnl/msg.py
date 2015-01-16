@@ -12,8 +12,9 @@ of the License.
 from ctypes import sizeof
 from resource import getpagesize
 
-from libnl.netlink import NLMSG_ALIGN, NLMSG_HDRLEN, nlmsghdr
+from libnl.linux_private.netlink import NLMSG_ALIGN, NLMSG_HDRLEN, nlmsghdr
 from libnl.types import nl_msg
+
 
 default_msg_size = None
 

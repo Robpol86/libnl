@@ -9,9 +9,9 @@ of the License.
 
 from ctypes import c_char_p, c_int, c_uint, POINTER, Structure
 
-from libnl.backends.netlink.attr import nla_policy
-from libnl.backends.netlink.cache_api import nl_cache_ops
-from libnl.backends.netlink.list import nl_list_head
+from libnl.attr import nla_policy
+from libnl.cache_api import nl_cache_ops
+from libnl.list import nl_list_head
 
 
 class genl_cmd(Structure):

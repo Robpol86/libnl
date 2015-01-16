@@ -9,12 +9,12 @@ of the License.
 
 from ctypes import c_char, c_int, c_size_t, c_uint, c_uint16, c_uint32, POINTER, Structure
 
-from libnl.backends.netlink.cache_api import nl_cache_ops
-from libnl.backends.netlink.hashtable import nl_hash_table
-from libnl.backends.netlink.list import nl_list_head
-from libnl.backends.netlink.misc import ucred
-from libnl.backends.netlink.netlink import nlmsghdr, sockaddr_nl
-from libnl.backends.netlink.object_api import NLHDR_COMMON
+from libnl.cache_api import nl_cache_ops
+from libnl.hashtable import nl_hash_table
+from libnl.list import nl_list_head
+from libnl.misc import ucred
+from libnl.netlink import nlmsghdr, sockaddr_nl
+from libnl.object_api import NLHDR_COMMON
 
 
 class nl_cache(Structure):

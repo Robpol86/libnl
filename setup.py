@@ -11,10 +11,10 @@ import subprocess
 import setuptools.command.sdist
 from setuptools.command.test import test
 
-DESCRIPTION = 'A pure python library for wifi adapters. Communicates with the driver/kernel directly.'
+DESCRIPTION = 'Pure python port of the netlink protocol library suite.'
 HERE = os.path.abspath(os.path.dirname(__file__))
-KEYWORDS = 'netlink nl80211 wifi'
-NAME = 'wifipy'
+KEYWORDS = 'netlink libnl libnl-genl'
+NAME = 'libnl'
 NAME_FILE = NAME
 PACKAGE = True
 REQUIRES_INSTALL = []
@@ -107,15 +107,12 @@ ALL_DATA = dict(
     classifiers=[
         'Development Status :: 1 - Planning',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: MIT License',
+        'License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)',
         'Operating System :: POSIX :: Linux',
-        'Programming Language :: Python :: 2.6',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: Implementation :: PyPy',
         'Topic :: Software Development :: Libraries',
         'Topic :: System :: Networking',
+        'Topic :: System :: Operating System Kernels :: Linux',
     ],
 
     keywords=KEYWORDS,

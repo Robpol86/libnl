@@ -9,7 +9,7 @@ of the License.
 
 from ctypes import c_int, c_uint32, POINTER, Structure
 
-from libnl.backends.netlink.object_api import nl_object
+from libnl.object_api import nl_object
 
 
 class nl_hash_node(Structure):

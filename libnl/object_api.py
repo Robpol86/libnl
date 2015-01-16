@@ -9,8 +9,8 @@ of the License.
 
 from ctypes import c_char_p, c_int, c_size_t, c_uint32, c_void_p, POINTER, Structure
 
-from libnl.backends.netlink.list import nl_list_head
-from libnl.backends.netlink.types import nl_cache
+from libnl.list import nl_list_head
+from libnl.types import nl_cache
 
 
 class nl_object_ops(Structure):

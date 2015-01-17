@@ -7,7 +7,7 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-from ctypes import c_int, c_uint, c_uint16, c_uint32, c_ushort, sizeof, Structure
+from ctypes import byref, c_int, c_uint, c_uint16, c_uint32, c_ushort, c_void_p, cast, sizeof, Structure
 
 
 NLM_F_REQUEST = 1  # It is request message.
@@ -72,10 +72,10 @@ NLMSG_ALIGN = lambda len_: (len_ + NLMSG_ALIGNTO.value - 1) & ~(NLMSG_ALIGNTO.va
 NLMSG_HDRLEN = NLMSG_ALIGN(sizeof(nlmsghdr))
 NLMSG_LENGTH = lambda len_: len_ + NLMSG_ALIGN(NLMSG_HDRLEN)
 NLMSG_SPACE = lambda len_: NLMSG_ALIGN(NLMSG_LENGTH(len_))
-#define NLMSG_DATA(nlh)  ((void*)(((char*)nlh) + NLMSG_LENGTH(0)))
+NLMSG_DATA = lambda nlh: cast(byref(nlh, NLMSG_LENGTH(0)), c_void_p)
 #define NLMSG_NEXT(nlh,len)	 ((len) -= NLMSG_ALIGN((nlh)->nlmsg_len), (struct nlmsghdr*)(((char*)(nlh)) + NLMSG_ALIGN((nlh)->nlmsg_len)))
-#define NLMSG_OK(nlh,len) ((len) >= (int)sizeof(struct nlmsghdr) && (nlh)->nlmsg_len >= sizeof(struct nlmsghdr) && (nlh)->nlmsg_len <= (len))
-#define NLMSG_PAYLOAD(nlh,len) ((nlh)->nlmsg_len - NLMSG_SPACE((len)))
+NLMSG_OK = lambda nlh, len_: len_ >= sizeof(nlmsghdr) and sizeof(nlmsghdr) <= nlh.contents.nlmsg_len <= len_
+NLMSG_PAYLOAD = lambda nlh, len_: nlh.nlmsg_len - NLMSG_SPACE(len_)
 NLMSG_NOOP = 0x1  # Nothing.
 NLMSG_ERROR = 0x2  # Error.
 NLMSG_DONE = 0x3  # End of a dump.

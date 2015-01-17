@@ -12,12 +12,43 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
+from ctypes import cast, POINTER
+
 from libnl.errno import NLE_OBJ_NOTFOUND
 from libnl.genl.family import genl_family_alloc
-from libnl.linux_private.genetlink import GENL_ID_CTRL
-from libnl.msg import nlmsg_alloc, NL_AUTO_PORT, NL_AUTO_SEQ
+from libnl.handlers import NL_CB_CUSTOM, NL_CB_VALID, NL_SKIP, NL_STOP
+from libnl.linux_private.genetlink import (
+    CTRL_ATTR_FAMILY_NAME, CTRL_ATTR_FAMILY_ID, CTRL_ATTR_MAX, CTRL_ATTR_MCAST_GROUPS, CTRL_CMD_GETFAMILY, GENL_ID_CTRL
+)
+from libnl.msg import NL_AUTO_PORT, NL_AUTO_SEQ, nlmsg_alloc
 from libnl.netlink_private.netlink import BUG
 from libnl.nl import nl_send_auto_complete
+from libnl.types import genl_family
+
+
+def probe_response(msg, arg):
+    """Process responses from from the query sent by genl_ctrl_probe_by_name.
+    https://github.com/thom311/libnl/blob/master/lib/genl/ctrl.c#L203
+
+    Process returned messages, filling out the missing information in the genl_family structure.
+
+    Positional arguments:
+    msg -- netlink message object.
+    arg -- argument passed on through caller.
+
+    Returns:
+    Indicator to keep processing frames or not.
+    """
+    tb = POINTER(nlattr)
+    nlh = nlmsg_hdr(msg)
+    ret = cast(arg, POINTER(genl_family))
+    if genlmsg_parse(nlh, 0, tb, CTRL_ATTR_MAX, ctrl_policy):
+        return NL_SKIP
+    if tb[CTRL_ATTR_FAMILY_ID]:
+        genl_family_set_id(ret, nla_get_u16(tb[CTRL_ATTR_FAMILY_ID]))
+    if tb[CTRL_ATTR_MCAST_GROUPS] and parse_mcast_grps(ret, tb[CTRL_ATTR_MCAST_GROUPS]) < 0:
+        return NL_SKIP
+    return NL_STOP
 
 
 def genl_ctrl_probe_by_name(sk, name):

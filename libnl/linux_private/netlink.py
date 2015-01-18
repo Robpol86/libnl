@@ -115,3 +115,8 @@ class nlattr(Structure):
         ('nla_len', c_uint16),
         ('nla_type', c_uint16),
     ]
+
+
+NLA_ALIGNTO = 4
+NLA_ALIGN = lambda len_: (len_ + NLA_ALIGNTO - 1) & ~(NLA_ALIGNTO - 1)
+NLA_HDRLEN = int(NLA_ALIGN(sizeof(nlattr)))

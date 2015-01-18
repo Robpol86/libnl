@@ -58,6 +58,13 @@ void netlink_macros() {  // For tests of: libnl.linux_private.netlink
     for (i = 0; i < i_size; i++)
         printf("assert %d == NLMSG_PAYLOAD(nlh, %d)\n", NLMSG_PAYLOAD(nlh, range[i]), range[i]);
     printf("\n");
+
+    // NLA_ALIGN
+    for (i = 0; i < i_size; i++) printf("assert %d == NLA_ALIGN(%d)\n", NLA_ALIGN(range[i]), range[i]);
+    printf("\n");
+
+    // NLA_HDRLEN
+    printf("assert %d == NLA_HDRLEN\n\n", NLA_HDRLEN);
 }
 
 

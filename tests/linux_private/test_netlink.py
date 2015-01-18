@@ -3,7 +3,7 @@ from ctypes import cast, pointer, POINTER, resize, sizeof
 from libnl.handlers import NL_CB_VALID
 from libnl.linux_private.netlink import (
     NLMSG_ALIGN, NLMSG_ALIGNTO, NLMSG_DATA, NLMSG_HDRLEN, NLMSG_LENGTH, NLMSG_PAYLOAD, NLMSG_SPACE, NLM_F_DUMP,
-    NLMSG_OK, nlattr, nlmsghdr
+    NLMSG_OK, nlattr, nlmsghdr, NLA_ALIGN, NLA_HDRLEN
 )
 
 
@@ -67,3 +67,16 @@ def test_nlmsg_payload():
     assert -16 == NLMSG_PAYLOAD(nlh, 19)
     assert -16 == NLMSG_PAYLOAD(nlh, 20)
     assert -48 == NLMSG_PAYLOAD(nlh, 50)
+
+
+def test_nla_align():
+    assert 0 == NLA_ALIGN(0)
+    assert 4 == NLA_ALIGN(1)
+    assert 4 == NLA_ALIGN(2)
+    assert 20 == NLA_ALIGN(19)
+    assert 20 == NLA_ALIGN(20)
+    assert 52 == NLA_ALIGN(50)
+
+
+def test_nla_hdrlen():
+    assert 4 == NLA_HDRLEN

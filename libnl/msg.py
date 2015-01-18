@@ -99,3 +99,18 @@ def nlmsg_alloc_size(max_):
     Newly allocated netlink message.
     """
     return _nlmsg_alloc(max_)
+
+
+def nlmsg_hdr(msg):
+    """Return actual netlink message.
+    https://github.com/thom311/libnl/blob/master/lib/msg.c#L536
+
+    Returns the actual netlink message casted to the type of the netlink message header.
+
+    Positional arguments:
+    msg -- netlink message.
+
+    Returns:
+    A pointer to the netlink message.
+    """
+    return msg.nm_nlh

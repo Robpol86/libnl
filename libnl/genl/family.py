@@ -9,8 +9,6 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-from libnl.types import genl_family
-
 
 def genl_family_alloc():
     """Allocate new Generic Netlink family object.

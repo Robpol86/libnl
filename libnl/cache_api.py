@@ -9,6 +9,7 @@ of the License.
 
 from ctypes import c_char_p, c_int, c_uint, c_void_p, POINTER, Structure
 
+from libnl.genl.mngt import genl_ops
 from libnl.object_api import nl_object_ops
 from libnl.types import nl_cache
 
@@ -108,6 +109,6 @@ nl_cache_ops._fields_ = [
     ('co_obj_ops', POINTER(nl_object_ops)),
     ('co_next', POINTER(nl_cache_ops)),
     ('co_major_cache', POINTER(nl_cache)),
-    ('co_genl', POINTER()),  # POINTER(genl_ops): infinite python import recursion.
+    ('co_genl', POINTER(genl_ops)),
     ('co_msgtypes', nl_msgtype),
 ]

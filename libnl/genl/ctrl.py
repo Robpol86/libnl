@@ -20,10 +20,14 @@ from libnl.handlers import NL_CB_CUSTOM, NL_CB_VALID, NL_SKIP, NL_STOP
 from libnl.linux_private.genetlink import (
     CTRL_ATTR_FAMILY_NAME, CTRL_ATTR_FAMILY_ID, CTRL_ATTR_MAX, CTRL_ATTR_MCAST_GROUPS, CTRL_CMD_GETFAMILY, GENL_ID_CTRL
 )
-from libnl.msg import NL_AUTO_PORT, NL_AUTO_SEQ, nlmsg_alloc
+from libnl.linux_private.netlink import nlattr
+from libnl.msg import NL_AUTO_PORT, NL_AUTO_SEQ, nlmsg_alloc, nlmsg_hdr
 from libnl.netlink_private.netlink import BUG
 from libnl.nl import nl_send_auto_complete
 from libnl.types import genl_family
+
+
+#ctrl_policy = nla_policy * (CTRL_ATTR_MAX + 1)
 
 
 def probe_response(msg, arg):

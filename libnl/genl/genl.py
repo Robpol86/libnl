@@ -12,7 +12,7 @@ from ctypes import byref, cast, POINTER
 from libnl.errno import NLE_MSG_TOOSHORT
 from libnl.linux_private.genetlink import GENL_HDRLEN
 from libnl.linux_private.netlink import NLMSG_ALIGN, NLMSG_HDRLEN, nlmsghdr
-from libnl.msg import nlmsg_data
+from libnl.msg import nlmsg_data, nlmsg_valid_hdr
 
 
 def genlmsg_valid_hdr(nlh, hdrlen):
@@ -74,6 +74,37 @@ def genlmsg_len(gnlh):
     return int(nlh.nlmsg_len - GENL_HDRLEN - NLMSG_HDRLEN)
 
 
+def genlmsg_user_hdr(gnlh):
+    """Return pointer to user header.
+    https://github.com/thom311/libnl/blob/master/lib/genl/genl.c#L242
+
+    Calculates the pointer to the user header based on the pointer to the Generic Netlink message header.
+
+    Positional arguments:
+    gnlh -- generic Netlink message header.
+
+    Returns:
+    Pointer to the user header.
+    """
+    return genlmsg_data(gnlh)
+
+
+def genlmsg_user_data(gnlh, hdrlen):
+    """Return pointer to user data.
+    https://github.com/thom311/libnl/blob/master/lib/genl/genl.c#L259
+
+    Calculates the pointer to the user data based on the pointer to the Generic Netlink message header.
+
+    Positional arguments:
+    gnlh -- generic Netlink message header.
+    hdrlen -- length of user header.
+
+    Returns:
+    Pointer to the user data.
+    """
+    return genlmsg_user_hdr(gnlh) + NLMSG_ALIGN(hdrlen)
+
+
 def genlmsg_attrdata(gnlh, hdrlen):
     """Return pointer to message attributes.
     https://github.com/thom311/libnl/blob/master/lib/genl/genl.c#L287
@@ -102,3 +133,19 @@ def genlmsg_attrlen(gnlh, hdrlen):
     _gml = genlmsg_len(gnlh)
     _nma = NLMSG_ALIGN(hdrlen)
     return int(_gml - _nma)
+
+
+def genlmsg_data(gnlh):
+    """(Deprecated) Return pointer to message payload.
+    https://github.com/thom311/libnl/blob/master/lib/genl/genl.c#L385
+
+    This function has been deprecated due to inability to specify the length of the user header. Use genlmsg_user_hdr()
+    respectively genlmsg_user_data().
+
+    Positional arguments:
+    gnlh -- generic Netlink message header.
+
+    Returns:
+    Pointer to payload section.
+    """
+    return byref(gnlh, GENL_HDRLEN)

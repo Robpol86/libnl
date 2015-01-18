@@ -70,6 +70,21 @@ def nlmsg_data(nlh):
     return byref(nlh, NLMSG_HDRLEN)
 
 
+def nlmsg_valid_hdr(nlh, hdrlen):
+    """https://github.com/thom311/libnl/blob/master/lib/msg.c#L166
+
+    Positional arguments:
+    nlh -- pointer to Netlink message header.
+    hdrlen -- length of user header.
+
+    Returns:
+    0 (False, invalid) or 1 (True, valid).
+    """
+    if nlh.nlmsg_len < nlmsg_msg_size(hdrlen):
+        return 0
+    return 1
+
+
 def _nlmsg_alloc(len_):
     """Message Building/Access.
     https://github.com/thom311/libnl/blob/master/lib/msg.c#L261

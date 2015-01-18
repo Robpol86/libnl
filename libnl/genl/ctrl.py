@@ -17,6 +17,7 @@ from ctypes import cast, POINTER
 from libnl.attr import nla_policy, NLA_U16, NLA_STRING, NLA_U32, NLA_NESTED
 from libnl.errno import NLE_OBJ_NOTFOUND
 from libnl.genl.family import genl_family_alloc
+from libnl.genl.genl import genlmsg_parse
 from libnl.handlers import NL_CB_CUSTOM, NL_CB_VALID, NL_SKIP, NL_STOP
 from libnl.linux_private.genetlink import (
     CTRL_ATTR_FAMILY_NAME, CTRL_ATTR_FAMILY_ID, CTRL_ATTR_MAX, CTRL_ATTR_MCAST_GROUPS, CTRL_CMD_GETFAMILY, GENL_ID_CTRL,

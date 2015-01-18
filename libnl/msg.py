@@ -10,7 +10,7 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-from ctypes import sizeof
+from ctypes import byref, sizeof
 from resource import getpagesize
 
 from libnl.linux_private.netlink import NLMSG_ALIGN, NLMSG_HDRLEN, nlmsghdr
@@ -55,6 +55,19 @@ def nlmsg_total_size(payload):
     Size of netlink message including padding (integer).
     """
     return int(NLMSG_ALIGN(nlmsg_msg_size(payload)))
+
+
+def nlmsg_data(nlh):
+    """Return pointer to message payload.
+    https://github.com/thom311/libnl/blob/master/lib/msg.c#L105
+
+    Positional arguments:
+    nlh -- netlink message header.
+
+    Returns:
+    Pointer to start of message payload.
+    """
+    return byref(nlh, NLMSG_HDRLEN)
 
 
 def _nlmsg_alloc(len_):

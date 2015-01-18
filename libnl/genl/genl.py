@@ -7,9 +7,11 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
+from ctypes import byref, cast, POINTER
+
 from libnl.errno import NLE_MSG_TOOSHORT
 from libnl.linux_private.genetlink import GENL_HDRLEN
-from libnl.linux_private.netlink import NLMSG_ALIGN
+from libnl.linux_private.netlink import NLMSG_ALIGN, NLMSG_HDRLEN, nlmsghdr
 from libnl.msg import nlmsg_data
 
 
@@ -56,3 +58,47 @@ def genlmsg_parse(nlh, hdrlen, tb, maxtype, policy):
     _gad = genlmsg_attrdata(ghdr, hdrlen)
     _gal = genlmsg_attrlen(ghdr, hdrlen)
     return int(nla_parse(tb, maxtype, _gad, _gal, policy))
+
+
+def genlmsg_len(gnlh):
+    """Return length of message payload including user header.
+    https://github.com/thom311/libnl/blob/master/lib/genl/genl.c#L224
+
+    Positional arguments:
+    gnlh -- generic Netlink message header.
+
+    Returns:
+    Length of user payload including an eventual user header in number of bytes.
+    """
+    nlh = cast(byref(gnlh, -NLMSG_HDRLEN), POINTER(nlmsghdr))
+    return int(nlh.nlmsg_len - GENL_HDRLEN - NLMSG_HDRLEN)
+
+
+def genlmsg_attrdata(gnlh, hdrlen):
+    """Return pointer to message attributes.
+    https://github.com/thom311/libnl/blob/master/lib/genl/genl.c#L287
+
+    Positional arguments:
+    gnlh -- generic Netlink message header.
+    hdrlen -- length of user header.
+
+    Returns:
+    Pointer to the start of the message's attributes section.
+    """
+    return genlmsg_user_data(gnlh, hdrlen)
+
+
+def genlmsg_attrlen(gnlh, hdrlen):
+    """Return length of message attributes.
+    https://github.com/thom311/libnl/blob/master/lib/genl/genl.c#L302
+
+    Positional arguments:
+    gnlh -- generic Netlink message header.
+    hdrlen -- length of user header.
+
+    Returns:
+    Length of the message section containing attributes in number of bytes.
+    """
+    _gml = genlmsg_len(gnlh)
+    _nma = NLMSG_ALIGN(hdrlen)
+    return int(_gml - _nma)

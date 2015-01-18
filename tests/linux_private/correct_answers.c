@@ -11,7 +11,7 @@
 #include <netlink/netlink.h>
 
 
-void netlink_py() {  // For tests of: libnl.linux_private.netlink
+void netlink_macros() {  // For tests of: libnl.linux_private.netlink
     int i, range[] = { 0, 1, 2, 19, 20, 50 };
     int i_size = sizeof(range) / sizeof(int);
     struct nlmsghdr *nlh = malloc(sizeof(struct nlmsghdr));
@@ -36,7 +36,16 @@ void netlink_py() {  // For tests of: libnl.linux_private.netlink
     printf("\n");
 
     // NLMSG_DATA
-    // printf("assert %d == NLMSG_DATA(%s)\n\n", NLMSG_DATA(nlh), nlh_repr);
+    struct nlattr *head = (struct nlattr *) (NLMSG_DATA(nlh) + NLMSG_LENGTH(sizeof(struct nlmsghdr)) - NLMSG_ALIGNTO);
+    printf("nlh = %s\n", nlh_repr);
+    printf("_nlmsg_data = NLMSG_DATA(nlh)\n");
+    printf("_size_to = sizeof(_nlmsg_data) + NLMSG_LENGTH(sizeof(nlmsghdr)) - NLMSG_ALIGNTO.value\n");
+    printf("resize(_nlmsg_data, _size_to)\n");
+    printf("head = pointer(cast(_nlmsg_data, POINTER(nlattr)))\n");
+    printf("assert %d == sizeof(head)\n", sizeof(head));
+    // printf("assert %d == int(head.nla_len)\n", head->nla_len);
+    // printf("assert %d == int(head.nla_type)\n", head->nla_type);
+    printf("\n");
 
     // NLMSG_OK
     printf("nlh = %s\n", nlh_repr);
@@ -45,13 +54,14 @@ void netlink_py() {  // For tests of: libnl.linux_private.netlink
     printf("\n");
 
     // NLMSG_PAYLOAD
-    // for (i = 0; i < i_size; i++)
-    //     printf("assert %d == NLMSG_PAYLOAD(%s, %d)\n", NLMSG_PAYLOAD(nlh, range[i]), nlh_repr, range[i]);
-    // printf("\n");
+    printf("nlh = %s\n", nlh_repr);
+    for (i = 0; i < i_size; i++)
+        printf("assert %d == NLMSG_PAYLOAD(nlh, %d)\n", NLMSG_PAYLOAD(nlh, range[i]), range[i]);
+    printf("\n");
 }
 
 
 int main() {
-    netlink_py();
+    netlink_macros();
     return 0;
 }

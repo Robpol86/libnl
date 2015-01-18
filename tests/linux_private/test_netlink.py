@@ -1,8 +1,9 @@
-from ctypes import pointer
+from ctypes import cast, pointer, POINTER, resize, sizeof
 
 from libnl.handlers import NL_CB_VALID
 from libnl.linux_private.netlink import (
-    NLMSG_ALIGN, NLMSG_HDRLEN, NLMSG_LENGTH, NLMSG_SPACE, NLM_F_DUMP, NLMSG_OK, nlmsghdr
+    NLMSG_ALIGN, NLMSG_ALIGNTO, NLMSG_DATA, NLMSG_HDRLEN, NLMSG_LENGTH, NLMSG_PAYLOAD, NLMSG_SPACE, NLM_F_DUMP,
+    NLMSG_OK, nlattr, nlmsghdr
 )
 
 
@@ -37,6 +38,17 @@ def test_nlmsg_space():
     assert 68 == NLMSG_SPACE(50)
 
 
+def test_nlmsg_data():
+    nlh = pointer(nlmsghdr(nlmsg_len=20, nlmsg_type=NL_CB_VALID, nlmsg_flags=NLM_F_DUMP))
+    _nlmsg_data = NLMSG_DATA(nlh)
+    _size_to = sizeof(_nlmsg_data) + NLMSG_LENGTH(sizeof(nlmsghdr)) - NLMSG_ALIGNTO.value
+    resize(_nlmsg_data, _size_to)
+    head = pointer(cast(_nlmsg_data, POINTER(nlattr)))
+    assert 4 == sizeof(head)
+    #assert 0 == int(head.nla_len)  # TODO fix this later.
+    #assert 0 == int(head.nla_type)
+
+
 def test_nlmsg_ok():
     nlh = pointer(nlmsghdr(nlmsg_len=20, nlmsg_type=NL_CB_VALID, nlmsg_flags=NLM_F_DUMP))
     assert False == NLMSG_OK(nlh, 0)
@@ -45,3 +57,13 @@ def test_nlmsg_ok():
     assert False == NLMSG_OK(nlh, 19)
     assert True == NLMSG_OK(nlh, 20)
     assert True == NLMSG_OK(nlh, 50)
+
+
+def test_nlmsg_payload():
+    nlh = pointer(nlmsghdr(nlmsg_len=20, nlmsg_type=NL_CB_VALID, nlmsg_flags=NLM_F_DUMP))
+    assert 4 == NLMSG_PAYLOAD(nlh, 0)
+    assert 0 == NLMSG_PAYLOAD(nlh, 1)
+    assert 0 == NLMSG_PAYLOAD(nlh, 2)
+    assert -16 == NLMSG_PAYLOAD(nlh, 19)
+    assert -16 == NLMSG_PAYLOAD(nlh, 20)
+    assert -48 == NLMSG_PAYLOAD(nlh, 50)

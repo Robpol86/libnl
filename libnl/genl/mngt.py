@@ -10,7 +10,7 @@ of the License.
 from ctypes import c_char_p, c_int, c_uint, POINTER, Structure
 
 from libnl.attr import nla_policy
-from libnl.cache_api import nl_cache_ops
+#from libnl.cache_api import nl_cache_ops
 from libnl.list import nl_list_head
 
 
@@ -53,7 +53,7 @@ class genl_ops(Structure):
         ('o_hdrsize', c_uint),
         ('o_id', c_int),
         ('o_name', c_char_p),
-        ('o_cache_ops', POINTER(nl_cache_ops)),
+        #('o_cache_ops', POINTER(nl_cache_ops)),
         ('o_cmds', POINTER(genl_cmd)),
         ('o_ncmds', c_int),
         ('o_list', nl_list_head),

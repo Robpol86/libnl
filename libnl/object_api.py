@@ -10,7 +10,7 @@ of the License.
 from ctypes import c_char_p, c_int, c_size_t, c_uint32, c_void_p, POINTER, Structure
 
 from libnl.list import nl_list_head
-from libnl.types import nl_cache
+#from libnl.types import nl_cache
 
 
 class nl_object_ops(Structure):
@@ -62,7 +62,7 @@ class nl_object_ops(Structure):
 NLHDR_COMMON = [
     ('ce_refcnt', c_int),
     ('ce_ops', POINTER(nl_object_ops)),
-    ('ce_cache', POINTER(nl_cache)),
+    #('ce_cache', POINTER(nl_cache)),
     ('ce_list', nl_list_head),
     ('ce_msgtype', c_int),
     ('ce_flags', c_int),

@@ -14,11 +14,13 @@ of the License.
 
 from ctypes import cast, POINTER
 
+from libnl.attr import nla_policy, NLA_U16, NLA_STRING, NLA_U32, NLA_NESTED
 from libnl.errno import NLE_OBJ_NOTFOUND
 from libnl.genl.family import genl_family_alloc
 from libnl.handlers import NL_CB_CUSTOM, NL_CB_VALID, NL_SKIP, NL_STOP
 from libnl.linux_private.genetlink import (
-    CTRL_ATTR_FAMILY_NAME, CTRL_ATTR_FAMILY_ID, CTRL_ATTR_MAX, CTRL_ATTR_MCAST_GROUPS, CTRL_CMD_GETFAMILY, GENL_ID_CTRL
+    CTRL_ATTR_FAMILY_NAME, CTRL_ATTR_FAMILY_ID, CTRL_ATTR_MAX, CTRL_ATTR_MCAST_GROUPS, CTRL_CMD_GETFAMILY, GENL_ID_CTRL,
+    GENL_NAMSIZ
 )
 from libnl.linux_private.netlink import nlattr
 from libnl.msg import NL_AUTO_PORT, NL_AUTO_SEQ, nlmsg_alloc, nlmsg_hdr
@@ -26,8 +28,17 @@ from libnl.netlink_private.netlink import BUG
 from libnl.nl import nl_send_auto_complete
 from libnl.types import genl_family
 
-
-#ctrl_policy = nla_policy * (CTRL_ATTR_MAX + 1)
+_pycs = lambda x: x  # Suppress PyCharm inspection. Does nothing, just passes through.
+ctrl_policy = _pycs(nla_policy * (CTRL_ATTR_MAX + 1))(
+    nla_policy(),
+    nla_policy(type=NLA_U16),  # CTRL_ATTR_FAMILY_ID
+    nla_policy(type=NLA_STRING, maxlen=GENL_NAMSIZ),  # CTRL_ATTR_FAMILY_NAME
+    nla_policy(type=NLA_U32),  # CTRL_ATTR_VERSION
+    nla_policy(type=NLA_U32),  # CTRL_ATTR_HDRSIZE
+    nla_policy(type=NLA_U32),  # CTRL_ATTR_MAXATTR
+    nla_policy(type=NLA_NESTED),  # CTRL_ATTR_OPS
+    nla_policy(type=NLA_NESTED),  # CTRL_ATTR_MCAST_GROUPS
+)
 
 
 def probe_response(msg, arg):

@@ -18,57 +18,43 @@ void netlink_macros() {  // For tests of: libnl.linux_private.netlink
     nlh->nlmsg_len = 20;
     nlh->nlmsg_type = NL_CB_VALID;
     nlh->nlmsg_flags = NLM_F_DUMP;
-    static char nlh_repr[] = "pointer(nlmsghdr(nlmsg_len=20, nlmsg_type=NL_CB_VALID, nlmsg_flags=NLM_F_DUMP))";
 
     // NLMSG_ALIGN
-    for (i = 0; i < i_size; i++) printf("assert %d == NLMSG_ALIGN(%d)\n", NLMSG_ALIGN(range[i]), range[i]);
-    printf("\n");
+    for (i = 0; i < i_size; i++) printf("\"NLMSG_ALIGN(%d)\": %d,\n", range[i], NLMSG_ALIGN(range[i]));
 
     // NLMSG_HDRLEN
-    printf("assert %d == NLMSG_HDRLEN\n\n", NLMSG_HDRLEN);
+    printf("\"NLMSG_HDRLEN\": %d,\n", NLMSG_HDRLEN);
 
     // NLMSG_LENGTH
-    for (i = 0; i < i_size; i++) printf("assert %d == NLMSG_LENGTH(%d)\n", NLMSG_LENGTH(range[i]), range[i]);
-    printf("\n");
+    for (i = 0; i < i_size; i++) printf("\"NLMSG_LENGTH(%d)\": %d,\n", range[i], NLMSG_LENGTH(range[i]));
 
     // NLMSG_SPACE
-    for (i = 0; i < i_size; i++) printf("assert %d == NLMSG_SPACE(%d)\n", NLMSG_SPACE(range[i]), range[i]);
-    printf("\n");
+    for (i = 0; i < i_size; i++) printf("\"NLMSG_SPACE(%d)\": %d,\n", range[i], NLMSG_SPACE(range[i]));
 
     // NLMSG_DATA
     struct nlattr *head = (struct nlattr *) (NLMSG_DATA(nlh) + NLMSG_LENGTH(sizeof(struct nlmsghdr)) - NLMSG_ALIGNTO);
-    printf("nlh = %s\n", nlh_repr);
-    printf("_nlmsg_data = NLMSG_DATA(nlh)\n");
-    printf("_size_to = sizeof(_nlmsg_data) + NLMSG_LENGTH(sizeof(nlmsghdr)) - NLMSG_ALIGNTO.value\n");
-    printf("resize(_nlmsg_data, _size_to)\n");
-    printf("head = pointer(cast(_nlmsg_data, POINTER(nlattr)))\n");
-    printf("assert %d == sizeof(head)\n", sizeof(head));
-    // printf("assert %d == int(head.nla_len)\n", head->nla_len);
-    // printf("assert %d == int(head.nla_type)\n", head->nla_type);
-    printf("\n");
+    printf("\"NLMSG_DATA(sizeof)\": %d,\n", sizeof(head));
+    printf("\"NLMSG_DATA(len)\": %d,\n", head->nla_len);
+    printf("\"NLMSG_DATA(type)\": %d,\n", head->nla_type);
 
     // NLMSG_OK
-    printf("nlh = %s\n", nlh_repr);
     for (i = 0; i < i_size; i++)
-        printf("assert %s == NLMSG_OK(nlh, %d)\n", NLMSG_OK(nlh, range[i]) ? "True" : "False", range[i]);
-    printf("\n");
+        printf("\"NLMSG_OK(nlh, %d)\": %s,\n", range[i], NLMSG_OK(nlh, range[i]) ? "true" : "false");
 
     // NLMSG_PAYLOAD
-    printf("nlh = %s\n", nlh_repr);
-    for (i = 0; i < i_size; i++)
-        printf("assert %d == NLMSG_PAYLOAD(nlh, %d)\n", NLMSG_PAYLOAD(nlh, range[i]), range[i]);
-    printf("\n");
+    for (i = 0; i < i_size; i++) printf("\"NLMSG_PAYLOAD(nlh, %d)\": %d,\n", range[i], NLMSG_PAYLOAD(nlh, range[i]));
 
     // NLA_ALIGN
-    for (i = 0; i < i_size; i++) printf("assert %d == NLA_ALIGN(%d)\n", NLA_ALIGN(range[i]), range[i]);
-    printf("\n");
+    for (i = 0; i < i_size; i++) printf("\"NLA_ALIGN(%d)\": %d,\n", range[i], NLA_ALIGN(range[i]));
 
     // NLA_HDRLEN
-    printf("assert %d == NLA_HDRLEN\n\n", NLA_HDRLEN);
+    printf("\"NLA_HDRLEN\": %d,\n", NLA_HDRLEN);
 }
 
 
 int main() {
+    printf("{\n");
     netlink_macros();
+    printf("\"end\": null}\n");
     return 0;
 }

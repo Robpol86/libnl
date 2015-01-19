@@ -38,13 +38,13 @@ def test_nlmsg_space():
     assert 68 == NLMSG_SPACE(50)
 
 
-def test_nlmsg_data():
+def test_nlmsg_data(correct_answers):
     nlh = pointer(nlmsghdr(nlmsg_len=20, nlmsg_type=NL_CB_VALID, nlmsg_flags=NLM_F_DUMP))
     _nlmsg_data = NLMSG_DATA(nlh)
     _size_to = sizeof(_nlmsg_data) + NLMSG_LENGTH(sizeof(nlmsghdr)) - NLMSG_ALIGNTO.value
     resize(_nlmsg_data, _size_to)
     head = pointer(cast(_nlmsg_data, POINTER(nlattr)))
-    assert 4 == sizeof(head)
+    assert correct_answers['NLMSG_DATA(sizeof)'] == sizeof(head)
     #assert 0 == int(head.nla_len)  # TODO fix this later.
     #assert 0 == int(head.nla_type)
 

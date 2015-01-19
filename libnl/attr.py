@@ -8,10 +8,11 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-from ctypes import byref, c_int, c_uint16, cast, memset, POINTER, sizeof, Structure
+from ctypes import byref, c_int, c_uint8, c_uint16, c_uint32, c_uint64, cast, memset, POINTER, sizeof, Structure
 
 from libnl.errno import NLE_INVAL, NLE_RANGE
-from libnl.linux_private.netlink import nlattr, NLA_ALIGN, NLA_TYPE_MASK
+from libnl.linux_private.netlink import nlattr, NLA_ALIGN, NLA_TYPE_MASK, NLA_HDRLEN
+from libnl.misc import define_struct
 from libnl.netlink_private.netlink import BUG
 
 NLA_UNSPEC = 0  # Unspecified type, binary data chunk.
@@ -23,6 +24,16 @@ NLA_STRING = 5  # NUL terminated character string.
 NLA_FLAG = 6  # Flag.
 NLA_MSECS = 7  # Micro seconds (64bit).
 NLA_NESTED = 8  # Nested attributes.
+NLA_TYPE_MAX = NLA_NESTED
+
+nla_attr_minlen = define_struct(c_uint16, NLA_TYPE_MAX + 1, {
+    NLA_U8: sizeof(c_uint8),
+    NLA_U16: sizeof(c_uint16),
+    NLA_U32: sizeof(c_uint32),
+    NLA_U64: sizeof(c_uint64),
+    NLA_STRING: 1,
+    NLA_FLAG: 0,
+})
 
 
 class nla_policy(Structure):
@@ -52,6 +63,32 @@ def nla_type(nla):
     Type of attribute.
     """
     return nla.nla_type & NLA_TYPE_MASK
+
+
+def nla_data(nla):
+    """Return pointer to the payload section.
+    https://github.com/thom311/libnl/blob/master/lib/attr.c#L120
+
+    Positional arguments:
+    nla -- attribute.
+
+    Returns:
+    Pointer to start of payload section.
+    """
+    return byref(nla, NLA_HDRLEN)
+
+
+def nla_len(nla):
+    """Return length of the payload.
+    https://github.com/thom311/libnl/blob/master/lib/attr.c#L131
+
+    Positional arguments:
+    nla -- attribute.
+
+    Returns:
+    Length of payload in bytes.
+    """
+    return int(nla.nla_len - NLA_HDRLEN)
 
 
 def nla_ok(nla, remaining):

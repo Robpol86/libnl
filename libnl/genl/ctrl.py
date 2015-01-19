@@ -21,25 +21,24 @@ from libnl.genl.genl import genlmsg_parse
 from libnl.handlers import NL_CB_CUSTOM, NL_CB_VALID, NL_SKIP, NL_STOP
 from libnl.linux_private.genetlink import (
     CTRL_ATTR_FAMILY_NAME, CTRL_ATTR_FAMILY_ID, CTRL_ATTR_MAX, CTRL_ATTR_MCAST_GROUPS, CTRL_CMD_GETFAMILY, GENL_ID_CTRL,
-    GENL_NAMSIZ
+    GENL_NAMSIZ, CTRL_ATTR_VERSION, CTRL_ATTR_HDRSIZE, CTRL_ATTR_MAXATTR, CTRL_ATTR_OPS
 )
 from libnl.linux_private.netlink import nlattr
+from libnl.misc import define_struct
 from libnl.msg import NL_AUTO_PORT, NL_AUTO_SEQ, nlmsg_alloc, nlmsg_hdr
 from libnl.netlink_private.netlink import BUG
 from libnl.nl import nl_send_auto_complete
 from libnl.types import genl_family
 
-_pycs = lambda x: x  # Suppress PyCharm inspection. Does nothing, just passes through.
-ctrl_policy = _pycs(nla_policy * (CTRL_ATTR_MAX + 1))(
-    nla_policy(),
-    nla_policy(type=NLA_U16),  # CTRL_ATTR_FAMILY_ID
-    nla_policy(type=NLA_STRING, maxlen=GENL_NAMSIZ),  # CTRL_ATTR_FAMILY_NAME
-    nla_policy(type=NLA_U32),  # CTRL_ATTR_VERSION
-    nla_policy(type=NLA_U32),  # CTRL_ATTR_HDRSIZE
-    nla_policy(type=NLA_U32),  # CTRL_ATTR_MAXATTR
-    nla_policy(type=NLA_NESTED),  # CTRL_ATTR_OPS
-    nla_policy(type=NLA_NESTED),  # CTRL_ATTR_MCAST_GROUPS
-)
+ctrl_policy = define_struct(nla_policy, CTRL_ATTR_MAX + 1, {
+    CTRL_ATTR_FAMILY_ID: nla_policy(type=NLA_U16),
+    CTRL_ATTR_FAMILY_NAME: nla_policy(type=NLA_STRING, maxlen=GENL_NAMSIZ),
+    CTRL_ATTR_VERSION: nla_policy(type=NLA_U32),
+    CTRL_ATTR_HDRSIZE: nla_policy(type=NLA_U32),
+    CTRL_ATTR_MAXATTR: nla_policy(type=NLA_U32),
+    CTRL_ATTR_OPS: nla_policy(type=NLA_NESTED),
+    CTRL_ATTR_MCAST_GROUPS: nla_policy(type=NLA_NESTED),
+})
 
 
 def probe_response(msg, arg):

@@ -17,6 +17,7 @@ from socket import AF_NETLINK, SOCK_CLOEXEC, SOCK_RAW, socket
 
 from libnl.errno_ import NLE_BAD_SOCK, NLE_AF_NOSUPPORT
 from libnl.error import nl_syserr2nlerr
+from libnl.msg import nlmsg_alloc_simple, nlmsg_append
 from libnl.netlink_private.types import NL_OWN_PORT
 
 
@@ -159,3 +160,31 @@ def nl_send_auto(sk, msg):
     nl_complete_msg()  # TODO
     nl_send()
 nl_send_auto_complete = nl_send_auto
+
+
+def nl_send_simple(sk, type_, flags, buf=None):
+    """Construct and transmit a Netlink message.
+    https://github.com/thom311/libnl/blob/master/lib/nl.c#L549
+
+    Allocates a new Netlink message based on `type_` and `flags`. If `buf` is specified that payload will be appended to
+    the message.
+
+    Sends out the message using `nl_send_auto()`.
+
+    Positional arguments:
+    sk -- netlink socket (nl_sock class instance).
+    type_ -- netlink message type (integer).
+    flags -- netlink message flags (integer).
+
+    Keyword arguments:
+    buf -- payload data.
+
+    Returns:
+    Number of characters sent on success or a negative error code.
+    """
+    msg = nlmsg_alloc_simple(type_, flags)
+    if buf:
+        err = nlmsg_append(msg, buf)
+        if err < 0:
+            return err
+    return nl_send_auto(sk, msg)

@@ -78,6 +78,60 @@ def nlmsg_alloc():
     return nm
 
 
+def nlmsg_inherit(hdr=None):
+    """Allocate a new netlink message and inherit netlink message header.
+    https://github.com/thom311/libnl/blob/master/lib/msg.c#L322
+
+    Allocates a new netlink message and inherits the original message header. If `hdr` is not None it will be used as a
+    template for the netlink message header, otherwise the header is left blank.
+
+    Keyword arguments:
+    hdr -- netlink message header template (nlmsghdr class instance).
+
+    Returns:
+    Newly allocated netlink message (nl_msg class instance) or None.
+    """
+    nm = nlmsg_alloc()
+    if hdr:
+        new = nm.nm_nlh
+        new.nlmsg_type = hdr.nlmsg_type
+        new.nlmsg_flags = hdr.nlmsg_flags
+        new.nlmsg_seq = hdr.nlmsg_seq
+        new.nlmsg_pid = hdr.nlmsg_pid
+    return nm
+
+
+def nlmsg_alloc_simple(nlmsgtype, flags):
+    """Allocate a new netlink message.
+    https://github.com/thom311/libnl/blob/master/lib/msg.c#L346
+
+    Positional arguments:
+    nlmsgtype -- netlink message type (integer).
+    flags -- message flags (integer).
+
+    Returns:
+    Newly allocated netlink message (nl_msg class instance) or None.
+    """
+    nlh = nlmsghdr(nlmsg_type=nlmsgtype, nlmsg_flags=flags)
+    msg = nlmsg_inherit(nlh)
+    return msg
+
+
+def nlmsg_append(msg, data):
+    """Append data to tail of a netlink message.
+    https://github.com/thom311/libnl/blob/master/lib/msg.c#L442
+
+    Positional arguments:
+    msg -- netlink message (nl_msg class instance).
+    data -- data to add.
+
+    Returns:
+    0 on success or a negative error code.
+    """
+    msg.nm_nlh.payload.append(data)
+    return 0
+
+
 def nlmsg_hdr(msg):
     """Return actual netlink message.
     https://github.com/thom311/libnl/blob/master/lib/msg.c#L536

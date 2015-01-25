@@ -51,7 +51,7 @@ class nl_sock(object):
     Instance variables:
     s_local -- struct sockaddr_nl.
     s_peer -- struct sockaddr_nl.
-    s_fd -- returns None if the socket has not been opened, or the socket's file descriptor integer.
+    s_fd -- returns -1 if the socket has not been opened, or the socket's file descriptor integer.
     s_proto -- int.
     s_seq_next -- unsigned int.
     s_seq_expect -- unsigned int.
@@ -74,7 +74,7 @@ class nl_sock(object):
 
     @property
     def s_fd(self):
-        return None if self.socket_instance is None else self.socket_instance.fileno()
+        return -1 if self.socket_instance is None else self.socket_instance.fileno()
 
 
 class nl_cache(Structure):

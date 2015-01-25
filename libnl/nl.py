@@ -13,6 +13,51 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
+from socket import AF_NETLINK, SOCK_CLOEXEC, SOCK_RAW, socket
+
+from libnl.errno_ import NLE_BAD_SOCK, NLE_AF_NOSUPPORT
+from libnl.error import nl_syserr2nlerr
+from libnl.types import NL_OWN_PORT
+
+
+def nl_connect(sk, protocol):
+    """Create file descriptor and bind socket.
+    https://github.com/thom311/libnl/blob/master/lib/nl.c#L96
+
+    Creates a new Netlink socket using `socket.socket()` and binds the socket to the protocol and local port specified
+    in the `sk` socket object (if any). Fails if the socket is already connected.
+
+    Positional arguments:
+    sk -- netlink socket (nl_sock class instance).
+    protocol -- netlink protocol to use (integer).
+
+    Returns:
+    0 on success or a negative error code.
+    """
+    flags = SOCK_CLOEXEC
+    if sk.s_fd != -1:
+        return -NLE_BAD_SOCK
+    try:
+        sk.socket_instance = socket(AF_NETLINK, SOCK_RAW | flags, protocol)
+    except OSError as exc:
+        return -nl_syserr2nlerr(exc.errno)
+
+    if not sk.s_local.nl_pid:
+        sk.s_flags &= ~NL_OWN_PORT
+    try:
+        sk.socket_instance.bind((sk.s_local.nl_pid, sk.s_local.nl_groups))
+    except OSError as exc:
+        sk.socket_instance.close()
+        return -nl_syserr2nlerr(exc.errno)
+    sk.s_local.nl_pid = sk.socket_instance.getsockname()[1]
+
+    if sk.s_local.nl_family != AF_NETLINK:
+        sk.socket_instance.close()
+        return -NLE_AF_NOSUPPORT
+
+    sk.s_proto = protocol
+    return 0
+
 
 def nl_sendmsg(sk, msg, hdr):
     """Transmit Netlink message using sendmsg().

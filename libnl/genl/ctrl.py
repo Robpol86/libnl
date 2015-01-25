@@ -15,7 +15,7 @@ of the License.
 from ctypes import cast, POINTER
 
 from libnl.attr import NLA_U16, NLA_STRING, NLA_U32, NLA_NESTED
-from libnl.errno import NLE_OBJ_NOTFOUND
+from libnl.errno_ import NLE_OBJ_NOTFOUND
 from libnl.genl.family import genl_family_alloc
 from libnl.genl.genl import genlmsg_parse
 from libnl.handlers import NL_CB_CUSTOM, NL_CB_VALID, NL_SKIP, NL_STOP

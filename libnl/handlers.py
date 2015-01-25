@@ -8,7 +8,7 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-from libnl.errno import NLE_RANGE
+from libnl.errno_ import NLE_RANGE
 from libnl.netlink_private.netlink import BUG
 from libnl.types import nl_cb
 

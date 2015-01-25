@@ -5,6 +5,7 @@ import pytest
 
 from libnl.handlers import NL_OK, NL_CB_VALID, NL_CB_CUSTOM
 from libnl.linux_private.netlink import NLM_F_REQUEST, NLM_F_DUMP
+from libnl.nl import nl_connect
 from libnl.socket_ import nl_socket_alloc
 
 

@@ -10,7 +10,7 @@ of the License.
 from ctypes import byref, cast, POINTER
 
 from libnl.attr import nla_parse
-from libnl.errno import NLE_MSG_TOOSHORT
+from libnl.errno_ import NLE_MSG_TOOSHORT
 from libnl.linux_private.genetlink import GENL_HDRLEN
 from libnl.linux_private.netlink import NLMSG_ALIGN, nlmsghdr
 from libnl.msg import nlmsg_data

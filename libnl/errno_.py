@@ -1,5 +1,5 @@
 """Error Numbers (netlink/errno.h).
-https://github.com/thom311/libnl/blob/master/lib/genl/ctrl.c
+https://github.com/thom311/libnl/blob/master/include/netlink/errno.h
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -42,3 +42,4 @@ NLE_PARSE_ERR = 30
 NLE_NODEV = 31
 NLE_IMMUTABLE = 32
 NLE_DUMP_INTR = 33
+NLE_MAX = NLE_DUMP_INTR

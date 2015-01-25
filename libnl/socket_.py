@@ -9,7 +9,7 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-from socket import AF_NETLINK, SOCK_DGRAM, socket
+from socket import AF_NETLINK
 from libnl.handlers import NL_CB_DEFAULT, nl_cb_alloc
 
 from libnl.linux_private.netlink import NETLINK_ADD_MEMBERSHIP, NETLINK_DROP_MEMBERSHIP
@@ -19,7 +19,7 @@ SOL_NETLINK = 270
 
 
 def nl_socket_alloc(cb=None):
-    """Allocate new netlink socket.
+    """Allocate new netlink socket. Does not yet actually open a socket.
     https://github.com/thom311/libnl/blob/master/lib/socket.c#L206
 
     Keyword arguments:
@@ -39,7 +39,6 @@ def nl_socket_alloc(cb=None):
     sk.s_local.nl_family = AF_NETLINK
     sk.s_peer.nl_family = AF_NETLINK
     sk.s_flags = NL_OWN_PORT  # The port is 0 (unspecified), meaning NL_OWN_PORT.
-    sk.socket_instance = socket(AF_NETLINK, SOCK_DGRAM)
     return sk
 
 

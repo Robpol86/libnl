@@ -10,7 +10,7 @@ of the License.
 
 from ctypes import byref, c_int, c_uint32, cast, memset, POINTER, sizeof
 
-from libnl.errno import NLE_INVAL, NLE_RANGE
+from libnl.errno_ import NLE_INVAL, NLE_RANGE
 from libnl.linux_private.netlink import nlattr, NLA_ALIGN, NLA_TYPE_MASK
 from libnl.netlink_private.netlink import BUG
 

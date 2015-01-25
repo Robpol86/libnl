@@ -10,20 +10,36 @@ of the License.
 """
 
 from socket import AF_NETLINK, SOCK_DGRAM, socket
+from libnl.handlers import NL_CB_DEFAULT, nl_cb_alloc
 
 from libnl.linux_private.netlink import NETLINK_ADD_MEMBERSHIP, NETLINK_DROP_MEMBERSHIP
+from libnl.types import nl_sock, NL_OWN_PORT
 
 SOL_NETLINK = 270
 
 
-def nl_socket_alloc():
+def nl_socket_alloc(cb=None):
     """Allocate new netlink socket.
     https://github.com/thom311/libnl/blob/master/lib/socket.c#L206
 
+    Keyword arguments:
+    cb -- custom callback handler.
+
     Returns:
-    Newly allocated netlink socket or NULL.
+    Newly allocated netlink socket (nl_sock class instance) or None.
     """
-    sk = socket(AF_NETLINK, SOCK_DGRAM)  # TODO
+    # Allocate the callback.
+    cb = cb or nl_cb_alloc(NL_CB_DEFAULT)
+    if not cb:
+        return None
+
+    # Allocate the socket.
+    sk = nl_sock()
+    sk.s_cb = cb
+    sk.s_local.nl_family = AF_NETLINK
+    sk.s_peer.nl_family = AF_NETLINK
+    sk.s_flags = NL_OWN_PORT  # The port is 0 (unspecified), meaning NL_OWN_PORT.
+    sk.socket_instance = socket(AF_NETLINK, SOCK_DGRAM)
     return sk
 
 

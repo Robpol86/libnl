@@ -1,4 +1,5 @@
 from ctypes import c_int
+from socket import AF_PACKET, NETLINK_ROUTE
 
 import pytest
 

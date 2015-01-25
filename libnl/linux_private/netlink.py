@@ -42,7 +42,7 @@ NLM_F_CREATE = 0x400  # Create, if it does not exist.
 NLM_F_APPEND = 0x800  # Add to end of list.
 
 
-class sockaddr_nl(Structure):
+class sockaddr_nl(object):
     """https://github.com/thom311/libnl/blob/master/include/linux-private/linux/netlink.h#L31
 
     Fields:
@@ -51,12 +51,33 @@ class sockaddr_nl(Structure):
     nl_pid -- port ID.
     nl_groups -- multicast groups mask.
     """
-    _fields_ = [
-        ('nl_family', c_ushort),
-        ('nl_pad', c_ushort),
-        ('nl_pid', c_uint32),
-        ('nl_groups', c_uint32),
-    ]
+
+    def __init__(self):
+        self._nl_pid = None
+        self._nl_groups = None
+        self.nl_family = None
+
+    @property
+    def nl_pid(self):
+        return self._nl_pid
+
+    @nl_pid.setter
+    def nl_pid(self, value):
+        if value is None:
+            self._nl_pid = None
+            return
+        self._nl_pid = value if isinstance(value, c_uint32) else c_uint32(value)
+
+    @property
+    def nl_groups(self):
+        return self._nl_groups
+
+    @nl_groups.setter
+    def nl_groups(self, value):
+        if value is None:
+            self._nl_groups = None
+            return
+        self._nl_groups = value if isinstance(value, c_uint32) else c_uint32(value)
 
 
 class nlmsghdr(object):

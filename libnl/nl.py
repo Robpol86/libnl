@@ -17,8 +17,11 @@ from socket import AF_NETLINK, SOCK_CLOEXEC, SOCK_RAW, socket
 
 from libnl.errno_ import NLE_BAD_SOCK, NLE_AF_NOSUPPORT
 from libnl.error import nl_syserr2nlerr
+from libnl.handlers import NL_OK, NL_CB_MSG_OUT
 from libnl.linux_private.netlink import NLM_F_REQUEST, NLM_F_ACK
-from libnl.msg import nlmsg_alloc_simple, nlmsg_append, NL_AUTO_PORT
+from libnl.misc import msghdr
+from libnl.msg import nlmsg_alloc_simple, nlmsg_append, NL_AUTO_PORT, nlmsg_get_dst, nlmsg_get_creds, nlmsg_set_src
+from libnl.netlink_private.netlink import nl_cb_call
 from libnl.netlink_private.types import NL_OWN_PORT, NL_NO_AUTO_ACK
 from libnl.socket_ import nl_socket_get_local_port
 
@@ -63,10 +66,10 @@ def nl_connect(sk, protocol):
 
 
 def nl_sendmsg(sk, msg, hdr):
-    """Transmit Netlink message using sendmsg().
+    """Transmit Netlink message using socket.sendmsg().
     https://github.com/thom311/libnl/blob/master/lib/nl.c#L299
 
-    Transmits the message specified in \c hdr over the Netlink socket using the sendmsg() system call.
+    Transmits the message specified in `hdr` over the Netlink socket using the sendmsg() system call.
 
     ATTENTION: The `msg` argument will *not* be used to derive the message payload that is being sent out. The `msg`
     argument is *only* passed on to the `NL_CB_MSG_OUT` callback. The caller is responsible to initialize the `hdr`
@@ -82,43 +85,64 @@ def nl_sendmsg(sk, msg, hdr):
     object.
 
     Positional arguments:
-    sk -- generic netlink socket.
-    msg -- netlink message to be sent.
-    hdr -- sendmsg() message header.
+    sk -- netlink socket (nl_sock class instance).
+    msg -- netlink message to be sent (nl_msg class instance).
+    hdr -- sendmsg() message header (msghdr class instance).
 
     Returns:
     Number of bytes sent on success or a negative error code.
     """
-    sk.sendmsg()  # TODO
+    if sk.s_fd < 0:
+        return -NLE_BAD_SOCK
+    nlmsg_set_src(msg, sk.s_local)
+    cb = sk.s_cb
+    if cb.cb_set[NL_CB_MSG_OUT]:
+        ret = nl_cb_call(cb, NL_CB_MSG_OUT, msg)
+        if ret != NL_OK:
+            return ret
+    try:
+        ret = sk.socket_instance.sendmsg(hdr)  # TODO
+    except OSError as exc:
+        return -nl_syserr2nlerr(exc.errno)
+    return ret
 
 
-def nl_send_iovec(sk, msg, iov, iovlen):
-    """Transmit Netlink message (taking IO vector)
+def nl_send_iovec(sk, msg):
+    """Transmit Netlink message.
     https://github.com/thom311/libnl/blob/master/lib/nl.c#L342
 
-    This function is identical to nl_send() except that instead of taking a `struct nl_msg` object it takes an IO
-    vector. Please see the description of `nl_send()`.
+    This function is identical to nl_send().
 
     This function triggers the `NL_CB_MSG_OUT` callback.
 
     Positional arguments:
-    sk -- generic netlink socket.
-    msg -- netlink message to be sent.
-    iov -- IO vector to be sent.
-    iovlen -- number of struct iovec to be sent.
+    sk -- netlink socket (nl_sock class instance).
+    msg -- netlink message (nl_msg class instance).
 
     Returns:
     Number of bytes sent on success or a negative error code.
     """
-    nl_sendmsg()  # TODO
+    hdr = msghdr(msg_name=sk.s_peer)
+
+    # Overwrite destination if specified in the message itself, defaults to the peer address of the socket.
+    dst = nlmsg_get_dst(msg)
+    if dst.nl_family == AF_NETLINK:
+        hdr.msg_name = dst
+
+    # Add credentials if present.
+    creds = nlmsg_get_creds(msg)
+    if creds:
+        raise NotImplementedError  # TODO
+
+    return nl_sendmsg(sk, msg, hdr)
 
 
 def nl_send(sk, msg):
     """Transmit Netlink message.
     https://github.com/thom311/libnl/blob/master/lib/nl.c#L416
 
-    Transmits the Netlink message `msg` over the Netlink socket using the `sendmsg()` system call. This function is
-    based on `nl_send_iovec()` but takes care of initializing a `struct iovec` based on the `msg` object.
+    Transmits the Netlink message `msg` over the Netlink socket using the `socket.sendmsg()`. This function is based on
+    `nl_send_iovec()`.
 
     The message is addressed to the peer as specified in the socket by either the nl_socket_set_peer_port() or
     nl_socket_set_peer_groups() function. The peer address can be overwritten by specifying an address in the `msg`
@@ -135,13 +159,16 @@ def nl_send(sk, msg):
     needed flags or filling out port numbers.
 
     Positional arguments:
-    sk -- generic netlink socket.
-    msg -- netlink message to be sent.
+    sk -- netlink socket (nl_sock class instance).
+    msg -- netlink message (nl_msg class instance).
 
     Returns:
     Number of bytes sent on success or a negative error code.
     """
-    nl_send_iovec()  # TODO
+    cb = sk.s_cb
+    if cb.cb_send_ow:
+        return cb.cb_send_ow(sk, msg)
+    return nl_send_iovec(sk, msg)
 
 
 def nl_complete_msg(sk, msg):

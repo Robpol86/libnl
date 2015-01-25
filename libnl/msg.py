@@ -14,7 +14,7 @@ from ctypes import byref
 
 from libnl.attr import nla_for_each_attr
 from libnl.linux_private.netlink import NLMSG_ALIGN, nlmsghdr
-from libnl.netlink_private.types import nl_msg
+from libnl.netlink_private.types import nl_msg, NL_MSG_CRED_PRESENT
 
 NL_AUTO_PORT = 0
 NL_AUTO_PID = NL_AUTO_PORT
@@ -159,3 +159,20 @@ def nlmsg_hdr(msg):
     A pointer to the netlink message.
     """
     return msg.nm_nlh
+
+
+def nlmsg_set_src(msg, addr):
+    """https://github.com/thom311/libnl/blob/master/lib/msg.c#L599"""
+    msg.nm_src = addr
+
+
+def nlmsg_get_dst(msg):
+    """https://github.com/thom311/libnl/blob/master/lib/msg.c#L614"""
+    return msg.nm_dst
+
+
+def nlmsg_get_creds(msg):
+    """https://github.com/thom311/libnl/blob/master/lib/msg.c#L625"""
+    if msg.nm_flags & NL_MSG_CRED_PRESENT:
+        return msg.nm_creds
+    return None

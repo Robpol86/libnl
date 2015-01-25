@@ -30,3 +30,21 @@ def define_struct(type_, maxlen, fields):
         padded_fields.append(fields.get(i, null_ptr))
     array = array_type(*padded_fields)
     return array
+
+
+class msghdr(object):
+    """msghdr struct from sys/socket.h
+    http://pubs.opengroup.org/onlinepubs/7908799/xns/syssocket.h.html
+
+    Instance variables:
+    msg_name -- optional address.
+    msg_iov -- scatter/gather array.
+    msg_control -- ancillary data.
+    msg_flags -- flags on received message.
+    """
+
+    def __init__(self, msg_name=None, msg_iov=None, msg_control=None, msg_flags=None):
+        self.msg_name = msg_name
+        self.msg_iov = msg_iov
+        self.msg_control = msg_control
+        self.msg_flags = msg_flags

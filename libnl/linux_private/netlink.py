@@ -7,7 +7,7 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-from ctypes import c_int, c_uint, c_uint16, c_uint32, c_ushort, c_void_p, cast, pointer, resize, sizeof, Structure
+from ctypes import c_uint, c_uint16, c_uint32, resize, sizeof
 
 
 def _increase(ptr, offset):
@@ -74,36 +74,36 @@ class nlmsghdr(object):
     @property
     def nlmsg_type(self):
         """message content."""
-        return self._nlmsg_type
+        return self._nlmsg_type.value
 
     @nlmsg_type.setter
     def nlmsg_type(self, value):
         if value is None:
-            self._nlmsg_type = None
+            self._nlmsg_type = c_uint16()
             return
         self._nlmsg_type = value if isinstance(value, c_uint16) else c_uint16(value)
 
     @property
     def nlmsg_flags(self):
         """additional flags."""
-        return self._nlmsg_flags
+        return self._nlmsg_flags.value
 
     @nlmsg_flags.setter
     def nlmsg_flags(self, value):
         if value is None:
-            self._nlmsg_flags = None
+            self._nlmsg_flags = c_uint16()
             return
         self._nlmsg_flags = value if isinstance(value, c_uint16) else c_uint16(value)
 
     @property
     def nlmsg_pid(self):
         """sending process port ID."""
-        return self._nlmsg_pid
+        return self._nlmsg_pid.value
 
     @nlmsg_pid.setter
     def nlmsg_pid(self, value):
         if value is None:
-            self._nlmsg_pid = None
+            self._nlmsg_pid = c_uint32()
             return
         self._nlmsg_pid = value if isinstance(value, c_uint32) else c_uint32(value)
 
@@ -157,12 +157,12 @@ class nlattr(object):
     @property
     def nla_type(self):
         """c_uint16 attribute type (e.g. NL80211_ATTR_SCAN_SSIDS)."""
-        return self._nla_type
+        return self._nla_type.value
 
     @nla_type.setter
     def nla_type(self, value):
         if value is None:
-            self._nla_type = None
+            self._nla_type = c_uint16()
             return
         self._nla_type = value if isinstance(value, c_uint16) else c_uint16(value)
 

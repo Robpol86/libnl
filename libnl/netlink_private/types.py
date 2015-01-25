@@ -35,7 +35,7 @@ class nl_cb(object):  # TODO
     cb_recvmsgs_ow -- TODO
     cb_recv_ow -- TODO
     cb_send_ow -- call this function instead of nl_send_iovec() in nl_send(). Args are (sk, msg).
-    cb_active -- TODO
+    cb_active -- current callback type (e.g. NL_CB_MSG_OUT). Modified before every callback function call.
     """
 
     def __init__(self):

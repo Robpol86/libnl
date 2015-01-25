@@ -30,6 +30,12 @@ class nl_cb(object):  # TODO
     Instance variables:
     cb_set -- dictionary of callback functions (values), indexed by callback type (keys).
     cb_args -- dictionary of arguments to be passed to callback functions (values), indexed by callback type (keys).
+    cb_err -- error callback function.
+    cb_err_arg -- argument to be passed to error callback function.
+    cb_recvmsgs_ow -- TODO
+    cb_recv_ow -- TODO
+    cb_send_ow -- call this function instead of nl_send_iovec() in nl_send(). Args are (sk, msg).
+    cb_active -- TODO
     """
 
     def __init__(self):
@@ -40,7 +46,6 @@ class nl_cb(object):  # TODO
         self.cb_recvmsgs_ow = None
         self.cb_recv_ow = None
         self.cb_send_ow = None
-        self.cb_refcnt = None
         self.cb_active = None
 
 

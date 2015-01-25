@@ -12,6 +12,7 @@ of the License.
 
 from ctypes import byref
 
+from libnl.attr import nla_for_each_attr
 from libnl.linux_private.netlink import NLMSG_ALIGN, nlmsghdr
 from libnl.netlink_private.types import nl_msg
 
@@ -62,6 +63,19 @@ def nlmsg_data(nlh):
     return byref(nlh, NLMSG_HDRLEN)
 
 
+def nlmsg_for_each_attr(nlh):
+    """Iterate over a stream of attributes in a message.
+    https://github.com/thom311/libnl/blob/master/include/netlink/msg.h#L123
+
+    Positional arguments:
+    nlh -- netlink message header (nlmsghdr class instance).
+
+    Returns:
+    Generator yielding nl_attr instances.
+    """
+    return nla_for_each_attr(nlh.payload)
+
+
 def nlmsg_alloc():
     """Instantiate a new netlink message.
     https://github.com/thom311/libnl/blob/master/lib/msg.c#L299
@@ -96,7 +110,7 @@ def nlmsg_inherit(hdr=None):
         new = nm.nm_nlh
         new.nlmsg_type = hdr.nlmsg_type
         new.nlmsg_flags = hdr.nlmsg_flags
-        new.nlmsg_seq = hdr.nlmsg_seq
+        #new.nlmsg_seq = hdr.nlmsg_seq
         new.nlmsg_pid = hdr.nlmsg_pid
     return nm
 

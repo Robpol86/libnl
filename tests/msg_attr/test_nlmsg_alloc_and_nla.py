@@ -1,5 +1,5 @@
 from libnl.attr import nla_type, nla_put_u32, nla_get_u32
-from libnl.msg import nlmsg_alloc, nlmsg_hdr
+from libnl.msg import nlmsg_alloc, nlmsg_hdr, nlmsg_for_each_attr
 
 
 def test_nla_put_get_u32():
@@ -29,7 +29,7 @@ def test_nla_put_get_u32():
         nla_put_u32(msg, i, range_[i])
     nlh = nlmsg_hdr(msg)
     i = 0
-    for nla in nlh.attrs:
+    for nla in nlmsg_for_each_attr(nlh):
         assert i == nla_type(nla)
         assert range_[i] == nla_get_u32(nla)
         i += 1

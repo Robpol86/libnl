@@ -53,9 +53,9 @@ class sockaddr_nl(object):
     """
 
     def __init__(self):
+        self.nl_family = None
         self.nl_pid = 0
         self.nl_groups = 0
-        self.nl_family = None
 
 
 class nlmsghdr(object):
@@ -66,7 +66,7 @@ class nlmsghdr(object):
         self._nlmsg_flags = None
         self._nlmsg_pid = None
 
-        self.attrs = list()
+        self.payload = list()
         self.nlmsg_type = nlmsg_type
         self.nlmsg_flags = nlmsg_flags
         self.nlmsg_pid = nlmsg_pid

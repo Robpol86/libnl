@@ -122,7 +122,6 @@ def nl_cb_alloc(kind):
     if kind > NL_CB_KIND_MAX:
         return None
     cb = nl_cb()
-    cb.cb_refcnt = 1
     cb.cb_active = NL_CB_TYPE_MAX + 1
     for i in range(NL_CB_TYPE_MAX):
         nl_cb_set(cb, i, kind, None, None)
@@ -132,7 +131,6 @@ def nl_cb_alloc(kind):
 
 def nl_cb_get(cb):
     """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L244"""
-    cb.cb_refcnt += 1
     return cb
 
 

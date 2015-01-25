@@ -11,7 +11,7 @@ of the License.
 from ctypes import byref, c_int, c_uint32, cast, memset, POINTER, sizeof
 
 from libnl.errno_ import NLE_INVAL, NLE_RANGE
-from libnl.linux_private.netlink import nlattr, NLA_ALIGN, NLA_TYPE_MASK
+from libnl.linux_private.netlink import nlattr, NLA_ALIGN, NLA_TYPE_MASK, nlmsghdr
 from libnl.netlink_private.netlink import BUG
 
 NLA_UNSPEC = 0  # Unspecified type, binary data chunk.
@@ -172,6 +172,19 @@ def nla_parse(tb, maxtype, head, len_, policy):
     return 0
 
 
+def nla_for_each_attr(head):
+    """Iterate over a list of attributes.
+    https://github.com/thom311/libnl/blob/master/include/netlink/attr.h#L262
+
+    Positional arguments:
+    head -- list of attributes.
+
+    Returns:
+    Generator yielding nl_attr instances.
+    """
+    return (a for a in head if isinstance(a, nlmsghdr))
+
+
 def nla_put(msg, attrtype, data):
     """Add a unspecific attribute to netlink message.
     https://github.com/thom311/libnl/blob/master/lib/attr.c#L497
@@ -187,7 +200,7 @@ def nla_put(msg, attrtype, data):
     0 on success or a negative error code.
     """
     nla = nlattr(nla_type=attrtype, payload=data)
-    msg.nm_nlh.attrs.append(nla)
+    msg.nm_nlh.payload.append(nla)
     return 0
 
 

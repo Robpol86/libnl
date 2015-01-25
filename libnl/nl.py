@@ -17,8 +17,10 @@ from socket import AF_NETLINK, SOCK_CLOEXEC, SOCK_RAW, socket
 
 from libnl.errno_ import NLE_BAD_SOCK, NLE_AF_NOSUPPORT
 from libnl.error import nl_syserr2nlerr
-from libnl.msg import nlmsg_alloc_simple, nlmsg_append
-from libnl.netlink_private.types import NL_OWN_PORT
+from libnl.linux_private.netlink import NLM_F_REQUEST, NLM_F_ACK
+from libnl.msg import nlmsg_alloc_simple, nlmsg_append, NL_AUTO_PORT
+from libnl.netlink_private.types import NL_OWN_PORT, NL_NO_AUTO_ACK
+from libnl.socket_ import nl_socket_get_local_port
 
 
 def nl_connect(sk, protocol):
@@ -142,6 +144,33 @@ def nl_send(sk, msg):
     nl_send_iovec()  # TODO
 
 
+def nl_complete_msg(sk, msg):
+    """Finalize Netlink message.
+    https://github.com/thom311/libnl/blob/master/lib/nl.c#L450
+
+    This function finalizes a Netlink message by completing the message with desirable flags and values depending on the
+    socket configuration.
+
+    - If not yet filled out, the source address of the message (`nlmsg_pid`) will be set to the local port number of the
+      socket.
+    - If not yet specified, the protocol field of the message will be set to the protocol field of the socket.
+    - The `NLM_F_REQUEST` Netlink message flag will be set.
+    - The `NLM_F_ACK` flag will be set if Auto-ACK mode is enabled on the socket.
+
+    Positional arguments:
+    sk -- netlink socket (nl_sock class instance).
+    msg -- netlink message (nl_msg class instance.
+    """
+    nlh = msg.nm_nlh
+    if nlh.nlmsg_pid == NL_AUTO_PORT:
+        nlh.nlmsg_pid = nl_socket_get_local_port(sk)
+    if msg.nm_protocol == -1:
+        msg.nm_protocol = sk.s_proto
+    nlh.nlmsg_flags |= NLM_F_REQUEST
+    if not sk.s_flags & NL_NO_AUTO_ACK:
+        nlh.nlmsg_flags |= NLM_F_ACK
+
+
 def nl_send_auto(sk, msg):
     """Finalize and transmit Netlink message.
     https://github.com/thom311/libnl/blob/master/lib/nl.c#L485
@@ -151,15 +180,15 @@ def nl_send_auto(sk, msg):
     This function triggers the `NL_CB_MSG_OUT` callback.
 
     Positional arguments:
-    sk -- generic netlink socket.
-    msg -- netlink message to be sent.
+    sk -- netlink socket (nl_sock class instance).
+    msg -- netlink message (nl_msg class instance).
 
     Returns:
     Number of bytes sent on success or a negative error code.
     """
-    nl_complete_msg()  # TODO
-    nl_send()
-nl_send_auto_complete = nl_send_auto
+    nl_complete_msg(sk, msg)
+    nl_send(sk, msg)
+nl_send_auto_complete = nl_send_auto  # Alias.
 
 
 def nl_send_simple(sk, type_, flags, buf=None):

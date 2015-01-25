@@ -28,7 +28,7 @@ from libnl.misc import define_struct
 from libnl.msg import NL_AUTO_PORT, NL_AUTO_SEQ, nlmsg_alloc, nlmsg_hdr
 from libnl.netlink_private.netlink import BUG
 from libnl.nl import nl_send_auto_complete
-from libnl.types import genl_family
+from libnl.netlink_private.types import genl_family
 
 #ctrl_policy = define_struct(nla_policy, CTRL_ATTR_MAX + 1, {
 #    CTRL_ATTR_FAMILY_ID: nla_policy(type=NLA_U16),

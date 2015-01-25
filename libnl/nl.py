@@ -17,7 +17,7 @@ from socket import AF_NETLINK, SOCK_CLOEXEC, SOCK_RAW, socket
 
 from libnl.errno_ import NLE_BAD_SOCK, NLE_AF_NOSUPPORT
 from libnl.error import nl_syserr2nlerr
-from libnl.types import NL_OWN_PORT
+from libnl.netlink_private.types import NL_OWN_PORT
 
 
 def nl_connect(sk, protocol):

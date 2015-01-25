@@ -9,8 +9,7 @@ of the License.
 """
 
 from libnl.errno_ import NLE_RANGE
-from libnl.netlink_private.netlink import BUG
-from libnl.types import nl_cb
+from libnl.netlink_private.types import nl_cb
 
 NL_OK = 0  # Proceed with whatever would come next.
 NL_SKIP = 1  # Skip this message.

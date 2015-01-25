@@ -10,7 +10,7 @@ of the License.
 from ctypes import c_char_p, c_int, c_uint, c_void_p, POINTER, Structure
 
 from libnl.genl.mngt import genl_ops
-from libnl.object_api import nl_object_ops
+from libnl.netlink_private.object_api import nl_object_ops
 #from libnl.types import nl_cache
 
 

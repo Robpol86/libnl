@@ -9,11 +9,11 @@ of the License.
 
 from ctypes import c_char, c_int, c_uint, c_uint16, c_uint32, POINTER, Structure
 
-from libnl.cache_api import nl_cache_ops
+from libnl.netlink_private.cache_api import nl_cache_ops
 from libnl.hashtable import nl_hash_table
 from libnl.linux_private.netlink import sockaddr_nl
 from libnl.list import nl_list_head
-from libnl.object_api import NLHDR_COMMON
+from libnl.netlink_private.object_api import NLHDR_COMMON
 
 NL_SOCK_BUFSIZE_SET = 1 << 0
 NL_SOCK_PASSCRED = 1 << 1

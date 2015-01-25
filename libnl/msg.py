@@ -13,7 +13,7 @@ of the License.
 from ctypes import byref
 
 from libnl.linux_private.netlink import NLMSG_ALIGN, nlmsghdr
-from libnl.types import nl_msg
+from libnl.netlink_private.types import nl_msg
 
 NL_AUTO_PORT = 0
 NL_AUTO_PID = NL_AUTO_PORT

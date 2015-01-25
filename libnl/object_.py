@@ -11,7 +11,7 @@ of the License.
 
 from ctypes import POINTER, sizeof
 
-from libnl.object_api import nl_object
+from libnl.netlink_private.object_api import nl_object
 
 
 def nl_object_alloc(ops):

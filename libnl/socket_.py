@@ -10,10 +10,10 @@ of the License.
 """
 
 from socket import AF_NETLINK
-from libnl.handlers import NL_CB_DEFAULT, nl_cb_alloc
 
+from libnl.handlers import NL_CB_DEFAULT, nl_cb_alloc
 from libnl.linux_private.netlink import NETLINK_ADD_MEMBERSHIP, NETLINK_DROP_MEMBERSHIP
-from libnl.types import nl_sock, NL_OWN_PORT
+from libnl.netlink_private.types import nl_sock, NL_OWN_PORT
 
 SOL_NETLINK = 270
 

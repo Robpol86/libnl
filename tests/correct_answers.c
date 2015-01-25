@@ -9,8 +9,6 @@
  */
 
 #include <netlink/netlink.h>
-#include <netlink/attr.h>
-#include <netlink/msg.h>
 
 
 void netlink_macros() {  // For tests of: libnl.linux_private.netlink
@@ -54,21 +52,9 @@ void netlink_macros() {  // For tests of: libnl.linux_private.netlink
 }
 
 
-void msg_attr() {  // For tests of: libnl.msg and libnl.attr
-    int rem, i, range[] = { 0, 1, 2, 19, 20, 50 };
-    struct nl_msg *msg = nlmsg_alloc();
-    struct nlmsghdr *nlh = nlmsg_hdr(msg);
-    struct nlattr *nla;
-    for (i = 0; i < (sizeof(range) / sizeof(int)); i++) nla_put_u32(msg, i, i + 1);
-    nlmsg_for_each_attr(nla, nlh, 0, rem) printf("nla_type: %d; nla_get_u32: %d\n", nla_type(nla), nla_get_u32(nla));
-    nlmsg_free(msg);
-}
-
-
 int main() {
     printf("{\n");
     netlink_macros();
-    msg_attr();
     printf("\"end\": null}\n");
     return 0;
 }

@@ -12,8 +12,8 @@ from ctypes import byref, cast, POINTER
 from libnl.attr import nla_parse
 from libnl.errno import NLE_MSG_TOOSHORT
 from libnl.linux_private.genetlink import GENL_HDRLEN
-from libnl.linux_private.netlink import NLMSG_ALIGN, NLMSG_HDRLEN, nlmsghdr
-from libnl.msg import nlmsg_data, nlmsg_valid_hdr
+from libnl.linux_private.netlink import NLMSG_ALIGN, nlmsghdr
+from libnl.msg import nlmsg_data
 
 
 def genlmsg_valid_hdr(nlh, hdrlen):

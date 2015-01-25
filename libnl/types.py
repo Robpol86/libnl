@@ -7,13 +7,11 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-from ctypes import c_char, c_int, c_size_t, c_uint, c_uint16, c_uint32, POINTER, Structure
+from ctypes import c_char, c_int, c_uint, c_uint16, c_uint32, POINTER, Structure
 
 from libnl.cache_api import nl_cache_ops
 from libnl.hashtable import nl_hash_table
 from libnl.list import nl_list_head
-from libnl.misc import ucred
-from libnl.linux_private.netlink import nlmsghdr, sockaddr_nl
 from libnl.object_api import NLHDR_COMMON
 
 
@@ -31,18 +29,17 @@ class nl_cache(Structure):
     ]
 
 
-class nl_msg(Structure):
+class nl_msg(object):
     """https://github.com/thom311/libnl/blob/master/include/netlink-private/types.h#L133"""
-    _fields_ = [
-        ('nm_protocol', c_int),
-        ('nm_flags', c_int),
-        ('nm_src', sockaddr_nl),
-        ('nm_dst', sockaddr_nl),
-        ('nm_creds', ucred),
-        ('nm_nlh', nlmsghdr),
-        ('nm_size', c_size_t),
-        ('nm_refcnt', c_int),
-    ]
+
+    def __init__(self):
+        self.nm_protocol = None
+        self.nm_flags = None
+        self.nm_src = None
+        self.nm_dst = None
+        self.nm_creds = None
+        self.nm_nlh = None
+        self.nm_refcnt = None
 
 
 class genl_family(Structure):

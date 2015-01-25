@@ -14,7 +14,7 @@ of the License.
 
 from ctypes import cast, POINTER
 
-from libnl.attr import nla_policy, NLA_U16, NLA_STRING, NLA_U32, NLA_NESTED
+from libnl.attr import NLA_U16, NLA_STRING, NLA_U32, NLA_NESTED
 from libnl.errno import NLE_OBJ_NOTFOUND
 from libnl.genl.family import genl_family_alloc
 from libnl.genl.genl import genlmsg_parse
@@ -30,15 +30,15 @@ from libnl.netlink_private.netlink import BUG
 from libnl.nl import nl_send_auto_complete
 from libnl.types import genl_family
 
-ctrl_policy = define_struct(nla_policy, CTRL_ATTR_MAX + 1, {
-    CTRL_ATTR_FAMILY_ID: nla_policy(type=NLA_U16),
-    CTRL_ATTR_FAMILY_NAME: nla_policy(type=NLA_STRING, maxlen=GENL_NAMSIZ),
-    CTRL_ATTR_VERSION: nla_policy(type=NLA_U32),
-    CTRL_ATTR_HDRSIZE: nla_policy(type=NLA_U32),
-    CTRL_ATTR_MAXATTR: nla_policy(type=NLA_U32),
-    CTRL_ATTR_OPS: nla_policy(type=NLA_NESTED),
-    CTRL_ATTR_MCAST_GROUPS: nla_policy(type=NLA_NESTED),
-})
+#ctrl_policy = define_struct(nla_policy, CTRL_ATTR_MAX + 1, {
+#    CTRL_ATTR_FAMILY_ID: nla_policy(type=NLA_U16),
+#    CTRL_ATTR_FAMILY_NAME: nla_policy(type=NLA_STRING, maxlen=GENL_NAMSIZ),
+#    CTRL_ATTR_VERSION: nla_policy(type=NLA_U32),
+#    CTRL_ATTR_HDRSIZE: nla_policy(type=NLA_U32),
+#    CTRL_ATTR_MAXATTR: nla_policy(type=NLA_U32),
+#    CTRL_ATTR_OPS: nla_policy(type=NLA_NESTED),
+#    CTRL_ATTR_MCAST_GROUPS: nla_policy(type=NLA_NESTED),
+#})
 
 
 def probe_response(msg, arg):

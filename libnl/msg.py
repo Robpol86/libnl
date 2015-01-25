@@ -10,22 +10,14 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-from ctypes import byref, sizeof
-from resource import getpagesize
+from ctypes import byref
 
-from libnl.linux_private.netlink import NLMSG_ALIGN, NLMSG_HDRLEN, nlmsghdr
+from libnl.linux_private.netlink import NLMSG_ALIGN, nlmsghdr
 from libnl.types import nl_msg
 
-default_msg_size = None
 NL_AUTO_PORT = 0
 NL_AUTO_PID = NL_AUTO_PORT
 NL_AUTO_SEQ = 0
-
-
-def init_msg_size():
-    """https://github.com/thom311/libnl/blob/master/lib/msg.c#L38"""
-    global default_msg_size
-    default_msg_size = getpagesize()
 
 
 def nlmsg_size(payload):
@@ -70,63 +62,20 @@ def nlmsg_data(nlh):
     return byref(nlh, NLMSG_HDRLEN)
 
 
-def nlmsg_valid_hdr(nlh, hdrlen):
-    """https://github.com/thom311/libnl/blob/master/lib/msg.c#L166
+def nlmsg_alloc():
+    """Instantiate a new netlink message.
+    https://github.com/thom311/libnl/blob/master/lib/msg.c#L299
 
-    Positional arguments:
-    nlh -- pointer to Netlink message header.
-    hdrlen -- length of user header.
-
-    Returns:
-    0 (False, invalid) or 1 (True, valid).
-    """
-    if nlh.nlmsg_len < nlmsg_msg_size(hdrlen):
-        return 0
-    return 1
-
-
-def _nlmsg_alloc(len_):
-    """Message Building/Access.
-    https://github.com/thom311/libnl/blob/master/lib/msg.c#L261
-
-    Positional arguments:
-    len_ -- payload size.
+    Instantiates a new netlink message without any further payload.
 
     Returns:
     Newly allocated netlink message.
     """
     nm = nl_msg()
-    len_ = sizeof(nlmsghdr) if len_ < sizeof(nlmsghdr) else len_
+    nm.nm_nlh = nlmsghdr()
     nm.nm_refcnt = 1
     nm.nm_protocol = -1
-    nm.nm_size = len_
     return nm
-
-
-def nlmsg_alloc():
-    """Allocate a new netlink message with the default maximum payload size.
-    https://github.com/thom311/libnl/blob/master/lib/msg.c#L299
-
-    Allocates a new netlink message without any further payload. The maximum payload size defaults to PAGESIZE or as
-    otherwise specified with nlmsg_set_default_size().
-
-    Returns:
-    Newly allocated netlink message.
-    """
-    return _nlmsg_alloc(default_msg_size)
-
-
-def nlmsg_alloc_size(max_):
-    """Allocate a new netlink message with maximum payload size specified.
-    https://github.com/thom311/libnl/blob/master/lib/msg.c#L307
-
-    Positional arguments:
-    max_ -- specified maximum payload size.
-
-    Return:
-    Newly allocated netlink message.
-    """
-    return _nlmsg_alloc(max_)
 
 
 def nlmsg_hdr(msg):

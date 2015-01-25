@@ -8,11 +8,10 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-from ctypes import byref, c_int, c_uint8, c_uint16, c_uint32, c_uint64, cast, memset, POINTER, sizeof, Structure
+from ctypes import byref, c_int, c_uint32, cast, memset, POINTER, sizeof
 
 from libnl.errno import NLE_INVAL, NLE_RANGE
-from libnl.linux_private.netlink import nlattr, NLA_ALIGN, NLA_TYPE_MASK, NLA_HDRLEN
-from libnl.misc import define_struct
+from libnl.linux_private.netlink import nlattr, NLA_ALIGN, NLA_TYPE_MASK
 from libnl.netlink_private.netlink import BUG
 
 NLA_UNSPEC = 0  # Unspecified type, binary data chunk.
@@ -26,31 +25,6 @@ NLA_MSECS = 7  # Micro seconds (64bit).
 NLA_NESTED = 8  # Nested attributes.
 NLA_TYPE_MAX = NLA_NESTED
 
-nla_attr_minlen = define_struct(c_uint16, NLA_TYPE_MAX + 1, {
-    NLA_U8: sizeof(c_uint8),
-    NLA_U16: sizeof(c_uint16),
-    NLA_U32: sizeof(c_uint32),
-    NLA_U64: sizeof(c_uint64),
-    NLA_STRING: 1,
-    NLA_FLAG: 0,
-})
-
-
-class nla_policy(Structure):
-    """Attribute validation policy.
-    https://github.com/thom311/libnl/blob/master/include/netlink/attr.h#L60
-
-    Fields:
-    type -- type of attribute or NLA_UNSPEC.
-    minlen -- minimal length of payload required.
-    maxlen -- maximal length of payload allowed.
-    """
-    _fields_ = [
-        ('type', c_uint16),
-        ('minlen', c_uint16),
-        ('maxlen', c_uint16),
-    ]
-
 
 def nla_type(nla):
     """Return type of the attribute.
@@ -62,11 +36,11 @@ def nla_type(nla):
     Returns:
     Type of attribute.
     """
-    return nla.nla_type & NLA_TYPE_MASK
+    return nla.nla_type.value & NLA_TYPE_MASK
 
 
 def nla_data(nla):
-    """Return pointer to the payload section.
+    """Return payload section.
     https://github.com/thom311/libnl/blob/master/lib/attr.c#L120
 
     Positional arguments:
@@ -75,7 +49,7 @@ def nla_data(nla):
     Returns:
     Pointer to start of payload section.
     """
-    return byref(nla, NLA_HDRLEN)
+    return nla.payload
 
 
 def nla_len(nla):
@@ -198,19 +172,46 @@ def nla_parse(tb, maxtype, head, len_, policy):
     return 0
 
 
-def nla_for_each_attr(pos, head, len_, rem):
-    """Iterate over a stream of attributes.
-    https://github.com/thom311/libnl/blob/master/include/netlink/attr.h#L262
+def nla_put(msg, attrtype, data):
+    """Add a unspecific attribute to netlink message.
+    https://github.com/thom311/libnl/blob/master/lib/attr.c#L497
+
+    Copies the provided data into the message as payload of the attribute.
 
     Positional arguments:
-    pos -- loop counter, set to current attribute.
-    head -- head of attribute stream.
-    len_ -- length of attribute stream.
-    rem -- initialized to len_, holds bytes currently remaining in stream.
+    msg -- netlink message.
+    attrtype -- attribute type.
+    data -- data to be used as attribute payload.
 
     Returns:
-    Generator to use in a for loop.
+    0 on success or a negative error code.
     """
-    while nla_ok(head, len_):
-        pos.value = nla_next(pos, rem)
-        yield
+    nla = nlattr(nla_type=attrtype, payload=data)
+    msg.nm_nlh.attrs.append(nla)
+    return 0
+
+
+def nla_put_u32(msg, attrtype, value):
+    """Add 32 bit integer attribute to netlink message.
+    https://github.com/thom311/libnl/blob/master/lib/attr.c#L613
+
+    Positional arguments:
+    msg -- netlink message.
+    attrtype -- attribute type.
+    value -- int() or c_uint32() value to store as payload.
+
+    Returns:
+    0 on success or a negative error code.
+    """
+    return nla_put(msg, attrtype, value if isinstance(value, c_uint32) else c_uint32(value))
+
+
+def nla_get_u32(nla):
+    """Return payload of 32 bit integer attribute as an int().
+    https://github.com/thom311/libnl/blob/master/lib/attr.c#L624
+
+    Returns:
+    Integer from netlink attribute payload.
+    """
+    assert isinstance(nla.payload, c_uint32)
+    return nla.payload.value

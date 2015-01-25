@@ -9,7 +9,6 @@ of the License.
 
 from ctypes import c_char_p, c_int, c_uint, POINTER, Structure
 
-from libnl.attr import nla_policy
 #from libnl.cache_api import nl_cache_ops
 from libnl.list import nl_list_head
 
@@ -32,7 +31,7 @@ class genl_cmd(Structure):
         ('c_name', c_char_p),
         ('c_maxattr', c_int),
         ('c_msg_parser', c_int),
-        ('c_attr_policy', POINTER(nla_policy)),
+        #('c_attr_policy', POINTER(nla_policy)),
     ]
 
 

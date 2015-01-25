@@ -59,34 +59,65 @@ class sockaddr_nl(Structure):
     ]
 
 
-class nlmsghdr(Structure):
-    """https://github.com/thom311/libnl/blob/master/include/linux-private/linux/netlink.h#L38
+class nlmsghdr(object):
+    """https://github.com/thom311/libnl/blob/master/include/linux-private/linux/netlink.h#L38"""
 
-    Fields:
-    nlmsg_len -- length of message including header.
-    nlmsg_type -- message content.
-    nlmsg_flags -- additional flags.
-    nlmsg_seq -- sequence number.
-    nlmsg_pid -- sending process port ID.
-    """
-    _fields_ = [
-        ('nlmsg_len', c_uint32),
-        ('nlmsg_type', c_uint16),
-        ('nlmsg_flags', c_uint16),
-        ('nlmsg_seq', c_uint32),
-        ('nlmsg_pid', c_uint32),
-    ]
+    def __init__(self, nlmsg_type=None, nlmsg_flags=None, nlmsg_pid=None):
+        self._nlmsg_type = None
+        self._nlmsg_flags = None
+        self._nlmsg_pid = None
+
+        self.attrs = list()
+        self.nlmsg_type = nlmsg_type
+        self.nlmsg_flags = nlmsg_flags
+        self.nlmsg_pid = nlmsg_pid
+
+    @property
+    def nlmsg_type(self):
+        """message content."""
+        return self._nlmsg_type
+
+    @nlmsg_type.setter
+    def nlmsg_type(self, value):
+        if value is None:
+            self._nlmsg_type = None
+            return
+        self._nlmsg_type = value if isinstance(value, c_uint16) else c_uint16(value)
+
+    @property
+    def nlmsg_flags(self):
+        """additional flags."""
+        return self._nlmsg_flags
+
+    @nlmsg_flags.setter
+    def nlmsg_flags(self, value):
+        if value is None:
+            self._nlmsg_flags = None
+            return
+        self._nlmsg_flags = value if isinstance(value, c_uint16) else c_uint16(value)
+
+    @property
+    def nlmsg_pid(self):
+        """sending process port ID."""
+        return self._nlmsg_pid
+
+    @nlmsg_pid.setter
+    def nlmsg_pid(self, value):
+        if value is None:
+            self._nlmsg_pid = None
+            return
+        self._nlmsg_pid = value if isinstance(value, c_uint32) else c_uint32(value)
 
 
 NLMSG_ALIGNTO = c_uint(4)
 NLMSG_ALIGN = lambda len_: (len_ + NLMSG_ALIGNTO.value - 1) & ~(NLMSG_ALIGNTO.value - 1)
-NLMSG_HDRLEN = NLMSG_ALIGN(sizeof(nlmsghdr))
-NLMSG_LENGTH = lambda len_: len_ + NLMSG_ALIGN(NLMSG_HDRLEN)
-NLMSG_SPACE = lambda len_: NLMSG_ALIGN(NLMSG_LENGTH(len_))
-NLMSG_DATA = lambda nlh: cast(_increase(pointer(nlh), NLMSG_LENGTH(0)), c_void_p)
+#NLMSG_HDRLEN = NLMSG_ALIGN(sizeof(nlmsghdr))
+#NLMSG_LENGTH = lambda len_: len_ + NLMSG_ALIGN(NLMSG_HDRLEN)
+#NLMSG_SPACE = lambda len_: NLMSG_ALIGN(NLMSG_LENGTH(len_))
+#NLMSG_DATA = lambda nlh: cast(_increase(pointer(nlh), NLMSG_LENGTH(0)), c_void_p)
 #define NLMSG_NEXT(nlh,len)	 ((len) -= NLMSG_ALIGN((nlh)->nlmsg_len), (struct nlmsghdr*)(((char*)(nlh)) + NLMSG_ALIGN((nlh)->nlmsg_len)))
 NLMSG_OK = lambda nlh, len_: len_ >= sizeof(nlmsghdr) and sizeof(nlmsghdr) <= nlh.contents.nlmsg_len <= len_
-NLMSG_PAYLOAD = lambda nlh, len_: nlh.contents.nlmsg_len - NLMSG_SPACE(len_)
+#NLMSG_PAYLOAD = lambda nlh, len_: nlh.contents.nlmsg_len - NLMSG_SPACE(len_)
 NLMSG_NOOP = 0x1  # Nothing.
 NLMSG_ERROR = 0x2  # Error.
 NLMSG_DONE = 0x3  # End of a dump.
@@ -94,12 +125,12 @@ NLMSG_OVERRUN = 0x4  # Data lost.
 NLMSG_MIN_TYPE = 0x10  # < 0x10: reserved control messages.
 
 
-class nlmsgerr(Structure):
-    """https://github.com/thom311/libnl/blob/master/include/linux-private/linux/netlink.h#L95"""
-    _fields_ = [
-        ('error', c_int),
-        ('msg', nlmsghdr),
-    ]
+#class nlmsgerr(Structure):
+#    """https://github.com/thom311/libnl/blob/master/include/linux-private/linux/netlink.h#L95"""
+#    _fields_ = [
+#        ('error', c_int),
+#        ('msg', nlmsghdr),
+#    ]
 
 
 NETLINK_ADD_MEMBERSHIP = 1
@@ -109,12 +140,32 @@ NETLINK_BROADCAST_ERROR = 4
 NETLINK_NO_ENOBUFS = 5
 
 
-class nlattr(Structure):
-    """https://github.com/thom311/libnl/blob/master/include/linux-private/linux/netlink.h#L126"""
-    _fields_ = [
-        ('nla_len', c_uint16),
-        ('nla_type', c_uint16),
-    ]
+class nlattr(object):
+    """https://github.com/thom311/libnl/blob/master/include/linux-private/linux/netlink.h#L126
+
+    Holds a netlink attribute along with a payload/data (such as a c_uint32 instance).
+
+    Instance variables:
+    nla_type -- c_uint16 attribute type (e.g. NL80211_ATTR_SCAN_SSIDS).
+    payload -- data of any type for this attribute.
+    """
+
+    def __init__(self, nla_type=None, payload=None):
+        self._nla_type = None
+        self.nla_type = nla_type
+        self.payload = payload
+
+    @property
+    def nla_type(self):
+        """c_uint16 attribute type (e.g. NL80211_ATTR_SCAN_SSIDS)."""
+        return self._nla_type
+
+    @nla_type.setter
+    def nla_type(self, value):
+        if value is None:
+            self._nla_type = None
+            return
+        self._nla_type = value if isinstance(value, c_uint16) else c_uint16(value)
 
 
 NLA_F_NESTED = 1 << 15
@@ -124,4 +175,4 @@ NLA_TYPE_MASK = ~(NLA_F_NESTED | NLA_F_NET_BYTEORDER)
 
 NLA_ALIGNTO = 4
 NLA_ALIGN = lambda len_: (len_ + NLA_ALIGNTO - 1) & ~(NLA_ALIGNTO - 1)
-NLA_HDRLEN = int(NLA_ALIGN(sizeof(nlattr)))
+#NLA_HDRLEN = int(NLA_ALIGN(sizeof(nlattr)))

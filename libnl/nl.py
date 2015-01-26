@@ -23,7 +23,6 @@ from libnl.misc import msghdr
 from libnl.msg import nlmsg_alloc_simple, nlmsg_append, NL_AUTO_PORT, nlmsg_get_dst, nlmsg_get_creds, nlmsg_set_src
 from libnl.netlink_private.netlink import nl_cb_call
 from libnl.netlink_private.types import NL_OWN_PORT, NL_NO_AUTO_ACK
-from libnl.socket_ import nl_socket_get_local_port
 
 
 def nl_connect(sk, protocol):
@@ -190,7 +189,7 @@ def nl_complete_msg(sk, msg):
     """
     nlh = msg.nm_nlh
     if nlh.nlmsg_pid == NL_AUTO_PORT:
-        nlh.nlmsg_pid = nl_socket_get_local_port(sk)
+        nlh.nlmsg_pid = 0
     if msg.nm_protocol == -1:
         msg.nm_protocol = sk.s_proto
     nlh.nlmsg_flags |= NLM_F_REQUEST

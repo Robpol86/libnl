@@ -185,3 +185,14 @@ def nl_cb_err(cb, kind, func, arg):
         cb.cb_err_arg = arg
 
     return 0
+
+
+def nl_cb_overwrite_send(cb, func):
+    """Overwrite internal calls to nl_send().
+    https://github.com/thom311/libnl/blob/master/lib/handlers.c#L293
+
+    Positional arguments:
+    cb -- callback class instance.
+    func -- replacement callback for nl_send() (a function with args (sk, msg)).
+    """
+    cb.cb_send_ow = func

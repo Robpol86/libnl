@@ -69,10 +69,10 @@ class nl_sock(object):
     def __init__(self):
         self.s_local = sockaddr_nl()
         self.s_peer = sockaddr_nl()
-        self.s_proto = None
-        self.s_seq_next = None
-        self.s_seq_expect = None
-        self.s_flags = None
+        self.s_proto = 0
+        self.s_seq_next = 0
+        self.s_seq_expect = 0
+        self.s_flags = 0
         self.s_cb = None
         self.s_bufsize = None
         self.socket_instance = None
@@ -100,13 +100,13 @@ class nl_msg(object):
     """https://github.com/thom311/libnl/blob/master/include/netlink-private/types.h#L133"""
 
     def __init__(self):
-        self.nm_protocol = None
-        self.nm_flags = None
-        self.nm_src = None
-        self.nm_dst = None
+        self.nm_protocol = 0
+        self.nm_flags = 0
+        self.nm_src = sockaddr_nl()
+        self.nm_dst = sockaddr_nl()
         self.nm_creds = None
         self.nm_nlh = None
-        self.nm_refcnt = None
+        self.nm_refcnt = 0
 
 
 class genl_family(Structure):

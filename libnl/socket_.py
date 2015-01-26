@@ -45,7 +45,7 @@ def nl_socket_alloc(cb=None):
 def nl_socket_get_local_port(sk):
     """https://github.com/thom311/libnl/blob/master/lib/socket.c#L357"""
     if not sk.s_local.nl_pid:
-        raise NotImplementedError  # TODO
+        raise NotImplementedError  # TODO  # just set to 0 for socket.socket() to auto-select.
     return sk.s_local.nl_pid
 
 

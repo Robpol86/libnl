@@ -1,13 +1,10 @@
 import os
 
-import pytest
-
 from libnl.linux_private.netlink import NETLINK_GENERIC, NETLINK_ROUTE
 from libnl.nl import nl_connect
 from libnl.socket_ import nl_socket_alloc, nl_socket_free
 
 
-@pytest.mark.skipif('True')
 def test_nl_connect():
     """// gcc $(pkg-config --cflags --libs libnl-genl-3.0) a.c && ./a.out
     #include <netlink/msg.h>
@@ -156,16 +153,16 @@ def test_nl_connect():
     nl_socket_free(sk)
     assert initial_fd_count == len(os.listdir('/proc/self/fd'))
     assert 16 == sk.s_local.nl_family
-    assert persistent_pid == sk.s_local.nl_pid
+    #assert persistent_pid == sk.s_local.nl_pid  # In C, pointer points to deallocated memory. In Python, leave alone.
     assert 0 == sk.s_local.nl_groups
     assert 16 == sk.s_peer.nl_family
     assert 0 == sk.s_peer.nl_pid
     assert 0 == sk.s_peer.nl_groups
-    assert 0 < sk.s_fd
+    # assert persistent_fd == sk.s_fd  # In C, s_fd is a regular int. In Python, it's a class property.
     assert 0 == sk.s_proto
     assert 1 == sk.s_flags
-    assert 11 == sk.s_cb.cb_active
-    assert sk.s_cb.cb_err is None
+    #assert 11 == sk.s_cb.cb_active  # In C, pointer points to deallocated memory. In Python, leave alone.
+    #assert sk.s_cb.cb_err is None  # In C, pointer points to deallocated memory. In Python, leave alone.
 
     # Re-allocate and connect again, pid should be the same as the previous session.
     sk = nl_socket_alloc()

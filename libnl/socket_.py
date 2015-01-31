@@ -8,12 +8,15 @@ modify it under the terms of the GNU Lesser General Public
 License as published by the Free Software Foundation version 2.1
 of the License.
 """
+from _socket import SOL_SOCKET, SO_SNDBUF, SO_RCVBUF
 
 from socket import AF_NETLINK, socket, SOCK_RAW
+from libnl.errno_ import NLE_BAD_SOCK
+from libnl.error import nl_syserr2nlerr
 
 from libnl.handlers import NL_CB_DEFAULT, nl_cb_alloc
 from libnl.linux_private.netlink import NETLINK_ADD_MEMBERSHIP, NETLINK_DROP_MEMBERSHIP
-from libnl.netlink_private.types import nl_sock, NL_OWN_PORT
+from libnl.netlink_private.types import nl_sock, NL_OWN_PORT, NL_SOCK_BUFSIZE_SET
 
 _PREVIOUS_LOCAL_PORT = None
 SOL_NETLINK = 270
@@ -149,3 +152,37 @@ def nl_socket_drop_membership(sk, group):
     0 on success or a negative error code.
     """
     return nl_socket_drop_memberships(sk, group, 0)
+
+
+def nl_socket_set_buffer_size(sk, rxbuf, txbuf):
+    """Set socket buffer size of netlink socket.
+    https://github.com/thom311/libnl/blob/master/lib/socket.c#L675
+
+    Sets the socket buffer size of a netlink socket to the specified values `rxbuf` and `txbuf`. Providing a value of 0
+    assumes a good default value.
+
+    Positional arguments:
+    sk -- netlink socket (nl_sock class instance).
+    rxbuf -- new receive socket buffer size in bytes (integer).
+    txbuf -- new transmit socket buffer size in bytes (integer).
+
+    Returns:
+    0 on success or a negative error code.
+    """
+    rxbuf = 32768 if rxbuf <= 0 else rxbuf
+    txbuf = 32768 if txbuf <= 0 else txbuf
+    if sk.s_fd == -1:
+        return -NLE_BAD_SOCK
+
+    try:
+        sk.socket_instance.setsockopt(SOL_SOCKET, SO_SNDBUF, txbuf)
+    except OSError as exc:
+        return -nl_syserr2nlerr(exc.errno)
+
+    try:
+        sk.socket_instance.setsockopt(SOL_SOCKET, SO_RCVBUF, rxbuf)
+    except OSError as exc:
+        return -nl_syserr2nlerr(exc.errno)
+
+    sk.s_flags |= NL_SOCK_BUFSIZE_SET
+    return 0

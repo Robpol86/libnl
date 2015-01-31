@@ -22,7 +22,8 @@ from libnl.linux_private.netlink import NLM_F_REQUEST, NLM_F_ACK
 from libnl.misc import msghdr
 from libnl.msg import nlmsg_alloc_simple, nlmsg_append, NL_AUTO_PORT, nlmsg_get_dst, nlmsg_get_creds, nlmsg_set_src
 from libnl.netlink_private.netlink import nl_cb_call
-from libnl.netlink_private.types import NL_NO_AUTO_ACK
+from libnl.netlink_private.types import NL_NO_AUTO_ACK, NL_SOCK_BUFSIZE_SET
+from libnl.socket_ import nl_socket_set_buffer_size
 
 
 def nl_connect(sk, protocol):
@@ -46,6 +47,12 @@ def nl_connect(sk, protocol):
         sk.socket_instance = socket(AF_NETLINK, SOCK_RAW | flags, protocol)
     except OSError as exc:
         return -nl_syserr2nlerr(exc.errno)
+
+    if not sk.s_flags & NL_SOCK_BUFSIZE_SET:
+        err = nl_socket_set_buffer_size(sk, 0, 0)
+        if err < 0:
+            sk.socket_instance.close()
+            return err
 
     try:
         sk.socket_instance.bind((sk.s_local.nl_pid, sk.s_local.nl_groups))

@@ -7,19 +7,10 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-from ctypes import c_uint, c_uint16, c_uint32, resize, sizeof
+from ctypes import c_uint, c_uint16, c_uint32, sizeof
 
-
-def _increase(ptr, offset):
-    """Calls resize() on a sizeof(pointer) then returns that same pointer. Used for ported C macros (to lambdas) below.
-
-    Positional arguments:
-    ptr -- pointer() return value.
-    offset -- integer value to increase size of pointer.
-    """
-    resize(ptr, sizeof(ptr) + offset)
-    return ptr
-
+NETLINK_ROUTE = 0  # Routing/device hook.
+NETLINK_GENERIC = 16
 
 NLM_F_REQUEST = 1  # It is request message.
 NLM_F_MULTI = 2  # Multipart message, terminated by NLMSG_DONE
@@ -27,13 +18,11 @@ NLM_F_ACK = 4  # Reply with ack, with zero or error code
 NLM_F_ECHO = 8  # Echo this request
 NLM_F_DUMP_INTR = 16  # Dump was inconsistent due to sequence change
 
-
 # Modifiers to GET request.
 NLM_F_ROOT = 0x100  # Specify tree root.
 NLM_F_MATCH = 0x200  # Return all matching.
 NLM_F_ATOMIC = 0x400  # Atomic GET.
 NLM_F_DUMP = NLM_F_ROOT | NLM_F_MATCH
-
 
 # Modifiers to NEW request.
 NLM_F_REPLACE = 0x100  # Override existing.

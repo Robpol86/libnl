@@ -22,7 +22,7 @@ from libnl.linux_private.netlink import NLM_F_REQUEST, NLM_F_ACK
 from libnl.misc import msghdr
 from libnl.msg import nlmsg_alloc_simple, nlmsg_append, NL_AUTO_PORT, nlmsg_get_dst, nlmsg_get_creds, nlmsg_set_src
 from libnl.netlink_private.netlink import nl_cb_call
-from libnl.netlink_private.types import NL_OWN_PORT, NL_NO_AUTO_ACK
+from libnl.netlink_private.types import NL_NO_AUTO_ACK
 
 
 def nl_connect(sk, protocol):
@@ -47,14 +47,12 @@ def nl_connect(sk, protocol):
     except OSError as exc:
         return -nl_syserr2nlerr(exc.errno)
 
-    if not sk.s_local.nl_pid:
-        sk.s_flags &= ~NL_OWN_PORT
     try:
         sk.socket_instance.bind((sk.s_local.nl_pid, sk.s_local.nl_groups))
     except OSError as exc:
         sk.socket_instance.close()
         return -nl_syserr2nlerr(exc.errno)
-    sk.s_local.nl_pid = sk.socket_instance.getsockname()[1]
+    sk.s_local.nl_pid = sk.socket_instance.getsockname()[0]
 
     if sk.s_local.nl_family != AF_NETLINK:
         sk.socket_instance.close()

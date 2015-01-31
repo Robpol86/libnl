@@ -9,18 +9,32 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-from socket import AF_NETLINK
+from socket import AF_NETLINK, socket, SOCK_RAW
 
 from libnl.handlers import NL_CB_DEFAULT, nl_cb_alloc
 from libnl.linux_private.netlink import NETLINK_ADD_MEMBERSHIP, NETLINK_DROP_MEMBERSHIP
 from libnl.netlink_private.types import nl_sock, NL_OWN_PORT
 
+_PREVIOUS_LOCAL_PORT = None
 SOL_NETLINK = 270
+
+
+def generate_local_port():
+    """https://github.com/thom311/libnl/blob/master/lib/socket.c#L63"""
+    global _PREVIOUS_LOCAL_PORT
+    if _PREVIOUS_LOCAL_PORT is None:
+        with socket(AF_NETLINK, SOCK_RAW) as s:
+            s.bind((0, 0))
+            _PREVIOUS_LOCAL_PORT = int(s.getsockname()[0])
+    return int(_PREVIOUS_LOCAL_PORT)
 
 
 def nl_socket_alloc(cb=None):
     """Allocate new netlink socket. Does not yet actually open a socket.
     https://github.com/thom311/libnl/blob/master/lib/socket.c#L206
+
+    Also has code for generating local port once.
+    https://github.com/thom311/libnl/blob/master/lib/nl.c#L123
 
     Keyword arguments:
     cb -- custom callback handler.
@@ -39,13 +53,34 @@ def nl_socket_alloc(cb=None):
     sk.s_local.nl_family = AF_NETLINK
     sk.s_peer.nl_family = AF_NETLINK
     sk.s_flags = NL_OWN_PORT  # The port is 0 (unspecified), meaning NL_OWN_PORT.
+
+    # Generate local port.
+    nl_socket_get_local_port(sk)  # I didn't find this in the C source, but during testing I saw this behavior.
+
     return sk
 
 
+def nl_socket_free(sk):
+    """Free a netlink socket (closes the socket).
+    https://github.com/thom311/libnl/blob/master/lib/socket.c#L244
+
+    Positional arguments:
+    sk -- netlink socket (nl_sock class instance).
+    """
+    if sk and sk.socket_instance:
+        sk.socket_instance.close()
+
+
 def nl_socket_get_local_port(sk):
-    """https://github.com/thom311/libnl/blob/master/lib/socket.c#L357"""
+    """https://github.com/thom311/libnl/blob/master/lib/socket.c#L357
+
+    Also https://github.com/thom311/libnl/blob/master/lib/socket.c#L338
+    """
     if not sk.s_local.nl_pid:
-        raise NotImplementedError  # TODO  # just set to 0 for socket.socket() to auto-select.
+        port = generate_local_port()
+        sk.s_flags &= ~NL_OWN_PORT
+        sk.s_local.nl_pid = port
+        return port
     return sk.s_local.nl_pid
 
 
@@ -54,7 +89,7 @@ def nl_socket_add_memberships(sk, *group):
     https://github.com/thom311/libnl/blob/master/lib/socket.c#L417
 
     Joins the specified groups using the modern socket option which is available since kernel version 2.6.14. It allows
-    joining an almost arbitary number of groups without limitation. The list of groups has to be terminated by 0
+    joining an almost arbitrary number of groups without limitation. The list of groups has to be terminated by 0
     (%NFNLGRP_NONE).
 
     Make sure to use the correct group definitions as the older bitmask definitions for nl_join_groups() are likely to

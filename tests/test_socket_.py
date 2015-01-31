@@ -1,5 +1,5 @@
 from libnl.handlers import nl_cb_alloc, NL_CB_VERBOSE
-from libnl.socket_ import nl_socket_alloc
+from libnl.socket_ import nl_socket_alloc, nl_socket_free
 
 
 def test_nl_socket_alloc():
@@ -66,28 +66,30 @@ def test_nl_socket_alloc():
     // addr: sk.s_cb.cb_err = 0xb6f6eb40
     """
     sk = nl_socket_alloc()
-    assert sk.s_local.nl_family == 16
-    assert sk.s_local.nl_pid == 0  # Python's socket.socket() handles selecting a port ID.  # TODO test in nl_connect().
-    assert sk.s_local.nl_groups == 0
-    assert sk.s_peer.nl_family == 16
-    assert sk.s_peer.nl_pid == 0
-    assert sk.s_peer.nl_groups == 0
-    assert sk.s_fd == -1
-    assert sk.s_proto == 0
-    #assert sk.s_flags == 0  # TODO when (c)libnl gets pid, sets this from 4 to 0. (py)libnl doesn't get pid.   ^^^
-    assert sk.s_cb.cb_active == 11
+    assert 16 == sk.s_local.nl_family
+    assert 0 < sk.s_local.nl_pid
+    assert 0 == sk.s_local.nl_groups
+    assert 16 == sk.s_peer.nl_family
+    assert 0 == sk.s_peer.nl_pid
+    assert 0 == sk.s_peer.nl_groups
+    assert -1 == sk.s_fd
+    assert 0 == sk.s_proto
+    assert 0 == sk.s_flags
+    assert 11 == sk.s_cb.cb_active
     assert sk.s_cb.cb_err is None
+    nl_socket_free(sk)
 
     first_pid = int(sk.s_local.nl_pid)
     sk = nl_socket_alloc(nl_cb_alloc(NL_CB_VERBOSE))
-    assert sk.s_local.nl_family == 16
-    assert sk.s_local.nl_pid == first_pid
-    assert sk.s_local.nl_groups == 0
-    assert sk.s_peer.nl_family == 16
-    assert sk.s_peer.nl_pid == 0
-    assert sk.s_peer.nl_groups == 0
-    assert sk.s_fd == -1
-    assert sk.s_proto == 0
-    #assert sk.s_flags == 0  # TODO
-    assert sk.s_cb.cb_active == 11
+    assert 16 == sk.s_local.nl_family
+    assert first_pid == sk.s_local.nl_pid
+    assert 0 == sk.s_local.nl_groups
+    assert 16 == sk.s_peer.nl_family
+    assert 0 == sk.s_peer.nl_pid
+    assert 0 == sk.s_peer.nl_groups
+    assert -1 == sk.s_fd
+    assert 0 == sk.s_proto
+    assert 0 == sk.s_flags
+    assert 11 == sk.s_cb.cb_active
     assert sk.s_cb.cb_err is not None
+    nl_socket_free(sk)

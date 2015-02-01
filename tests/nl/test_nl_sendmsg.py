@@ -59,9 +59,18 @@ def test_default(tcp_server):
     assert [iov + b'\0'] == tcp_server.data
 
 
-@pytest.mark.skipif('True')
 def test_error_nle_bad_sock():
-    pass
+    sk = nl_socket_alloc()
+    msg = nlmsg_alloc_simple(0, 0)
+    nl_connect(sk, NETLINK_ROUTE)
+    sk.socket_instance.close()
+    nl_complete_msg(sk, msg)
+
+    message = 'Hello World!\n'
+    iov = bytes(message.encode('ascii'))
+    hdr = msghdr(msg_iov=iov)
+
+    assert -3 == nl_sendmsg(sk, msg, hdr)
 
 
 @pytest.mark.skipif('True')

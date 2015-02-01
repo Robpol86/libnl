@@ -2,6 +2,7 @@ import json
 import os
 import socketserver
 import threading
+import time
 
 import pytest
 
@@ -22,6 +23,20 @@ def tcp_server(request):
     """Starts up a TCP server in a thread."""
     data = list()
 
+    class Getter(object):
+        def __init__(self, t, s, d):
+            self.thread = t
+            self.server =s
+            self._data = d
+
+        @property
+        def data(self):
+            for i in range(50):
+                if self._data:
+                    break
+                time.sleep(0.1)
+            return self._data
+
     class TCPHandler(socketserver.BaseRequestHandler):
         def handle(self):
             data.append(self.request.recv(25))
@@ -37,4 +52,4 @@ def tcp_server(request):
         assert not thread.is_alive()
     request.addfinalizer(fin)
 
-    return thread, server, data
+    return Getter(thread, server, data)

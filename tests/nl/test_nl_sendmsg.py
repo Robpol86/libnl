@@ -1,8 +1,8 @@
 import socket
 
 import pytest
-from libnl.linux_private.netlink import NETLINK_ROUTE
 
+from libnl.linux_private.netlink import NETLINK_ROUTE
 from libnl.misc import msghdr
 from libnl.msg import nlmsg_alloc_simple
 from libnl.nl import nl_connect, nl_complete_msg, nl_sendmsg
@@ -47,7 +47,7 @@ def test_default(tcp_server):
     nl_connect(sk, NETLINK_ROUTE)
     sk.socket_instance.close()
     sk.socket_instance = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sk.socket_instance.connect(tcp_server[1].server_address)
+    sk.socket_instance.connect(tcp_server.server.server_address)
     sk.s_local.nl_pid = 0
     nl_complete_msg(sk, msg)
 
@@ -56,7 +56,7 @@ def test_default(tcp_server):
     hdr = msghdr(msg_iov=iov)
 
     assert 14 == nl_sendmsg(sk, msg, hdr)
-    assert [iov + b'\0'] == tcp_server[2]
+    assert [iov + b'\0'] == tcp_server.data
 
 
 @pytest.mark.skipif('True')

@@ -70,10 +70,10 @@ def nl_connect(sk, protocol):
 
 
 def nl_sendmsg(sk, msg, hdr):
-    """Transmit Netlink message using socket.sendmsg().
+    """Transmit Netlink message using socket.sendmsg|sendto|send().
     https://github.com/thom311/libnl/blob/master/lib/nl.c#L299
 
-    Transmits the message specified in `hdr` over the Netlink socket using the sendmsg() system call.
+    Transmits the message specified in `hdr` over the Netlink socket using Python's socket.sendmsg().
 
     ATTENTION: The `msg` argument will *not* be used to derive the message payload that is being sent out. The `msg`
     argument is *only* passed on to the `NL_CB_MSG_OUT` callback. The caller is responsible to initialize the `hdr`
@@ -105,7 +105,12 @@ def nl_sendmsg(sk, msg, hdr):
         if ret != NL_OK:
             return ret
     try:
-        ret = sk.socket_instance.sendmsg(hdr)  # TODO
+        if hdr.msg_control:
+            ret = sk.socket_instance.sendmsg([hdr.msg_iov + b'\0'], hdr.msg_control, hdr.msg_flags, hdr.msg_name)
+        elif hdr.msg_name:
+            ret = sk.socket_instance.sendto(hdr.msg_iov + b'\0', hdr.msg_flags, hdr.msg_name)
+        else:
+            ret = sk.socket_instance.send(hdr.msg_iov + b'\0', hdr.msg_flags)
     except OSError as exc:
         return -nl_syserr2nlerr(exc.errno)
     return ret

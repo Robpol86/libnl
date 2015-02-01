@@ -38,12 +38,12 @@ class msghdr(object):
 
     Instance variables:
     msg_name -- optional address.
-    msg_iov -- scatter/gather array.
+    msg_iov -- bytes() instance to send (payload data).
     msg_control -- ancillary data.
     msg_flags -- flags on received message.
     """
 
-    def __init__(self, msg_name=None, msg_iov=None, msg_control=None, msg_flags=None):
+    def __init__(self, msg_name=None, msg_iov=None, msg_control=None, msg_flags=0):
         self.msg_name = msg_name
         self.msg_iov = msg_iov
         self.msg_control = msg_control

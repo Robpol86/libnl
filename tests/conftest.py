@@ -1,5 +1,7 @@
-import os
 import json
+import os
+import socketserver
+import threading
 
 import pytest
 
@@ -13,3 +15,26 @@ def correct_answers():
         contents = f.read(10000)
     parsed = json.loads(contents)
     return parsed
+
+
+@pytest.fixture(scope='function')
+def tcp_server(request):
+    """Starts up a TCP server in a thread."""
+    data = list()
+
+    class TCPHandler(socketserver.BaseRequestHandler):
+        def handle(self):
+            data.append(self.request.recv(25))
+
+    server = socketserver.TCPServer(('', 0), TCPHandler)
+    thread = threading.Thread(target=server.serve_forever)
+    thread.daemon = True
+    thread.start()
+
+    def fin():
+        server.socket.close()
+        server.shutdown()
+        assert not thread.is_alive()
+    request.addfinalizer(fin)
+
+    return thread, server, data

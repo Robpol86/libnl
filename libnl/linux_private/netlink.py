@@ -46,6 +46,9 @@ class sockaddr_nl(object):
         self.nl_pid = 0
         self.nl_groups = 0
 
+    def __iter__(self):
+        return iter((self.nl_pid, self.nl_groups))
+
 
 class nlmsghdr(object):
     """https://github.com/thom311/libnl/blob/master/include/linux-private/linux/netlink.h#L38"""

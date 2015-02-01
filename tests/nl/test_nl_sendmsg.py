@@ -1,7 +1,5 @@
 import socket
 
-import pytest
-
 from libnl.linux_private.netlink import NETLINK_ROUTE
 from libnl.misc import msghdr
 from libnl.msg import nlmsg_alloc_simple
@@ -71,18 +69,3 @@ def test_error_nle_bad_sock():
     hdr = msghdr(msg_iov=iov)
 
     assert -3 == nl_sendmsg(sk, msg, hdr)
-
-
-@pytest.mark.skipif('True')
-def test_error_cb_not_nl_ok():
-    pass
-
-
-@pytest.mark.skipif('True')
-def test_error_nlerr():
-    pass
-
-
-@pytest.mark.skipif('True')
-def test_nl_cb_msg_out():
-    pass

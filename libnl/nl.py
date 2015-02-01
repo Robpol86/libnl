@@ -20,7 +20,8 @@ from libnl.error import nl_syserr2nlerr
 from libnl.handlers import NL_OK, NL_CB_MSG_OUT
 from libnl.linux_private.netlink import NLM_F_REQUEST, NLM_F_ACK
 from libnl.misc import msghdr
-from libnl.msg import nlmsg_alloc_simple, nlmsg_append, NL_AUTO_PORT, nlmsg_get_dst, nlmsg_get_creds, nlmsg_set_src
+from libnl.msg import (nlmsg_alloc_simple, nlmsg_append, NL_AUTO_PORT, nlmsg_get_dst, nlmsg_get_creds, nlmsg_set_src,
+                       nlmsg_hdr)
 from libnl.netlink_private.netlink import nl_cb_call
 from libnl.netlink_private.types import NL_NO_AUTO_ACK, NL_SOCK_BUFSIZE_SET
 from libnl.socket_ import nl_socket_set_buffer_size, nl_socket_get_local_port
@@ -104,11 +105,17 @@ def nl_sendmsg(sk, msg, hdr):
         ret = nl_cb_call(cb, NL_CB_MSG_OUT, msg)
         if ret != NL_OK:
             return ret
+
+    if hdr.msg_name and hdr.msg_name != (0, 0) and hdr.msg_name != sk.socket_instance.getsockname:
+        address = hdr.msg_name
+    else:
+        address = None
+
     try:
         if hdr.msg_control:
-            ret = sk.socket_instance.sendmsg([hdr.msg_iov + b'\0'], hdr.msg_control, hdr.msg_flags, hdr.msg_name)
+            ret = sk.socket_instance.sendmsg([hdr.msg_iov + b'\0'], hdr.msg_control, hdr.msg_flags, address)
         elif hdr.msg_name:
-            ret = sk.socket_instance.sendto(hdr.msg_iov + b'\0', hdr.msg_flags, hdr.msg_name)
+            ret = sk.socket_instance.sendto(hdr.msg_iov + b'\0', hdr.msg_flags, address)
         else:
             ret = sk.socket_instance.send(hdr.msg_iov + b'\0', hdr.msg_flags)
     except OSError as exc:
@@ -116,7 +123,7 @@ def nl_sendmsg(sk, msg, hdr):
     return ret
 
 
-def nl_send_iovec(sk, msg):
+def nl_send_iovec(sk, msg, iov):
     """Transmit Netlink message.
     https://github.com/thom311/libnl/blob/master/lib/nl.c#L342
 
@@ -127,11 +134,12 @@ def nl_send_iovec(sk, msg):
     Positional arguments:
     sk -- netlink socket (nl_sock class instance).
     msg -- netlink message (nl_msg class instance).
+    iov -- bytes() instance to be sent (data payload).
 
     Returns:
     Number of bytes sent on success or a negative error code.
     """
-    hdr = msghdr(msg_name=sk.s_peer)
+    hdr = msghdr(msg_name=sk.s_peer, msg_iov=iov)
 
     # Overwrite destination if specified in the message itself, defaults to the peer address of the socket.
     dst = nlmsg_get_dst(msg)
@@ -177,7 +185,8 @@ def nl_send(sk, msg):
     cb = sk.s_cb
     if cb.cb_send_ow:
         return cb.cb_send_ow(sk, msg)
-    return nl_send_iovec(sk, msg)
+    iov = bytes(nlmsg_hdr(msg))
+    return nl_send_iovec(sk, msg, iov)
 
 
 def nl_complete_msg(sk, msg):
@@ -224,6 +233,8 @@ def nl_send_auto(sk, msg):
     """
     nl_complete_msg(sk, msg)
     nl_send(sk, msg)
+
+
 nl_send_auto_complete = nl_send_auto  # Alias.
 
 

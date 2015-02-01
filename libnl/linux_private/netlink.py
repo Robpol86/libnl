@@ -42,7 +42,7 @@ class sockaddr_nl(object):
     """
 
     def __init__(self):
-        self.nl_family = None
+        self.nl_family = 0
         self.nl_pid = 0
         self.nl_groups = 0
 

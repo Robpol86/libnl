@@ -1,5 +1,6 @@
+from libnl.linux_private.netlink import NETLINK_ROUTE
 from libnl.msg import nlmsg_alloc_simple
-from libnl.nl import nl_complete_msg
+from libnl.nl import nl_complete_msg, nl_connect
 from libnl.socket_ import nl_socket_alloc, nl_socket_get_local_port
 
 
@@ -100,3 +101,33 @@ def test_defaults():
     assert 0 == msg.nm_nlh.nlmsg_type
     assert 5 == msg.nm_nlh.nlmsg_flags
     assert local_port == msg.nm_nlh.nlmsg_pid
+
+
+def test_nlmsg_pid():
+    sk = nl_socket_alloc()
+    msg = nlmsg_alloc_simple(0, 0)
+    assert 0 == msg.nm_nlh.nlmsg_pid
+
+    msg.nm_nlh.nlmsg_pid = 10
+    nl_complete_msg(sk, msg)
+    assert 10 == msg.nm_nlh.nlmsg_pid
+
+
+def test_nm_protocol():
+    sk = nl_socket_alloc()
+    msg = nlmsg_alloc_simple(0, 0)
+    assert -1 == msg.nm_protocol
+
+    msg.nm_protocol = 10
+    nl_complete_msg(sk, msg)
+    assert 10 == msg.nm_protocol
+
+
+def test_s_proto():
+    sk = nl_socket_alloc()
+    nl_connect(sk, NETLINK_ROUTE)
+    msg = nlmsg_alloc_simple(0, 0)
+    assert -1 == msg.nm_protocol
+
+    nl_complete_msg(sk, msg)
+    assert NETLINK_ROUTE == msg.nm_protocol

@@ -52,12 +52,20 @@ class sockaddr_nl(object):
 
 
 class nlmsghdr(object):
-    """https://github.com/thom311/libnl/blob/master/include/linux-private/linux/netlink.h#L38"""
+    """Netlink message header (holds actual payload of netlink message).
+    https://github.com/thom311/libnl/blob/master/include/linux-private/linux/netlink.h#L38
+
+    Instance variables:
+    nlmsg_type -- message content.
+    nlmsg_flags -- additional flags.
+    nlmsg_seq -- sequence number.
+    nlmsg_pid -- sending process port ID.
+    """
 
     def __init__(self, nlmsg_type=None, nlmsg_flags=None, nlmsg_seq=None, nlmsg_pid=None):
         self._nlmsg_type = None
         self._nlmsg_flags = None
-        self._nlmsg_seq = None  # TODO need to port all sequence stuff throughout the library.
+        self._nlmsg_seq = None
         self._nlmsg_pid = None
 
         self.payload = list()

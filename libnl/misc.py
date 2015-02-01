@@ -1,35 +1,60 @@
 """Misc code not defined in Netlink but used by it."""
 
-from ctypes import c_int32, c_uint32, POINTER, Structure
+from ctypes import c_int32, c_uint32
 
 
-class ucred(Structure):
+class ucred(object):
     """Ancillary message for passing credentials.
     http://linux.die.net/man/7/unix
     http://stackoverflow.com/questions/1922761/size-of-pid-t-uid-t-gid-t-on-linux
+
+    Instance variables:
+    pid -- process ID of the sending process.
+    uid -- user ID of the sending process.
+    gid -- group ID of the sending process.
     """
-    _fields_ = [
-        ('pid', c_int32),  # Process ID of the sending process.
-        ('uid', c_uint32),  # User ID of the sending process.
-        ('gid', c_uint32),  # Group ID of the sending process.
-    ]
 
+    def __init__(self, pid=0, uid=0, gid=0):
+        self._pid, self._uid, self._gid = None, None, None
+        self.pid = pid
+        self.uid = uid
+        self.gid = gid
 
-def define_struct(type_, maxlen, fields):
-    """Shorthand for `type my_struct[maxlen] = { [ATTR1] = value, [ATTR2] = value };`.
+    @property
+    def pid(self):
+        """c_int32 process ID of the sending process."""
+        return self._pid.value
 
-    :param type_:
-    :param maxlen:
-    :param fields:
-    :return:
-    """
-    array_type = type_ * maxlen
-    null_ptr = POINTER(type_)
-    padded_fields = list()
-    for i in range(maxlen):
-        padded_fields.append(fields.get(i, null_ptr))
-    array = array_type(*padded_fields)
-    return array
+    @pid.setter
+    def pid(self, value):
+        if value is None:
+            self._pid = c_int32()
+            return
+        self._pid = value if isinstance(value, c_int32) else c_int32(value)
+
+    @property
+    def uid(self):
+        """c_uint32 user ID of the sending process."""
+        return self._uid.value
+
+    @uid.setter
+    def uid(self, value):
+        if value is None:
+            self._uid = c_uint32()
+            return
+        self._uid = value if isinstance(value, c_uint32) else c_uint32(value)
+
+    @property
+    def gid(self):
+        """c_uint32 group ID of the sending process."""
+        return self._gid.value
+
+    @gid.setter
+    def gid(self, value):
+        if value is None:
+            self._gid = c_uint32()
+            return
+        self._gid = value if isinstance(value, c_uint32) else c_uint32(value)
 
 
 class msghdr(object):

@@ -110,7 +110,7 @@ def nlmsg_inherit(hdr=None):
         new = nm.nm_nlh
         new.nlmsg_type = hdr.nlmsg_type
         new.nlmsg_flags = hdr.nlmsg_flags
-        #new.nlmsg_seq = hdr.nlmsg_seq
+        new.nlmsg_seq = hdr.nlmsg_seq
         new.nlmsg_pid = hdr.nlmsg_pid
     return nm
 

@@ -8,6 +8,7 @@ of the License.
 """
 
 from ctypes import c_uint, c_uint16, c_uint32, sizeof
+from io import BytesIO
 
 NETLINK_ROUTE = 0  # Routing/device hook.
 NETLINK_GENERIC = 16
@@ -53,15 +54,28 @@ class sockaddr_nl(object):
 class nlmsghdr(object):
     """https://github.com/thom311/libnl/blob/master/include/linux-private/linux/netlink.h#L38"""
 
-    def __init__(self, nlmsg_type=None, nlmsg_flags=None, nlmsg_pid=None):
+    def __init__(self, nlmsg_type=None, nlmsg_flags=None, nlmsg_seq=None, nlmsg_pid=None):
         self._nlmsg_type = None
         self._nlmsg_flags = None
+        self._nlmsg_seq = None  # TODO need to port all sequence stuff throughout the library.
         self._nlmsg_pid = None
 
         self.payload = list()
         self.nlmsg_type = nlmsg_type
         self.nlmsg_flags = nlmsg_flags
+        self.nlmsg_seq = nlmsg_seq
         self.nlmsg_pid = nlmsg_pid
+
+    def __iter__(self):
+        """Converts all these Python data types into bytes() so the kernel can understand the data."""
+        buffer = BytesIO()
+        buffer.write(self._nlmsg_type)
+        buffer.write(self._nlmsg_flags)
+        buffer.write(self._nlmsg_seq)
+        buffer.write(self._nlmsg_pid)
+        for p in self.payload:
+            buffer.write(bytes(p))
+        return iter(buffer.getvalue())
 
     @property
     def nlmsg_type(self):
@@ -86,6 +100,18 @@ class nlmsghdr(object):
             self._nlmsg_flags = c_uint16()
             return
         self._nlmsg_flags = value if isinstance(value, c_uint16) else c_uint16(value)
+
+    @property
+    def nlmsg_seq(self):
+        """sequence number."""
+        return self._nlmsg_seq.value
+
+    @nlmsg_seq.setter
+    def nlmsg_seq(self, value):
+        if value is None:
+            self._nlmsg_seq = c_uint32()
+            return
+        self._nlmsg_seq = value if isinstance(value, c_uint32) else c_uint32(value)
 
     @property
     def nlmsg_pid(self):

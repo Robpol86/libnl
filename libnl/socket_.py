@@ -8,12 +8,12 @@ modify it under the terms of the GNU Lesser General Public
 License as published by the Free Software Foundation version 2.1
 of the License.
 """
-from _socket import SOL_SOCKET, SO_SNDBUF, SO_RCVBUF
 
-from socket import AF_NETLINK, socket, SOCK_RAW
+from socket import AF_NETLINK, socket, SOCK_RAW, SOL_SOCKET, SO_SNDBUF, SO_RCVBUF
+import time
+
 from libnl.errno_ import NLE_BAD_SOCK
 from libnl.error import nl_syserr2nlerr
-
 from libnl.handlers import NL_CB_DEFAULT, nl_cb_alloc
 from libnl.linux_private.netlink import NETLINK_ADD_MEMBERSHIP, NETLINK_DROP_MEMBERSHIP
 from libnl.netlink_private.types import nl_sock, NL_OWN_PORT, NL_SOCK_BUFSIZE_SET
@@ -55,6 +55,7 @@ def nl_socket_alloc(cb=None):
     sk.s_cb = cb
     sk.s_local.nl_family = AF_NETLINK
     sk.s_peer.nl_family = AF_NETLINK
+    sk.s_seq_expect = sk.s_seq_next = int(time.time())
     sk.s_flags = NL_OWN_PORT  # The port is 0 (unspecified), meaning NL_OWN_PORT.
 
     # Generate local port.

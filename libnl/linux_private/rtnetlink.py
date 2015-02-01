@@ -7,6 +7,8 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
+import struct
+
 RTNL_FAMILY_IPMR = 128
 RTNL_FAMILY_IP6MR = 129
 RTNL_FAMILY_MAX = 129
@@ -65,9 +67,15 @@ class rtattr(object):
     def __init__(self, rta_type):
         self.rta_type = int(rta_type)
 
+    def __iter__(self):
+        return iter(struct.pack('H', self.rta_type))
+
 
 class rtgenmsg(object):
     """https://github.com/thom311/libnl/blob/master/include/linux-private/linux/rtnetlink.h#L410"""
 
     def __init__(self, rtgen_family):
-        self.rtgen_family = str(rtgen_family)
+        self.rtgen_family = rtgen_family
+
+    def __iter__(self):
+        return iter(struct.pack('B', self.rtgen_family))

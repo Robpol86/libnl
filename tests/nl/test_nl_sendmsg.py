@@ -4,7 +4,7 @@ from libnl.linux_private.netlink import NETLINK_ROUTE
 from libnl.misc import msghdr
 from libnl.msg import nlmsg_alloc_simple
 from libnl.nl import nl_connect, nl_complete_msg, nl_sendmsg
-from libnl.socket_ import nl_socket_alloc
+from libnl.socket_ import nl_socket_alloc, nl_socket_free
 
 
 def test_default(tcp_server):
@@ -55,6 +55,7 @@ def test_default(tcp_server):
 
     assert 14 == nl_sendmsg(sk, msg, hdr)
     assert [iov + b'\0'] == tcp_server.data
+    nl_socket_free(sk)
 
 
 def test_error_nle_bad_sock():

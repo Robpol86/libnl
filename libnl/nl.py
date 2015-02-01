@@ -21,7 +21,7 @@ from libnl.handlers import NL_OK, NL_CB_MSG_OUT
 from libnl.linux_private.netlink import NLM_F_REQUEST, NLM_F_ACK
 from libnl.misc import msghdr
 from libnl.msg import (nlmsg_alloc_simple, nlmsg_append, NL_AUTO_PORT, nlmsg_get_dst, nlmsg_get_creds, nlmsg_set_src,
-                       nlmsg_hdr)
+                       nlmsg_hdr, NL_AUTO_SEQ)
 from libnl.netlink_private.netlink import nl_cb_call
 from libnl.netlink_private.types import NL_NO_AUTO_ACK, NL_SOCK_BUFSIZE_SET
 from libnl.socket_ import nl_socket_set_buffer_size, nl_socket_get_local_port
@@ -106,15 +106,17 @@ def nl_sendmsg(sk, msg, hdr):
         if ret != NL_OK:
             return ret
 
-    if hdr.msg_name and hdr.msg_name != (0, 0) and hdr.msg_name != sk.socket_instance.getsockname:
-        address = hdr.msg_name
-    else:
+    if hdr.msg_name is None:
         address = None
+    else:
+        address = tuple(hdr.msg_name)
+        if address == (0, 0) or address == sk.socket_instance.getsockname:
+            address = None
 
     try:
         if hdr.msg_control:
             ret = sk.socket_instance.sendmsg([hdr.msg_iov + b'\0'], hdr.msg_control, hdr.msg_flags, address)
-        elif hdr.msg_name:
+        elif address:
             ret = sk.socket_instance.sendto(hdr.msg_iov + b'\0', hdr.msg_flags, address)
         else:
             ret = sk.socket_instance.send(hdr.msg_iov + b'\0', hdr.msg_flags)
@@ -209,6 +211,9 @@ def nl_complete_msg(sk, msg):
     nlh = msg.nm_nlh
     if nlh.nlmsg_pid == NL_AUTO_PORT:
         nlh.nlmsg_pid = nl_socket_get_local_port(sk)
+    if nlh.nlmsg_seq == NL_AUTO_SEQ:
+        nlh.nlmsg_seq = sk.s_seq_next
+        sk.s_seq_next += 1
     if msg.nm_protocol == -1:
         msg.nm_protocol = sk.s_proto
     nlh.nlmsg_flags |= NLM_F_REQUEST
@@ -232,7 +237,7 @@ def nl_send_auto(sk, msg):
     Number of bytes sent on success or a negative error code.
     """
     nl_complete_msg(sk, msg)
-    nl_send(sk, msg)
+    return nl_send(sk, msg)
 
 
 nl_send_auto_complete = nl_send_auto  # Alias.

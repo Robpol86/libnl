@@ -10,9 +10,7 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-from ctypes import byref
-
-from libnl.attr import nla_for_each_attr
+from libnl.attr import nla_for_each_attr, nla_find
 from libnl.linux_private.netlink import NLMSG_ALIGN, nlmsghdr
 from libnl.netlink_private.types import nl_msg, NL_MSG_CRED_PRESENT
 
@@ -55,12 +53,12 @@ def nlmsg_data(nlh):
     https://github.com/thom311/libnl/blob/master/lib/msg.c#L105
 
     Positional arguments:
-    nlh -- netlink message header.
+    nlh -- netlink message header (nlmsghdr class instance).
 
     Returns:
-    Pointer to start of message payload.
+    Message payload (list of objects).
     """
-    return byref(nlh, NLMSG_HDRLEN)
+    return nlh.payload
 
 
 def nlmsg_for_each_attr(nlh):
@@ -74,6 +72,33 @@ def nlmsg_for_each_attr(nlh):
     Generator yielding nl_attr instances.
     """
     return nla_for_each_attr(nlh.payload)
+
+
+def nlmsg_attrdata(nlh):
+    """Returns list of attributes/payload from netlink message header.
+    https://github.com/thom311/libnl/blob/master/lib/msg.c#L143
+
+    Positional arguments:
+    nlh -- netlink message header (nlmsghdr class instance).
+
+    Returns:
+    List of attributes.
+    """
+    return nlh.payload
+
+
+def nlmsg_find_attr(nlh, attrtype):
+    """Find a specific attribute in a netlink message.
+    https://github.com/thom311/libnl/blob/master/lib/msg.c#L231
+
+    Positional arguments:
+    nlh -- netlink message header (nlmsghdr class instance).
+    attrtype -- type of attribute to look for.
+
+    Returns:
+    The first attribute which matches the specified type (nlattr class instance).
+    """
+    return nla_find(nlmsg_attrdata(nlh), attrtype)
 
 
 def nlmsg_alloc():

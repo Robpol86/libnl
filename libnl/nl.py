@@ -115,11 +115,11 @@ def nl_sendmsg(sk, msg, hdr):
 
     try:
         if hdr.msg_control:
-            ret = sk.socket_instance.sendmsg([hdr.msg_iov + b'\0'], hdr.msg_control, hdr.msg_flags, address)
+            ret = sk.socket_instance.sendmsg([hdr.msg_iov], hdr.msg_control, hdr.msg_flags, address)
         elif address:
-            ret = sk.socket_instance.sendto(hdr.msg_iov + b'\0', hdr.msg_flags, address)
+            ret = sk.socket_instance.sendto(hdr.msg_iov, hdr.msg_flags, address)
         else:
-            ret = sk.socket_instance.send(hdr.msg_iov + b'\0', hdr.msg_flags)
+            ret = sk.socket_instance.send(hdr.msg_iov, hdr.msg_flags)
     except OSError as exc:
         return -nl_syserr2nlerr(exc.errno)
     return ret

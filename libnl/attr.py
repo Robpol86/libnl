@@ -11,7 +11,7 @@ of the License.
 from ctypes import byref, c_int, c_uint32, cast, memset, POINTER, sizeof
 
 from libnl.errno_ import NLE_INVAL, NLE_RANGE
-from libnl.linux_private.netlink import nlattr, NLA_ALIGN, NLA_TYPE_MASK, nlmsghdr
+from libnl.linux_private.netlink import nlattr, NLA_ALIGN, NLA_TYPE_MASK
 from libnl.netlink_private.netlink import BUG
 
 NLA_UNSPEC = 0  # Unspecified type, binary data chunk.
@@ -36,7 +36,7 @@ def nla_type(nla):
     Returns:
     Type of attribute.
     """
-    return nla.nla_type.value & NLA_TYPE_MASK
+    return nla.nla_type & NLA_TYPE_MASK
 
 
 def nla_data(nla):
@@ -182,7 +182,27 @@ def nla_for_each_attr(head):
     Returns:
     Generator yielding nl_attr instances.
     """
-    return (a for a in head if isinstance(a, nlmsghdr))
+    return (a for a in head if isinstance(a, nlattr))
+
+
+def nla_find(attrs, attrtype):
+    """Find a single attribute in a list of attributes.
+    https://github.com/thom311/libnl/blob/master/lib/attr.c#L323
+
+    Iterates over the stream of attributes and compares each type with the type specified. Returns the first attribute
+    which matches the type.
+
+    Positional arguments:
+    attrs -- list of attributes or payload containing attributes.
+    attrtype -- attribute type to look for.
+
+    Returns:
+    Attribute found or None.
+    """
+    for nla in nla_for_each_attr(attrs):
+        if nla_type(nla) == attrtype:
+            return nla
+    return None
 
 
 def nla_put(msg, attrtype, data):

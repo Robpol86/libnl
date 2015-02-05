@@ -75,7 +75,14 @@ class nlmsghdr(object):
         self.nlmsg_pid = nlmsg_pid
 
     def __iter__(self):
-        """Converts all these Python data types into bytes() so the kernel can understand the data."""
+        """Converts all these Python data types into bytes() so the kernel can understand the data.
+
+         <------- NLMSG_ALIGN(hlen) ------> <---- NLMSG_ALIGN(len) --->
+        +----------------------------+- - -+- - - - - - - - - - -+- - -+
+        |           Header           | Pad |       Payload       | Pad |
+        |      struct nlmsghdr       |     |                     |     |
+        +----------------------------+- - -+- - - - - - - - - - -+- - -+
+        """
         buffer = BytesIO()
         buffer.write(self._nlmsg_type)
         buffer.write(self._nlmsg_flags)
@@ -174,11 +181,17 @@ class nlattr(object):
     nla_type -- c_uint16 attribute type (e.g. NL80211_ATTR_SCAN_SSIDS).
     payload -- data of any type for this attribute.
     """
+    SIZEOF = sizeof(c_uint16) * 2
 
     def __init__(self, nla_type=None, payload=None):
         self._nla_type = None
         self.nla_type = nla_type
         self.payload = payload
+
+    @property
+    def nla_len(self):
+        """c_uint16 attribute length including payload, returns integer."""
+        return NLA_HDRLEN + sizeof(self.payload)
 
     @property
     def nla_type(self):
@@ -192,6 +205,29 @@ class nlattr(object):
             return
         self._nla_type = value if isinstance(value, c_uint16) else c_uint16(value)
 
+    def __bytes__(self):
+        """Returns a bytes object formatted for the kernel.
+
+        To be fed into nl_sendmsg() and sent to the kernel in a format it understands.
+
+         <------- NLA_HDRLEN ------> <-- NLA_ALIGN(payload)-->
+        +---------------------+- - -+- - - - - - - - - -+- - -+
+        |        Header       | Pad |     Payload       | Pad |
+        |   (struct nlattr)   | ing |                   | ing |
+        +---------------------+- - -+- - - - - - - - - -+- - -+
+         <-------------- nlattr->nla_len -------------->
+
+         <-------- nla_attr_size(payload) --------->
+        +------------------+- - -+- - - - - - - - - +- - -+
+        | Attribute Header | Pad |     Payload      | Pad |
+        +------------------+- - -+- - - - - - - - - +- - -+
+         <----------- nla_total_size(payload) ----------->
+        """
+        nla_len = self.nla_len
+        padding = (b'\0' * (NLA_HDRLEN - self.SIZEOF), b'\0' * (NLA_ALIGN(nla_len) - nla_len))
+        segments = (bytes(c_uint16(nla_len)), bytes(self._nla_type), padding[0], bytes(self.payload), padding[1])
+        return b''.join(segments)
+
 
 NLA_F_NESTED = 1 << 15
 NLA_F_NET_BYTEORDER = 1 << 14
@@ -200,4 +236,4 @@ NLA_TYPE_MASK = ~(NLA_F_NESTED | NLA_F_NET_BYTEORDER)
 
 NLA_ALIGNTO = 4
 NLA_ALIGN = lambda len_: (len_ + NLA_ALIGNTO - 1) & ~(NLA_ALIGNTO - 1)
-#NLA_HDRLEN = int(NLA_ALIGN(sizeof(nlattr)))
+NLA_HDRLEN = int(NLA_ALIGN(nlattr.SIZEOF))

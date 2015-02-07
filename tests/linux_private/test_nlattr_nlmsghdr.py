@@ -61,6 +61,7 @@ def test_nlattr_socket(tcp_server):
     attr = nlmsg_find_attr(nlh, 4)
     assert 4 == nla_type(attr)
     assert 8 == nla_get_u32(attr)
+    assert 8 == attr.nla_len
 
     sk = nl_socket_alloc()
     nl_connect(sk, NETLINK_ROUTE)
@@ -90,33 +91,37 @@ def test_nlattr_ints():
     attr = nlmsg_find_attr(nlmsg_hdr(msg), 2)
     assert 2 == nla_type(attr)
     assert 10 == nla_get_u8(attr)
+    assert 5 == attr.nla_len
     assert b'BQACAAo=' == base64.b64encode(bytes(attr)[:attr.nla_len])
 
     attr = nlmsg_find_attr(nlmsg_hdr(msg), 3)
     assert 3 == nla_type(attr)
     assert 11 == nla_get_u16(attr)
+    assert 6 == attr.nla_len
     assert b'BgADAAsA' == base64.b64encode(bytes(attr)[:attr.nla_len])
 
     attr = nlmsg_find_attr(nlmsg_hdr(msg), 4)
     assert 4 == nla_type(attr)
     assert 12 == nla_get_u32(attr)
+    assert 8 == attr.nla_len
     assert b'CAAEAAwAAAA=' == base64.b64encode(bytes(attr)[:attr.nla_len])
 
     attr = nlmsg_find_attr(nlmsg_hdr(msg), 5)
     assert 5 == nla_type(attr)
     assert 13195 == nla_get_u64(attr)  # printf("%llu\n", nla_get_u64(attr));
+    assert 12 == attr.nla_len
     assert b'DAAFAIszAAAAAAAA' == base64.b64encode(bytes(attr)[:attr.nla_len])
 
 
-@pytest.mark.skipif('True')
 def test_nlattr_flag():
     msg = nlmsg_alloc()
     assert 0 == nla_put_flag(msg, 7)
 
     attr = nlmsg_find_attr(nlmsg_hdr(msg), 7)
     assert 7 == nla_type(attr)
-    assert nla_get_flag(attr) is True
-    assert b'BAAIAA==' == base64.b64encode(bytes(attr)[:attr.nla_len])
+    assert nla_get_flag(attr) is True  # printf("%s\n", nla_get_flag(attr) ? "True" : "False");
+    assert 4 == attr.nla_len
+    assert b'BAAHAA==' == base64.b64encode(bytes(attr)[:attr.nla_len])
 
 
 @pytest.mark.skipif('True')
@@ -127,6 +132,7 @@ def test_nlattr_string():
     attr = nlmsg_find_attr(nlmsg_hdr(msg), 6)
     assert 6 == nla_type(attr)
     assert bytes('The quick br()wn f0x jumps over the l@zy dog!'.encode('ascii')) == nla_get_string(attr)
+    assert 4 == attr.nla_len
     expected = b'MgAIAFRoZSBxdWljayBicigpd24gZjB4IGp1bXBzIG92ZXIgdGhlIGxAenkgZG9nIQA='
     assert expected == base64.b64encode(bytes(attr)[:attr.nla_len])
 
@@ -139,6 +145,7 @@ def test_nlattr_addr():
     attr = nlmsg_find_attr(nlmsg_hdr(msg), 1)
     assert 1 == nla_type(attr)
     assert '127.0.0.1' == nla_get_addr(attr)
+    assert 4 == attr.nla_len
     assert b'' == base64.b64encode(bytes(attr)[:attr.nla_len])
 
 
@@ -150,6 +157,7 @@ def test_nlattr_data():
     attr = nlmsg_find_attr(nlmsg_hdr(msg), 0)
     assert 0 == nla_type(attr)
     assert c_float(3.14).value == nla_get_data(attr)
+    assert 4 == attr.nla_len
     assert b'' == base64.b64encode(bytes(attr)[:attr.nla_len])
 
 

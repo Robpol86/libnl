@@ -367,7 +367,7 @@ def nla_put_flag(msg, attrtype):
     Returns:
     0 on success or a negative error code.
     """
-    return int(nla_put(msg, attrtype, c_char(0)))
+    return int(nla_put(msg, attrtype, None))
 
 
 def nla_get_flag(nla):

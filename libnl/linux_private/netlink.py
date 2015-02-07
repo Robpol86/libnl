@@ -179,7 +179,7 @@ class nlattr(object):
 
     Instance variables:
     nla_type -- c_uint16 attribute type (e.g. NL80211_ATTR_SCAN_SSIDS).
-    payload -- data of any type for this attribute.
+    payload -- data of any type for this attribute. None means 0 byte payload.
     """
     SIZEOF = sizeof(c_uint16) * 2
 
@@ -191,7 +191,7 @@ class nlattr(object):
     @property
     def nla_len(self):
         """c_uint16 attribute length including payload, returns integer."""
-        return NLA_HDRLEN + sizeof(self.payload)
+        return NLA_HDRLEN + (0 if self.payload is None else sizeof(self.payload))
 
     @property
     def nla_type(self):
@@ -224,8 +224,9 @@ class nlattr(object):
          <----------- nla_total_size(payload) ----------->
         """
         nla_len = self.nla_len
+        payload = b'' if self.payload is None else bytes(self.payload)
         padding = (b'\0' * (NLA_HDRLEN - self.SIZEOF), b'\0' * (NLA_ALIGN(nla_len) - nla_len))
-        segments = (bytes(c_uint16(nla_len)), bytes(self._nla_type), padding[0], bytes(self.payload), padding[1])
+        segments = (bytes(c_uint16(nla_len)), bytes(self._nla_type), padding[0], payload, padding[1])
         return b''.join(segments)
 
 

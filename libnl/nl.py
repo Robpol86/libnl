@@ -13,7 +13,7 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-from socket import AF_NETLINK, SOCK_CLOEXEC, SOCK_RAW, socket
+import socket
 
 from libnl.errno_ import NLE_BAD_SOCK, NLE_AF_NOSUPPORT
 from libnl.error import nl_syserr2nlerr
@@ -41,11 +41,11 @@ def nl_connect(sk, protocol):
     Returns:
     0 on success or a negative error code.
     """
-    flags = SOCK_CLOEXEC
+    flags = socket.SOCK_CLOEXEC
     if sk.s_fd != -1:
         return -NLE_BAD_SOCK
     try:
-        sk.socket_instance = socket(AF_NETLINK, SOCK_RAW | flags, protocol)
+        sk.socket_instance = socket.socket(socket.AF_NETLINK, socket.SOCK_RAW | flags, protocol)
     except OSError as exc:
         return -nl_syserr2nlerr(exc.errno)
 
@@ -62,7 +62,7 @@ def nl_connect(sk, protocol):
         return -nl_syserr2nlerr(exc.errno)
     sk.s_local.nl_pid = sk.socket_instance.getsockname()[0]
 
-    if sk.s_local.nl_family != AF_NETLINK:
+    if sk.s_local.nl_family != socket.AF_NETLINK:
         sk.socket_instance.close()
         return -NLE_AF_NOSUPPORT
 
@@ -145,7 +145,7 @@ def nl_send_iovec(sk, msg, iov):
 
     # Overwrite destination if specified in the message itself, defaults to the peer address of the socket.
     dst = nlmsg_get_dst(msg)
-    if dst.nl_family == AF_NETLINK:
+    if dst.nl_family == socket.AF_NETLINK:
         hdr.msg_name = dst
 
     # Add credentials if present.

@@ -8,12 +8,9 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-from ctypes import (byref, c_int, c_uint32, cast, memset, POINTER, sizeof, c_uint8, c_uint16, c_uint64, c_ulong,
-                    create_string_buffer)
+import ctypes
 
-from libnl.errno_ import NLE_INVAL, NLE_RANGE
-from libnl.linux_private.netlink import nlattr, NLA_ALIGN, NLA_TYPE_MASK
-from libnl.netlink_private.netlink import BUG
+from libnl.linux_private.netlink import nlattr, NLA_ALIGN, NLA_TYPE_MASK, NLA_HDRLEN
 
 NLA_UNSPEC = 0  # Unspecified type, binary data chunk.
 NLA_U8 = 1  # 8 bit integer.
@@ -81,7 +78,7 @@ def nla_ok(nla, remaining):
     Returns:
     True if the attribute can be accessed safely, False otherwise.
     """
-    return remaining >= sizeof(*nla) and sizeof(*nla) <= nla.nla_len <= remaining
+    return remaining >= ctypes.sizeof(*nla) and ctypes.sizeof(*nla) <= nla.nla_len <= remaining
 
 
 def nla_next(nla, remaining):
@@ -100,77 +97,7 @@ def nla_next(nla, remaining):
     """
     totlen = int(NLA_ALIGN(nla.nla_len))
     remaining.value -= totlen
-    return cast(byref(nla, totlen), POINTER(nlattr))
-
-
-def validate_nla(nla, maxtype, policy):
-    """https://github.com/thom311/libnl/blob/master/lib/attr.c#L188
-
-    Positional arguments:
-    nla -- attribute.
-    maxtype -- maximum attribute type expected and accepted.
-    policy -- attribute validation policy.
-
-    Returns:
-    Integer.
-    """
-    minlen = 0
-    type_ = nla_type(nla)
-    if type_ < 0 or type_ > maxtype:
-        return 0
-    pt = POINTER(policy[type_])
-    if pt.contents.type > NLA_TYPE_MAX:
-        raise BUG
-
-    if pt.contents.minlen:
-        minlen = pt.contents.minlen
-    elif pt.contents.type != NLA_UNSPEC:
-        minlen = nla_attr_minlen[pt.contents.type]
-
-    if nla_len(nla) < minlen:
-        return -NLE_RANGE
-    if pt.contents.maxlen and nla_len(nla) > pt.contents.maxlen:
-        return -NLE_RANGE
-
-    if pt.contents.type == NLA_STRING:
-        data = byref(nla_data(nla))
-        if data[nla_len(nla) - 1] != '\0':
-            return -NLE_INVAL
-
-    return 0
-
-
-def nla_parse(tb, maxtype, head, len_, policy):
-    """Create attribute index based on a stream of attributes.
-    https://github.com/thom311/libnl/blob/master/lib/attr.c#L242
-
-    Iterates over the stream of attributes and stores a pointer to each attribute in the index array using the attribute
-    type as index to the array. Attribute with a type greater than the maximum type specified will be silently ignored
-    in order to maintain backwards compatibility. If \a policy is not NULL, the attribute will be validated using the
-    specified policy.
-
-    tb -- index array to be filled (maxtype+1 elements).
-    maxtype -- maximum attribute type expected and accepted.
-    head -- head of attribute stream.
-    len_ -- length of attribute stream.
-    policy -- attribute validation policy.
-
-    Returns:
-    0 on success or a negative error code.
-    """
-    nla = nlattr()
-    rem = c_int()
-    memset(tb, 0, sizeof(nlattr) * (maxtype + 1))
-    while nla_for_each_attr(nla, head, len_, rem):
-        type_ = nla_type(nla)
-        if type_ > maxtype:
-            continue
-        if policy:
-            err = validate_nla(nla, maxtype, policy)
-            if err < 0:
-                return int(err)
-        tb[type_] = nla
-    return 0
+    return ctypes.cast(ctypes.byref(nla, totlen), ctypes.POINTER(nlattr))
 
 
 def nla_for_each_attr(head):
@@ -237,7 +164,7 @@ def nla_put_u8(msg, attrtype, value):
     Returns:
     0 on success or a negative error code.
     """
-    return int(nla_put(msg, attrtype, value if isinstance(value, c_uint8) else c_uint8(value)))
+    return int(nla_put(msg, attrtype, value if isinstance(value, ctypes.c_uint8) else ctypes.c_uint8(value)))
 
 
 def nla_get_u8(nla):
@@ -250,7 +177,8 @@ def nla_get_u8(nla):
     Returns:
     Payload as an int().
     """
-    return int(nla.payload.value if isinstance(nla.payload, c_uint8) else c_uint8(nla.payload.value).value)
+    value = nla.payload.value if isinstance(nla.payload, ctypes.c_uint8) else ctypes.c_uint8(nla.payload.value).value
+    return int(value)
 
 
 def nla_put_u16(msg, attrtype, value):
@@ -265,7 +193,7 @@ def nla_put_u16(msg, attrtype, value):
     Returns:
     0 on success or a negative error code.
     """
-    return int(nla_put(msg, attrtype, value if isinstance(value, c_uint16) else c_uint16(value)))
+    return int(nla_put(msg, attrtype, value if isinstance(value, ctypes.c_uint16) else ctypes.c_uint16(value)))
 
 
 def nla_get_u16(nla):
@@ -278,7 +206,8 @@ def nla_get_u16(nla):
     Returns:
     Payload as an int().
     """
-    return int(nla.payload.value if isinstance(nla.payload, c_uint16) else c_uint16(nla.payload.value).value)
+    value = nla.payload.value if isinstance(nla.payload, ctypes.c_uint16) else ctypes.c_uint16(nla.payload.value).value
+    return int(value)
 
 
 def nla_put_u32(msg, attrtype, value):
@@ -293,7 +222,7 @@ def nla_put_u32(msg, attrtype, value):
     Returns:
     0 on success or a negative error code.
     """
-    return int(nla_put(msg, attrtype, value if isinstance(value, c_uint32) else c_uint32(value)))
+    return int(nla_put(msg, attrtype, value if isinstance(value, ctypes.c_uint32) else ctypes.c_uint32(value)))
 
 
 def nla_get_u32(nla):
@@ -303,7 +232,8 @@ def nla_get_u32(nla):
     Returns:
     Payload as an int().
     """
-    return int(nla.payload.value if isinstance(nla.payload, c_uint32) else c_uint32(nla.payload.value).value)
+    value = nla.payload.value if isinstance(nla.payload, ctypes.c_uint32) else ctypes.c_uint32(nla.payload.value).value
+    return int(value)
 
 
 def nla_put_u64(msg, attrtype, value):
@@ -318,7 +248,7 @@ def nla_put_u64(msg, attrtype, value):
     Returns:
     0 on success or a negative error code.
     """
-    return int(nla_put(msg, attrtype, value if isinstance(value, c_uint64) else c_uint64(value)))
+    return int(nla_put(msg, attrtype, value if isinstance(value, ctypes.c_uint64) else ctypes.c_uint64(value)))
 
 
 def nla_get_u64(nla):
@@ -328,7 +258,8 @@ def nla_get_u64(nla):
     Returns:
     Payload as an int().
     """
-    return int(nla.payload.value if isinstance(nla.payload, c_uint64) else c_uint64(nla.payload.value).value)
+    value = nla.payload.value if isinstance(nla.payload, ctypes.c_uint64) else ctypes.c_uint64(nla.payload.value).value
+    return int(value)
 
 
 def nla_put_string(msg, attrtype, value):
@@ -343,7 +274,7 @@ def nla_put_string(msg, attrtype, value):
     Returns:
     0 on success or a negative error code.
     """
-    return int(nla_put(msg, attrtype, create_string_buffer(value)))
+    return int(nla_put(msg, attrtype, ctypes.create_string_buffer(value)))
 
 
 def nla_get_string(nla):
@@ -392,12 +323,12 @@ def nla_put_msecs(msg, attrtype, value):
     Returns:
     0 on success or a negative error code.
     """
-    if isinstance(value, c_uint64):
+    if isinstance(value, ctypes.c_uint64):
         pass
-    elif isinstance(value, c_ulong):
-        value = c_uint64(value.value)
+    elif isinstance(value, ctypes.c_ulong):
+        value = ctypes.c_uint64(value.value)
     else:
-        value = c_uint64(value)
+        value = ctypes.c_uint64(value)
     return int(nla_put_u64(msg, attrtype, value))
 
 

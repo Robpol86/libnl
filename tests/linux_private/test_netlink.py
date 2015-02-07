@@ -3,8 +3,7 @@ from ctypes import cast, pointer, POINTER, resize, sizeof
 import pytest
 
 from libnl.handlers import NL_CB_VALID
-from libnl.linux_private.netlink import (NLMSG_ALIGN, NLMSG_ALIGNTO, NLM_F_DUMP, NLMSG_OK, nlattr, nlmsghdr, NLA_ALIGN,
-                                         NLA_HDRLEN)
+from libnl.linux_private.netlink import NLMSG_ALIGN, NLMSG_ALIGNTO, NLM_F_DUMP, nlattr, nlmsghdr, NLA_ALIGN, NLA_HDRLEN
 
 
 def test_nlmsg_align():

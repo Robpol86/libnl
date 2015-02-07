@@ -9,7 +9,7 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-from socket import AF_NETLINK, socket, SOCK_RAW, SOL_SOCKET, SO_SNDBUF, SO_RCVBUF
+import socket
 import time
 
 from libnl.errno_ import NLE_BAD_SOCK
@@ -26,7 +26,7 @@ def generate_local_port():
     """https://github.com/thom311/libnl/blob/master/lib/socket.c#L63"""
     global _PREVIOUS_LOCAL_PORT
     if _PREVIOUS_LOCAL_PORT is None:
-        with socket(AF_NETLINK, SOCK_RAW) as s:
+        with socket.socket(socket.AF_NETLINK, socket.SOCK_RAW) as s:
             s.bind((0, 0))
             _PREVIOUS_LOCAL_PORT = int(s.getsockname()[0])
     return int(_PREVIOUS_LOCAL_PORT)
@@ -53,8 +53,8 @@ def nl_socket_alloc(cb=None):
     # Allocate the socket.
     sk = nl_sock()
     sk.s_cb = cb
-    sk.s_local.nl_family = AF_NETLINK
-    sk.s_peer.nl_family = AF_NETLINK
+    sk.s_local.nl_family = socket.AF_NETLINK
+    sk.s_peer.nl_family = socket.AF_NETLINK
     sk.s_seq_expect = sk.s_seq_next = int(time.time())
     sk.s_flags = NL_OWN_PORT  # The port is 0 (unspecified), meaning NL_OWN_PORT.
 
@@ -176,12 +176,12 @@ def nl_socket_set_buffer_size(sk, rxbuf, txbuf):
         return -NLE_BAD_SOCK
 
     try:
-        sk.socket_instance.setsockopt(SOL_SOCKET, SO_SNDBUF, txbuf)
+        sk.socket_instance.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, txbuf)
     except OSError as exc:
         return -nl_syserr2nlerr(exc.errno)
 
     try:
-        sk.socket_instance.setsockopt(SOL_SOCKET, SO_RCVBUF, rxbuf)
+        sk.socket_instance.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, rxbuf)
     except OSError as exc:
         return -nl_syserr2nlerr(exc.errno)
 

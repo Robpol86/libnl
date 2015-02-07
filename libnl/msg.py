@@ -11,41 +11,12 @@ of the License.
 """
 
 from libnl.attr import nla_for_each_attr, nla_find
-from libnl.linux_private.netlink import NLMSG_ALIGN, nlmsghdr
+from libnl.linux_private.netlink import nlmsghdr
 from libnl.netlink_private.types import nl_msg, NL_MSG_CRED_PRESENT
 
 NL_AUTO_PORT = 0
 NL_AUTO_PID = NL_AUTO_PORT
 NL_AUTO_SEQ = 0
-
-
-def nlmsg_size(payload):
-    """Calculates size of netlink message based on payload length.
-    https://github.com/thom311/libnl/blob/master/lib/msg.c#L54
-
-    Positional arguments:
-    payload -- length of payload (integer).
-
-    Returns:
-    Size of netlink message without padding (integer).
-    """
-    return int(NLMSG_HDRLEN + payload)
-nlmsg_msg_size = nlmsg_size
-
-
-def nlmsg_total_size(payload):
-    """Calculates size of netlink message including padding based on payload length.
-    https://github.com/thom311/libnl/blob/master/lib/msg.c#L72
-
-    This function is identical to nlmsg_size() + nlmsg_padlen().
-
-    Positional arguments:
-    payload -- length of payload (integer).
-
-    Returns:
-    Size of netlink message including padding (integer).
-    """
-    return int(NLMSG_ALIGN(nlmsg_msg_size(payload)))
 
 
 def nlmsg_data(nlh):

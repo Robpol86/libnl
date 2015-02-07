@@ -1,6 +1,6 @@
 """Misc code not defined in Netlink but used by it."""
 
-from ctypes import c_int32, c_uint32
+import ctypes
 
 
 class ucred(object):
@@ -28,9 +28,9 @@ class ucred(object):
     @pid.setter
     def pid(self, value):
         if value is None:
-            self._pid = c_int32()
+            self._pid = ctypes.c_int32()
             return
-        self._pid = value if isinstance(value, c_int32) else c_int32(value)
+        self._pid = value if isinstance(value, ctypes.c_int32) else ctypes.c_int32(value)
 
     @property
     def uid(self):
@@ -40,9 +40,9 @@ class ucred(object):
     @uid.setter
     def uid(self, value):
         if value is None:
-            self._uid = c_uint32()
+            self._uid = ctypes.c_uint32()
             return
-        self._uid = value if isinstance(value, c_uint32) else c_uint32(value)
+        self._uid = value if isinstance(value, ctypes.c_uint32) else ctypes.c_uint32(value)
 
     @property
     def gid(self):
@@ -52,9 +52,9 @@ class ucred(object):
     @gid.setter
     def gid(self, value):
         if value is None:
-            self._gid = c_uint32()
+            self._gid = ctypes.c_uint32()
             return
-        self._gid = value if isinstance(value, c_uint32) else c_uint32(value)
+        self._gid = value if isinstance(value, ctypes.c_uint32) else ctypes.c_uint32(value)
 
 
 class msghdr(object):

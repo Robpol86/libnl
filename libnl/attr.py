@@ -9,7 +9,7 @@ of the License.
 """
 
 from ctypes import (byref, c_int, c_uint32, cast, memset, POINTER, sizeof, c_uint8, c_uint16, c_uint64, c_ulong,
-                    create_string_buffer, c_char)
+                    create_string_buffer)
 
 from libnl.errno_ import NLE_INVAL, NLE_RANGE
 from libnl.linux_private.netlink import nlattr, NLA_ALIGN, NLA_TYPE_MASK
@@ -382,7 +382,7 @@ def nla_get_flag(nla):
 
 def nla_put_msecs(msg, attrtype, value):
     """Add msecs attribute to netlink message.
-    http://lxr.free-electrons.com/source/include/net/netlink.h#L954
+    https://github.com/thom311/libnl/blob/master/lib/attr.c#L737
 
     Positional arguments:
     msg -- netlink message (nl_msg class instance).

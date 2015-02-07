@@ -1,11 +1,13 @@
 import base64
 from ctypes import c_float
 import socket
+import string
 
 import pytest
 
 from libnl.attr import (nla_put_u32, nla_get_u32, nla_type, nla_put_u8, nla_put_u16, nla_put_u64, nla_get_u8,
-                        nla_get_u16, nla_get_u64, nla_get_flag, nla_put_flag, nla_put_string, nla_get_string)
+                        nla_get_u16, nla_get_u64, nla_get_flag, nla_put_flag, nla_put_string, nla_get_string,
+                        nla_put_msecs, nla_get_msecs)
 from libnl.linux_private.netlink import NETLINK_ROUTE
 from libnl.misc import msghdr
 from libnl.msg import nlmsg_alloc, nlmsg_hdr, nlmsg_find_attr
@@ -124,16 +126,55 @@ def test_nlattr_flag():
     assert b'BAAHAA==' == base64.b64encode(bytes(attr)[:attr.nla_len])
 
 
-@pytest.mark.skipif('True')
-def test_nlattr_string():
+def test_nlattr_msecs():
     msg = nlmsg_alloc()
-    assert 0 == nla_put_string(msg, 6, bytes('The quick br()wn f0x jumps over the l@zy dog!'.encode('ascii')))
+    assert 0 == nla_put_msecs(msg, 12, 99)
+
+    attr = nlmsg_find_attr(nlmsg_hdr(msg), 12)
+    assert 12 == nla_type(attr)
+    assert 99 == nla_get_msecs(attr)
+    assert 12 == attr.nla_len
+    assert b'DAAMAGMAAAAAAAAA' == base64.b64encode(bytes(attr)[:attr.nla_len])
+
+
+@pytest.mark.skipif('True')
+def test_nlattr_string_short():
+    payload = bytes('test'.encode('ascii'))
+    msg = nlmsg_alloc()
+    assert 0 == nla_put_string(msg, 6, payload)
 
     attr = nlmsg_find_attr(nlmsg_hdr(msg), 6)
     assert 6 == nla_type(attr)
-    assert bytes('The quick br()wn f0x jumps over the l@zy dog!'.encode('ascii')) == nla_get_string(attr)
-    assert 4 == attr.nla_len
-    expected = b'MgAIAFRoZSBxdWljayBicigpd24gZjB4IGp1bXBzIG92ZXIgdGhlIGxAenkgZG9nIQA='
+    assert payload == nla_get_string(attr)
+    assert 9 == attr.nla_len
+    assert b'CQAMAHRlc3QA' == base64.b64encode(bytes(attr)[:attr.nla_len])
+
+
+@pytest.mark.skipif('True')
+def test_nlattr_string_medium():
+    payload = bytes('The quick br()wn f0x jumps over the l@zy dog!'.encode('ascii'))
+    msg = nlmsg_alloc()
+    assert 0 == nla_put_string(msg, 6, payload)
+
+    attr = nlmsg_find_attr(nlmsg_hdr(msg), 6)
+    assert 6 == nla_type(attr)
+    assert payload == nla_get_string(attr)
+    assert 50 == attr.nla_len
+    expected = b'MgAMAFRoZSBxdWljayBicigpd24gZjB4IGp1bXBzIG92ZXIgdGhlIGxAenkgZG9nIQA='
+    assert expected == base64.b64encode(bytes(attr)[:attr.nla_len])
+
+
+@pytest.mark.skipif('True')
+def test_nlattr_string_long():
+    payload = bytes(string.printable[:-2].encode('ascii'))
+    msg = nlmsg_alloc()
+    assert 0 == nla_put_string(msg, 6, payload)
+
+    attr = nlmsg_find_attr(nlmsg_hdr(msg), 6)
+    assert 6 == nla_type(attr)
+    assert payload == nla_get_string(attr)
+    assert 103 == attr.nla_len
+    expected = b'ZwAMADAxMjM0NTY3ODlhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ekFCQ0RFRkdISUpLTE1OT1BRQFtcXV5fYHt8fX4gCQoNAA=='
     assert expected == base64.b64encode(bytes(attr)[:attr.nla_len])
 
 

@@ -1,4 +1,4 @@
-from ctypes import cast, pointer, POINTER, resize, sizeof
+import ctypes
 
 import pytest
 
@@ -42,19 +42,19 @@ def test_nlmsg_space():
 
 @pytest.mark.skipif('True')
 def test_nlmsg_data(correct_answers):
-    nlh = pointer(nlmsghdr(nlmsg_len=20, nlmsg_type=NL_CB_VALID, nlmsg_flags=NLM_F_DUMP))
+    nlh = ctypes.pointer(nlmsghdr(nlmsg_len=20, nlmsg_type=NL_CB_VALID, nlmsg_flags=NLM_F_DUMP))
     _nlmsg_data = NLMSG_DATA(nlh)
-    _size_to = sizeof(_nlmsg_data) + NLMSG_LENGTH(sizeof(nlmsghdr)) - NLMSG_ALIGNTO.value
-    resize(_nlmsg_data, _size_to)
-    head = pointer(cast(_nlmsg_data, POINTER(nlattr)))
-    assert correct_answers['NLMSG_DATA(sizeof)'] == sizeof(head)
+    _size_to = ctypes.sizeof(_nlmsg_data) + NLMSG_LENGTH(ctypes.sizeof(nlmsghdr)) - NLMSG_ALIGNTO.value
+    ctypes.resize(_nlmsg_data, _size_to)
+    head = ctypes.pointer(ctypes.cast(_nlmsg_data, ctypes.POINTER(nlattr)))
+    assert correct_answers['NLMSG_DATA(sizeof)'] == ctypes.sizeof(head)
     #assert 0 == int(head.nla_len)  # TODO fix this later.
     #assert 0 == int(head.nla_type)
 
 
 @pytest.mark.skipif('True')
 def test_nlmsg_ok():
-    nlh = pointer(nlmsghdr(nlmsg_len=20, nlmsg_type=NL_CB_VALID, nlmsg_flags=NLM_F_DUMP))
+    nlh = ctypes.pointer(nlmsghdr(nlmsg_len=20, nlmsg_type=NL_CB_VALID, nlmsg_flags=NLM_F_DUMP))
     assert False == NLMSG_OK(nlh, 0)
     assert False == NLMSG_OK(nlh, 1)
     assert False == NLMSG_OK(nlh, 2)
@@ -65,7 +65,7 @@ def test_nlmsg_ok():
 
 @pytest.mark.skipif('True')
 def test_nlmsg_payload():
-    nlh = pointer(nlmsghdr(nlmsg_len=20, nlmsg_type=NL_CB_VALID, nlmsg_flags=NLM_F_DUMP))
+    nlh = ctypes.pointer(nlmsghdr(nlmsg_len=20, nlmsg_type=NL_CB_VALID, nlmsg_flags=NLM_F_DUMP))
     assert 4 == NLMSG_PAYLOAD(nlh, 0)
     assert 0 == NLMSG_PAYLOAD(nlh, 1)
     assert 0 == NLMSG_PAYLOAD(nlh, 2)

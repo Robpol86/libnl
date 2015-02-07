@@ -1,10 +1,10 @@
-from ctypes import c_int
-from socket import AF_PACKET, NETLINK_ROUTE
+import ctypes
+import socket
 
 import pytest
 
 from libnl.handlers import NL_OK, NL_CB_VALID, NL_CB_CUSTOM
-from libnl.linux_private.netlink import NLM_F_REQUEST, NLM_F_DUMP
+from libnl.linux_private.netlink import NLM_F_REQUEST, NLM_F_DUMP, NETLINK_ROUTE
 from libnl.linux_private.rtnetlink import rtgenmsg, RTM_GETLINK
 from libnl.nl import nl_connect, nl_send_simple
 from libnl.socket_ import nl_socket_alloc, nl_socket_free
@@ -60,9 +60,9 @@ def test_callback():
         return NL_OK
     sk = nl_socket_alloc()
     nl_connect(sk, NETLINK_ROUTE)
-    rt_hdr = rtgenmsg(rtgen_family=AF_PACKET)
+    rt_hdr = rtgenmsg(rtgen_family=socket.AF_PACKET)
     assert 20 == nl_send_simple(sk, RTM_GETLINK, NLM_F_REQUEST | NLM_F_DUMP, rt_hdr)
-    ret = c_int(0)
+    ret = ctypes.c_int(0)
     nl_socket_modify_cb(sk, NL_CB_VALID, NL_CB_CUSTOM, callback, ret)
     nl_recvmsgs_default(sk)
     assert 123 == ret.value

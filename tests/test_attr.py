@@ -1,5 +1,5 @@
 import base64
-from ctypes import c_float
+import ctypes
 import socket
 import string
 
@@ -10,12 +10,45 @@ from libnl.attr import (nla_put_u32, nla_get_u32, nla_type, nla_put_u8, nla_put_
                         nla_put_msecs, nla_get_msecs)
 from libnl.linux_private.netlink import NETLINK_ROUTE
 from libnl.misc import msghdr
-from libnl.msg import nlmsg_alloc, nlmsg_hdr, nlmsg_find_attr
+from libnl.msg import nlmsg_alloc, nlmsg_hdr, nlmsg_find_attr, nlmsg_for_each_attr
 from libnl.nl import nl_sendmsg, nl_connect, nl_complete_msg
 from libnl.socket_ import nl_socket_alloc, nl_socket_free
 
 
-def test_nlattr_socket(tcp_server):
+def test_nla_put_get_u32():
+    """// gcc $(pkg-config --cflags --libs libnl-genl-3.0) a.c && ./a.out
+    #include <netlink/msg.h>
+    int main() {
+        int rem, i, range[] = { 0, 1, 2, 19, 20, 50 };
+        struct nl_msg *msg = nlmsg_alloc();
+        struct nlmsghdr *nlh = nlmsg_hdr(msg);
+        struct nlattr *nla;
+        for (i = 0; i < (sizeof(range) / sizeof(int)); i++) nla_put_u32(msg, i, range[i]);
+        nlmsg_for_each_attr(nla, nlh, 0, rem) printf("type: %d; nla_get_u32: %d\n", nla_type(nla), nla_get_u32(nla));
+        nlmsg_free(msg);
+        return 0;
+    }
+    // Expected output:
+    // type: 0; nla_get_u32: 0
+    // type: 1; nla_get_u32: 1
+    // type: 2; nla_get_u32: 2
+    // type: 3; nla_get_u32: 19
+    // type: 4; nla_get_u32: 20
+    // type: 5; nla_get_u32: 50
+    """
+    range_ = (0, 1, 2, 19, 20, 50)
+    msg = nlmsg_alloc()
+    for i in range(len(range_)):
+        nla_put_u32(msg, i, range_[i])
+    nlh = nlmsg_hdr(msg)
+    i = 0
+    for nla in nlmsg_for_each_attr(nlh):
+        assert i == nla_type(nla)
+        assert range_[i] == nla_get_u32(nla)
+        i += 1
+
+
+def test_socket(tcp_server):
     """// gcc $(pkg-config --cflags --libs libnl-genl-3.0) a.c && (nc -l 2000 |base64 &) && sleep 0.1 && ./a.out
     #include <netlink/msg.h>
     struct nl_sock {
@@ -83,7 +116,7 @@ def test_nlattr_socket(tcp_server):
     nl_socket_free(sk)
 
 
-def test_nlattr_ints():
+def test_ints():
     msg = nlmsg_alloc()
     assert 0 == nla_put_u8(msg, 2, 10)
     assert 0 == nla_put_u16(msg, 3, 11)
@@ -115,7 +148,7 @@ def test_nlattr_ints():
     assert b'DAAFAIszAAAAAAAA' == base64.b64encode(bytes(attr)[:attr.nla_len])
 
 
-def test_nlattr_flag():
+def test_flag():
     msg = nlmsg_alloc()
     assert 0 == nla_put_flag(msg, 7)
 
@@ -126,7 +159,7 @@ def test_nlattr_flag():
     assert b'BAAHAA==' == base64.b64encode(bytes(attr)[:attr.nla_len])
 
 
-def test_nlattr_msecs():
+def test_msecs():
     msg = nlmsg_alloc()
     assert 0 == nla_put_msecs(msg, 12, 99)
 
@@ -138,7 +171,7 @@ def test_nlattr_msecs():
 
 
 @pytest.mark.skipif('True')
-def test_nlattr_string_short():
+def test_string_short():
     payload = bytes('test'.encode('ascii'))
     msg = nlmsg_alloc()
     assert 0 == nla_put_string(msg, 6, payload)
@@ -151,7 +184,7 @@ def test_nlattr_string_short():
 
 
 @pytest.mark.skipif('True')
-def test_nlattr_string_medium():
+def test_string_medium():
     payload = bytes('The quick br()wn f0x jumps over the l@zy dog!'.encode('ascii'))
     msg = nlmsg_alloc()
     assert 0 == nla_put_string(msg, 6, payload)
@@ -165,7 +198,7 @@ def test_nlattr_string_medium():
 
 
 @pytest.mark.skipif('True')
-def test_nlattr_string_long():
+def test_string_long():
     payload = bytes(string.printable[:-2].encode('ascii'))
     msg = nlmsg_alloc()
     assert 0 == nla_put_string(msg, 6, payload)
@@ -179,7 +212,7 @@ def test_nlattr_string_long():
 
 
 @pytest.mark.skipif('True')
-def test_nlattr_addr():
+def test_addr():
     msg = nlmsg_alloc()
     assert 0 == nla_put_addr(msg, 1, '127.0.0.1')
 
@@ -191,9 +224,9 @@ def test_nlattr_addr():
 
 
 @pytest.mark.skipif('True')
-def test_nlattr_data():
+def test_data():
     msg = nlmsg_alloc()
-    assert 0 == nla_put_data(msg, 0, c_float(3.14))
+    assert 0 == nla_put_data(msg, 0, ctypes.c_float(3.14))
 
     attr = nlmsg_find_attr(nlmsg_hdr(msg), 0)
     assert 0 == nla_type(attr)
@@ -203,7 +236,7 @@ def test_nlattr_data():
 
 
 @pytest.mark.skipif('True')
-def test_nlattr_nested():
+def test_nested():
     msg = nlmsg_alloc()
     assert 0 == nla_put_u8(msg, 2, 10)
     msg2 = nlmsg_alloc()
@@ -213,7 +246,7 @@ def test_nlattr_nested():
 
 
 @pytest.mark.skipif('True')
-def test_nlattr_same_attrtype():
+def test_same_attrtype():
     pass
 
 

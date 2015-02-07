@@ -8,11 +8,6 @@ install:
   - pip install codecov
   - pip install .
 
-before_script:
-  - sudo apt-get install libnl-genl-3-dev
-  - gcc $(pkg-config --cflags --libs libnl-genl-3.0) tests/correct_answers.c
-  - ./a.out > tests/correct_answers.json
-
 script:
   - python setup.py test
 

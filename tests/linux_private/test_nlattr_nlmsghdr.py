@@ -1,11 +1,11 @@
 import base64
-from ctypes import c_float, c_ulong
+from ctypes import c_float
 import socket
 
 import pytest
 
 from libnl.attr import (nla_put_u32, nla_get_u32, nla_type, nla_put_u8, nla_put_u16, nla_put_u64, nla_get_u8,
-                        nla_get_u16, nla_get_u64, nla_put_msecs)
+                        nla_get_u16, nla_get_u64, nla_get_flag, nla_put_flag, nla_put_string, nla_get_string)
 from libnl.linux_private.netlink import NETLINK_ROUTE
 from libnl.misc import msghdr
 from libnl.msg import nlmsg_alloc, nlmsg_hdr, nlmsg_find_attr
@@ -86,7 +86,6 @@ def test_nlattr_ints():
     assert 0 == nla_put_u16(msg, 3, 11)
     assert 0 == nla_put_u32(msg, 4, 12)
     assert 0 == nla_put_u64(msg, 5, 13195)
-    assert 0 == nla_put_msecs(msg, 8, c_ulong(1234567890))
 
     attr = nlmsg_find_attr(nlmsg_hdr(msg), 2)
     assert 2 == nla_type(attr)
@@ -116,19 +115,20 @@ def test_nlattr_flag():
 
     attr = nlmsg_find_attr(nlmsg_hdr(msg), 7)
     assert 7 == nla_type(attr)
-    assert nla_get_flag(attr)
-    assert b'' == base64.b64encode(bytes(attr)[:attr.nla_len])
+    assert nla_get_flag(attr) is True
+    assert b'BAAIAA==' == base64.b64encode(bytes(attr)[:attr.nla_len])
 
 
 @pytest.mark.skipif('True')
 def test_nlattr_string():
     msg = nlmsg_alloc()
-    assert 0 == nla_put_string(msg, 6, 'test')
+    assert 0 == nla_put_string(msg, 6, bytes('The quick br()wn f0x jumps over the l@zy dog!'.encode('ascii')))
 
     attr = nlmsg_find_attr(nlmsg_hdr(msg), 6)
     assert 6 == nla_type(attr)
-    assert 'test' == nla_get_string(attr)
-    assert b'' == base64.b64encode(bytes(attr)[:attr.nla_len])
+    assert bytes('The quick br()wn f0x jumps over the l@zy dog!'.encode('ascii')) == nla_get_string(attr)
+    expected = b'MgAIAFRoZSBxdWljayBicigpd24gZjB4IGp1bXBzIG92ZXIgdGhlIGxAenkgZG9nIQA='
+    assert expected == base64.b64encode(bytes(attr)[:attr.nla_len])
 
 
 @pytest.mark.skipif('True')

@@ -8,7 +8,8 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-from ctypes import byref, c_int, c_uint32, cast, memset, POINTER, sizeof, c_uint8, c_uint16, c_uint64, c_ulong
+from ctypes import (byref, c_int, c_uint32, cast, memset, POINTER, sizeof, c_uint8, c_uint16, c_uint64, c_ulong,
+                    create_string_buffer, c_char)
 
 from libnl.errno_ import NLE_INVAL, NLE_RANGE
 from libnl.linux_private.netlink import nlattr, NLA_ALIGN, NLA_TYPE_MASK
@@ -328,6 +329,55 @@ def nla_get_u64(nla):
     Payload as an int().
     """
     return int(nla.payload.value if isinstance(nla.payload, c_uint64) else c_uint64(nla.payload.value).value)
+
+
+def nla_put_string(msg, attrtype, value):
+    """Add string attribute to netlink message.
+    https://github.com/thom311/libnl/blob/master/lib/attr.c#L674
+
+    Positional arguments:
+    msg -- netlink message (nl_msg class instance).
+    attrtype -- attribute type.
+    value -- bytes() string value (e.g. bytes('Test'.encode('ascii'))).
+
+    Returns:
+    0 on success or a negative error code.
+    """
+    return int(nla_put(msg, attrtype, create_string_buffer(value)))
+
+
+def nla_get_string(nla):
+    """Return string attribute.
+    https://github.com/thom311/libnl/blob/master/lib/attr.c#L685
+
+    Returns:
+    bytes() string value.
+    """
+    return nla.payload.value
+
+
+def nla_put_flag(msg, attrtype):
+    """Add flag netlink attribute to netlink message.
+    https://github.com/thom311/libnl/blob/master/lib/attr.c#L709
+
+    Positional arguments:
+    msg -- netlink message (nl_msg class instance).
+    attrtype -- attribute type.
+
+    Returns:
+    0 on success or a negative error code.
+    """
+    return int(nla_put(msg, attrtype, c_char(0)))
+
+
+def nla_get_flag(nla):
+    """Return True if flag attribute is set.
+    https://github.com/thom311/libnl/blob/master/lib/attr.c#L720
+
+    Returns:
+    True if flag is set, otherwise False.
+    """
+    return bool(nla)
 
 
 def nla_put_msecs(msg, attrtype, value):

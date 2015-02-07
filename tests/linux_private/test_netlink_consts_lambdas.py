@@ -3,7 +3,8 @@ import ctypes
 import pytest
 
 from libnl.handlers import NL_CB_VALID
-from libnl.linux_private.netlink import NLMSG_ALIGN, NLMSG_ALIGNTO, NLM_F_DUMP, nlattr, nlmsghdr, NLA_ALIGN, NLA_HDRLEN
+from libnl.linux_private.netlink import (NLMSG_ALIGN, NLMSG_ALIGNTO, NLM_F_DUMP, nlattr, nlmsghdr, NLA_ALIGN,
+                                         NLA_HDRLEN, NLMSG_HDRLEN, NLMSG_LENGTH, NLMSG_SPACE)
 
 
 def test_nlmsg_align():
@@ -15,12 +16,10 @@ def test_nlmsg_align():
     assert 52 == NLMSG_ALIGN(50)
 
 
-@pytest.mark.skipif('True')
 def test_nlmsg_hdrlen():
     assert 16 == NLMSG_HDRLEN
 
 
-@pytest.mark.skipif('True')
 def test_nlmsg_length():
     assert 16 == NLMSG_LENGTH(0)
     assert 17 == NLMSG_LENGTH(1)
@@ -30,7 +29,6 @@ def test_nlmsg_length():
     assert 66 == NLMSG_LENGTH(50)
 
 
-@pytest.mark.skipif('True')
 def test_nlmsg_space():
     assert 16 == NLMSG_SPACE(0)
     assert 20 == NLMSG_SPACE(1)
@@ -50,17 +48,6 @@ def test_nlmsg_data(correct_answers):
     assert correct_answers['NLMSG_DATA(sizeof)'] == ctypes.sizeof(head)
     #assert 0 == int(head.nla_len)  # TODO fix this later.
     #assert 0 == int(head.nla_type)
-
-
-@pytest.mark.skipif('True')
-def test_nlmsg_ok():
-    nlh = ctypes.pointer(nlmsghdr(nlmsg_len=20, nlmsg_type=NL_CB_VALID, nlmsg_flags=NLM_F_DUMP))
-    assert False == NLMSG_OK(nlh, 0)
-    assert False == NLMSG_OK(nlh, 1)
-    assert False == NLMSG_OK(nlh, 2)
-    assert False == NLMSG_OK(nlh, 19)
-    assert True == NLMSG_OK(nlh, 20)
-    assert True == NLMSG_OK(nlh, 50)
 
 
 @pytest.mark.skipif('True')

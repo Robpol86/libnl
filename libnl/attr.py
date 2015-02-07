@@ -8,7 +8,7 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-from ctypes import byref, c_int, c_uint32, cast, memset, POINTER, sizeof
+from ctypes import byref, c_int, c_uint32, cast, memset, POINTER, sizeof, c_uint8, c_uint16, c_uint64, c_ulong
 
 from libnl.errno_ import NLE_INVAL, NLE_RANGE
 from libnl.linux_private.netlink import nlattr, NLA_ALIGN, NLA_TYPE_MASK
@@ -224,27 +224,138 @@ def nla_put(msg, attrtype, data):
     return 0
 
 
+def nla_put_u8(msg, attrtype, value):
+    """Add 8 bit integer attribute to netlink message.
+    https://github.com/thom311/libnl/blob/master/lib/attr.c#L563
+
+    Positional arguments:
+    msg -- netlink message (nl_msg class instance).
+    attrtype -- attribute type.
+    value -- numeric value to store as payload (int() or c_uint8()).
+
+    Returns:
+    0 on success or a negative error code.
+    """
+    return int(nla_put(msg, attrtype, value if isinstance(value, c_uint8) else c_uint8(value)))
+
+
+def nla_get_u8(nla):
+    """Return value of 8 bit integer attribute as an int().
+    https://github.com/thom311/libnl/blob/master/lib/attr.c#L574
+
+    Positional arguments:
+    nla -- 8 bit integer attribute.
+
+    Returns:
+    Payload as an int().
+    """
+    return int(nla.payload.value if isinstance(nla.payload, c_uint8) else c_uint8(nla.payload.value).value)
+
+
+def nla_put_u16(msg, attrtype, value):
+    """Add 16 bit integer attribute to netlink message.
+    https://github.com/thom311/libnl/blob/master/lib/attr.c#L588
+
+    Positional arguments:
+    msg -- netlink message (nl_msg class instance).
+    attrtype -- attribute type.
+    value -- numeric value to store as payload (int() or c_uint16()).
+
+    Returns:
+    0 on success or a negative error code.
+    """
+    return int(nla_put(msg, attrtype, value if isinstance(value, c_uint16) else c_uint16(value)))
+
+
+def nla_get_u16(nla):
+    """Return value of 16 bit integer attribute as an int().
+    https://github.com/thom311/libnl/blob/master/lib/attr.c#L599
+
+    Positional arguments:
+    nla -- 16 bit integer attribute.
+
+    Returns:
+    Payload as an int().
+    """
+    return int(nla.payload.value if isinstance(nla.payload, c_uint16) else c_uint16(nla.payload.value).value)
+
+
 def nla_put_u32(msg, attrtype, value):
     """Add 32 bit integer attribute to netlink message.
     https://github.com/thom311/libnl/blob/master/lib/attr.c#L613
 
     Positional arguments:
-    msg -- netlink message.
+    msg -- netlink message (nl_msg class instance).
     attrtype -- attribute type.
-    value -- int() or c_uint32() value to store as payload.
+    value -- numeric value to store as payload (int() or c_uint32()).
 
     Returns:
     0 on success or a negative error code.
     """
-    return nla_put(msg, attrtype, value if isinstance(value, c_uint32) else c_uint32(value))
+    return int(nla_put(msg, attrtype, value if isinstance(value, c_uint32) else c_uint32(value)))
 
 
 def nla_get_u32(nla):
-    """Return payload of 32 bit integer attribute as an int().
+    """Return value of 32 bit integer attribute as an int().
     https://github.com/thom311/libnl/blob/master/lib/attr.c#L624
 
     Returns:
-    Integer from netlink attribute payload.
+    Payload as an int().
     """
-    assert isinstance(nla.payload, c_uint32)
-    return nla.payload.value
+    return int(nla.payload.value if isinstance(nla.payload, c_uint32) else c_uint32(nla.payload.value).value)
+
+
+def nla_put_u64(msg, attrtype, value):
+    """Add 64 bit integer attribute to netlink message.
+    https://github.com/thom311/libnl/blob/master/lib/attr.c#L638
+
+    Positional arguments:
+    msg -- netlink message (nl_msg class instance).
+    attrtype -- attribute type.
+    value -- numeric value to store as payload (int() or c_uint64()).
+
+    Returns:
+    0 on success or a negative error code.
+    """
+    return int(nla_put(msg, attrtype, value if isinstance(value, c_uint64) else c_uint64(value)))
+
+
+def nla_get_u64(nla):
+    """Return value of 64 bit integer attribute as an int().
+    https://github.com/thom311/libnl/blob/master/lib/attr.c#L649
+
+    Returns:
+    Payload as an int().
+    """
+    return int(nla.payload.value if isinstance(nla.payload, c_uint64) else c_uint64(nla.payload.value).value)
+
+
+def nla_put_msecs(msg, attrtype, value):
+    """Add msecs attribute to netlink message.
+    http://lxr.free-electrons.com/source/include/net/netlink.h#L954
+
+    Positional arguments:
+    msg -- netlink message (nl_msg class instance).
+    attrtype -- attribute type.
+    value -- numeric msecs (int(), c_uint64(), or c_ulong()).
+
+    Returns:
+    0 on success or a negative error code.
+    """
+    if isinstance(value, c_uint64):
+        pass
+    elif isinstance(value, c_ulong):
+        value = c_uint64(value.value)
+    else:
+        value = c_uint64(value)
+    return int(nla_put_u64(msg, attrtype, value))
+
+
+def nla_get_msecs(nla):
+    """Return value of msecs attribute as an int().
+    https://github.com/thom311/libnl/blob/master/lib/attr.c#L748
+
+    Returns:
+    Payload as an int().
+    """
+    return nla_get_u64(nla)

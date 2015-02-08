@@ -47,7 +47,8 @@ class sockaddr_nl(object):
         self.nl_groups = 0
 
     def __iter__(self):
-        return iter((self.nl_pid, self.nl_groups))
+        yield self.nl_pid
+        yield self.nl_groups
 
 
 class nlmsghdr(object):

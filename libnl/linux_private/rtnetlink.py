@@ -7,7 +7,7 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-import struct
+import ctypes
 
 RTNL_FAMILY_IPMR = 128
 RTNL_FAMILY_IP6MR = 129
@@ -62,20 +62,78 @@ RTM_FAM = lambda cmd: (cmd - RTM_BASE) >> 2
 
 
 class rtattr(object):
-    """https://github.com/thom311/libnl/blob/master/include/linux-private/linux/rtnetlink.h#L137"""
+    """https://github.com/thom311/libnl/blob/master/include/linux-private/linux/rtnetlink.h#L137
 
-    def __init__(self, rta_type):
-        self.rta_type = int(rta_type)
+    Generic structure for encapsulation of optional route information. It is reminiscent of sockaddr, but with sa_family
+    replaced with attribute type.
 
-    def __iter__(self):
-        return iter(struct.pack('H', self.rta_type))
+    Instance variables:
+    rta_type -- c_ushort attribute type.
+    payload -- data of any type for this attribute. None means 0 byte payload.
+    """
+    SIZEOF = ctypes.sizeof(ctypes.c_ushort) * 2
+
+    def __init__(self, rta_type=None, payload=None):
+        self._rta_type = None
+        self.rta_type = rta_type
+        self.payload = payload
+
+    def __bytes__(self):
+        """Returns a bytes object formatted for the kernel."""
+        rta_len = self.rta_len
+        payload = b'' if self.payload is None else bytes(self.payload)
+        padding = (b'\0' * (RTA_ALIGN(rtattr.SIZEOF) - self.SIZEOF), b'\0' * (RTA_ALIGN(rta_len) - rta_len))
+        segments = (bytes(ctypes.c_uint16(rta_len)), bytes(self._rta_type), padding[0], payload, padding[1])
+        return b''.join(segments)
+
+    @property
+    def rta_len(self):
+        """c_ushort attribute length including payload, returns integer."""
+        return RTA_ALIGN(rtattr.SIZEOF) + (0 if self.payload is None else ctypes.sizeof(self.payload))
+
+    @property
+    def rta_type(self):
+        """c_ushort attribute type."""
+        return self._rta_type.value
+
+    @rta_type.setter
+    def rta_type(self, value):
+        if value is None:
+            self._rta_type = ctypes.c_ushort()
+            return
+        self._rta_type = value if isinstance(value, ctypes.c_ushort) else ctypes.c_ushort(value)
+
+
+RTA_ALIGNTO = 4
+RTA_ALIGN = lambda len_: (len_ + RTA_ALIGNTO - 1) & ~(RTA_ALIGNTO - 1)
+RTA_LENGTH = lambda len_: RTA_ALIGN(rtattr.SIZEOF) + len_
+RTA_SPACE = lambda len_: RTA_ALIGN(RTA_LENGTH(len_))
+RTA_PAYLOAD = lambda rta: rta.rta_len - RTA_LENGTH(0)
 
 
 class rtgenmsg(object):
-    """https://github.com/thom311/libnl/blob/master/include/linux-private/linux/rtnetlink.h#L410"""
+    """https://github.com/thom311/libnl/blob/master/include/linux-private/linux/rtnetlink.h#L410
 
-    def __init__(self, rtgen_family):
+    Instance variables:
+    rtgen_family -- c_ubyte rtgen family.
+    """
+    SIZEOF = ctypes.sizeof(ctypes.c_ubyte)
+
+    def __init__(self, rtgen_family=None):
+        self._rtgen_family = None
         self.rtgen_family = rtgen_family
 
-    def __iter__(self):
-        return iter(struct.pack('B', self.rtgen_family))
+    def __bytes__(self):
+        return bytes(self._rtgen_family)
+
+    @property
+    def rtgen_family(self):
+        """c_ubyte rtgen family, returns TODO."""
+        return self._rtgen_family.value
+
+    @rtgen_family.setter
+    def rtgen_family(self, value):
+        if value is None:
+            self._rtgen_family = ctypes.c_ubyte()
+            return
+        self._rtgen_family = value if isinstance(value, ctypes.c_ubyte) else ctypes.c_ubyte(value)

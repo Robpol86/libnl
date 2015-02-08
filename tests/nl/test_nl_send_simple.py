@@ -49,5 +49,5 @@ def test(tcp_server):
 
     assert 20 == nl_send_simple(sk, RTM_GETLINK, NLM_F_REQUEST | NLM_F_DUMP, rt_hdr)
     assert 1 == len(tcp_server.data)
-    assert 'FAAAABIABQMBAAAAAAAAABEAAAA=' == base64.b64encode(tcp_server.data[0])
+    assert b'FAAAABIABQMBAAAAAAAAABEAAAA=' == base64.b64encode(tcp_server.data[0])
     nl_socket_free(sk)

@@ -37,62 +37,62 @@ NL_CB_TYPE_MAX = NL_CB_DUMP_INTR
 
 def nl_valid_handler_verbose(msg, arg):
     """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L45"""
-    # TODO implement
+    # TODO implement https://github.com/Robpol86/libnl/issues/1
     return NL_OK
 
 
 def nl_invalid_handler_verbose(msg, arg):
     """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L56"""
-    # TODO implement
+    # TODO implement https://github.com/Robpol86/libnl/issues/1
     return NL_STOP
 
 
 def nl_overrun_handler_verbose(msg, arg):
     """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L67"""
-    # TODO implement
+    # TODO implement https://github.com/Robpol86/libnl/issues/1
     return NL_STOP
 
 
 def nl_error_handler_verbose(who, err, arg):
     """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L78"""
-    # TODO implement
+    # TODO implement https://github.com/Robpol86/libnl/issues/1
     #return -nl_syserr2nlerr(err.error)
     raise NotImplementedError
 
 
 def nl_valid_handler_debug(msg, arg):
     """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L92"""
-    # TODO implement
+    # TODO implement https://github.com/Robpol86/libnl/issues/1
     return NL_OK
 
 
 def nl_finish_handler_debug(msg, arg):
     """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L103"""
-    # TODO implement
+    # TODO implement https://github.com/Robpol86/libnl/issues/1
     return NL_STOP
 
 
 def nl_msg_in_handler_debug(msg, arg):
     """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L114"""
-    # TODO implement
+    # TODO implement https://github.com/Robpol86/libnl/issues/1
     return NL_OK
 
 
 def nl_msg_out_handler_debug(msg, arg):
     """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L124"""
-    # TODO implement
+    # TODO implement https://github.com/Robpol86/libnl/issues/1
     return NL_OK
 
 
 def nl_skipped_handler_debug(msg, arg):
     """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L134"""
-    # TODO implement
+    # TODO implement https://github.com/Robpol86/libnl/issues/1
     return NL_SKIP
 
 
 def nl_ack_handler_debug(msg, arg):
     """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L145"""
-    # TODO implement
+    # TODO implement https://github.com/Robpol86/libnl/issues/1
     return NL_STOP
 
 

@@ -18,7 +18,7 @@ NAME = 'libnl'
 NAME_FILE = NAME
 PACKAGE = True
 REQUIRES_INSTALL = []
-REQUIRES_TEST = ['pytest-cov']
+REQUIRES_TEST = ['pytest-cov', 'pygments']
 REQUIRES_PIP = '"' + '" "'.join(set(REQUIRES_INSTALL + REQUIRES_TEST)) + '"'
 
 

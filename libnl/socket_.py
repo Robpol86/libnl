@@ -106,7 +106,7 @@ def nl_socket_add_memberships(sk, *group):
     Returns:
     0 on success or a negative error code.
     """
-    sk.setsockopt(SOL_NETLINK, NETLINK_ADD_MEMBERSHIP, group)  # TODO group is now a list.
+    sk.setsockopt(SOL_NETLINK, NETLINK_ADD_MEMBERSHIP, group)  # TODO group is now a list. /issues/3
 
 
 def nl_socket_add_membership(sk, group):
@@ -138,7 +138,7 @@ def nl_socket_drop_memberships(sk, *group):
     Returns:
     0 on success or a negative error code.
     """
-    sk.setsockopt(SOL_NETLINK, NETLINK_DROP_MEMBERSHIP, group)  # TODO group is now a list.
+    sk.setsockopt(SOL_NETLINK, NETLINK_DROP_MEMBERSHIP, group)  # TODO group is now a list. /issues/3
 
 
 def nl_socket_drop_membership(sk, group):

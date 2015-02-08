@@ -151,7 +151,7 @@ def nl_send_iovec(sk, msg, iov):
     # Add credentials if present.
     creds = nlmsg_get_creds(msg)
     if creds:
-        raise NotImplementedError  # TODO
+        raise NotImplementedError  # TODO https://github.com/Robpol86/libnl/issues/2
 
     return nl_sendmsg(sk, msg, hdr)
 

@@ -17,7 +17,7 @@ NL_NO_AUTO_ACK = 1 << 4
 NL_MSG_CRED_PRESENT = 1
 
 
-class nl_cb(object):  # TODO
+class nl_cb(object):  # TODO https://github.com/Robpol86/libnl/issues/4
     """Netlink callback class (C struct equivalent).
     https://github.com/thom311/libnl/blob/master/include/netlink-private/types.h#L39
 
@@ -26,8 +26,8 @@ class nl_cb(object):  # TODO
     cb_args -- dictionary of arguments to be passed to callback functions (values), indexed by callback type (keys).
     cb_err -- error callback function.
     cb_err_arg -- argument to be passed to error callback function.
-    cb_recvmsgs_ow -- TODO
-    cb_recv_ow -- TODO
+    cb_recvmsgs_ow -- TODO https://github.com/Robpol86/libnl/issues/4
+    cb_recv_ow -- TODO https://github.com/Robpol86/libnl/issues/4
     cb_send_ow -- call this function instead of nl_send_iovec() in nl_send(). Args are (sk, msg).
     cb_active -- current callback type (e.g. NL_CB_MSG_OUT). Modified before every callback function call.
     """

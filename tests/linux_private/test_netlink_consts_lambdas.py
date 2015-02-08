@@ -46,7 +46,7 @@ def test_nlmsg_data(correct_answers):
     ctypes.resize(_nlmsg_data, _size_to)
     head = ctypes.pointer(ctypes.cast(_nlmsg_data, ctypes.POINTER(nlattr)))
     assert correct_answers['NLMSG_DATA(sizeof)'] == ctypes.sizeof(head)
-    #assert 0 == int(head.nla_len)  # TODO fix this later.
+    #assert 0 == int(head.nla_len)  # TODO fix this later. https://github.com/Robpol86/libnl/issues/6
     #assert 0 == int(head.nla_type)
 
 

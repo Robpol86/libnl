@@ -4,7 +4,7 @@ from libnl.nl import nl_complete_msg, nl_connect
 from libnl.socket_ import nl_socket_alloc, nl_socket_get_local_port
 
 
-def test_defaults():  # TODO test nlmsg_seq
+def test_defaults():  # TODO test nlmsg_seq https://github.com/Robpol86/libnl/issues/5
     """// gcc $(pkg-config --cflags --libs libnl-genl-3.0) a.c && ./a.out
     #include <netlink/msg.h>
     struct ucred { __u32 pid; __u32 uid; __u32 gid; };

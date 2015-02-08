@@ -42,7 +42,7 @@ def test_socket(tcp_server):
         struct msghdr hdr = { .msg_iov = &iov, .msg_iovlen = 1, };
 
         int ret = nl_sendmsg(sk, msg, &hdr);
-        printf("Bytes: %d\n", ret);  // 14
+        printf("Bytes: %d\n", ret);
         return 0;
     }
     // Expected bash output:

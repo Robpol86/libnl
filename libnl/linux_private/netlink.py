@@ -86,7 +86,10 @@ class nlmsghdr(object):
          <-------------- nlmsghdr->nlmsg_len ------------------->
         """
         nlmsg_len = self.nlmsg_len
-        payload = b''.join(bytes(p) for p in self.payload)
+        payload = b''
+        for pl in self.payload:
+            pl_bytes = bytes(pl)
+            payload += pl_bytes.ljust(self._tlen(pl_bytes), b'\0')
         padding = (b'\0' * (NLMSG_ALIGN(self.SIZEOF) - self.SIZEOF), b'\0' * (NLMSG_ALIGN(nlmsg_len) - nlmsg_len))
         segments = (
             bytes(ctypes.c_uint32(nlmsg_len)),
@@ -100,10 +103,15 @@ class nlmsghdr(object):
         )
         return b''.join(segments)
 
+    @staticmethod
+    def _tlen(pl_bytes):
+        """https://github.com/thom311/libnl/blob/master/lib/msg.c#L413"""
+        return (len(pl_bytes) + (NLMSG_ALIGNTO - 1)) & ~(NLMSG_ALIGNTO - 1)
+
     @property
     def nlmsg_len(self):
         """c_uint32 length of message including header, returns integer."""
-        return NLMSG_ALIGN(self.SIZEOF) + len(b''.join(bytes(p) for p in self.payload))
+        return NLMSG_ALIGN(self.SIZEOF) + sum(self._tlen(bytes(pl)) for pl in self.payload)
 
     @property
     def nlmsg_type(self):
@@ -154,8 +162,8 @@ class nlmsghdr(object):
         self._nlmsg_pid = value if isinstance(value, ctypes.c_uint32) else ctypes.c_uint32(value)
 
 
-NLMSG_ALIGNTO = ctypes.c_uint(4)
-NLMSG_ALIGN = lambda len_: (len_ + NLMSG_ALIGNTO.value - 1) & ~(NLMSG_ALIGNTO.value - 1)
+NLMSG_ALIGNTO = ctypes.c_uint(4).value
+NLMSG_ALIGN = lambda len_: (len_ + NLMSG_ALIGNTO - 1) & ~(NLMSG_ALIGNTO - 1)
 NLMSG_HDRLEN = NLMSG_ALIGN(nlmsghdr.SIZEOF)
 NLMSG_LENGTH = lambda len_: len_ + NLMSG_ALIGN(NLMSG_HDRLEN)
 NLMSG_SPACE = lambda len_: NLMSG_ALIGN(NLMSG_LENGTH(len_))

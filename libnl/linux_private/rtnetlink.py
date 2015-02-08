@@ -128,7 +128,7 @@ class rtgenmsg(object):
 
     @property
     def rtgen_family(self):
-        """c_ubyte rtgen family, returns TODO."""
+        """c_ubyte rtgen family, returns integer."""
         return self._rtgen_family.value
 
     @rtgen_family.setter

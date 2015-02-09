@@ -13,9 +13,11 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
+import errno
 import socket
+import resource
 
-from libnl.errno_ import NLE_BAD_SOCK, NLE_AF_NOSUPPORT
+from libnl.errno_ import NLE_BAD_SOCK, NLE_AF_NOSUPPORT, NLE_INVAL
 from libnl.error import nl_syserr2nlerr
 from libnl.handlers import NL_OK, NL_CB_MSG_OUT
 from libnl.linux_private.netlink import NLM_F_REQUEST, NLM_F_ACK
@@ -23,7 +25,7 @@ from libnl.misc import msghdr
 from libnl.msg import (nlmsg_alloc_simple, nlmsg_append, NL_AUTO_PORT, nlmsg_get_dst, nlmsg_get_creds, nlmsg_set_src,
                        nlmsg_hdr, NL_AUTO_SEQ)
 from libnl.netlink_private.netlink import nl_cb_call
-from libnl.netlink_private.types import NL_NO_AUTO_ACK, NL_SOCK_BUFSIZE_SET
+from libnl.netlink_private.types import NL_NO_AUTO_ACK, NL_SOCK_BUFSIZE_SET, NL_MSG_PEEK, NL_SOCK_PASSCRED
 from libnl.socket_ import nl_socket_set_buffer_size, nl_socket_get_local_port
 
 
@@ -269,3 +271,78 @@ def nl_send_simple(sk, type_, flags, buf=None):
         if err < 0:
             return err
     return nl_send_auto(sk, msg)
+
+
+def nl_recv(sk, nla, creds=None):
+    """Receive data from netlink socket.
+
+    Receives data from a connected netlink socket using recvmsg(). The peer's netlink address will be stored in `nla`
+    (second argument passed to this function).
+
+    This function blocks until data is available to be read unless the socket has been put into non-blocking mode using
+    `nl_socket_set_nonblocking()` in which case this function will return immediately with a return value of (0, None).
+
+    The buffer size used when reading from the netlink socket and thus limiting the maximum size of a netlink message
+    that can be read defaults to the size of a memory page (getpagesize()). The buffer size can be modified on a per
+    socket level using the function `nl_socket_set_msg_buf_size()`.
+
+    If message peeking is enabled using nl_socket_enable_msg_peek() the size of the message to be read will be
+    determined using the MSG_PEEK flag prior to performing the actual read. This leads to an additional recvmsg() call
+    for every read operation which has performance implications and is not recommended for high throughput protocols.
+
+    An eventual interruption of the recvmsg() system call is automatically handled by retrying the operation.
+
+    If receiving of credentials has been enabled using the function `nl_socket_set_passcred()`, this function will
+    update the class instance with the received credentials and assign it to `creds`.
+
+    Positional arguments:
+    sk -- netlink socket (nl_sock class instance).
+    nla -- netlink socket structure to hold address of peer (sockaddr_nl class instance) (mutable).
+    creds -- holds credentials (ucred class instance) (mutable).
+
+    Returns:
+    Two-item tuple. First item is number of bytes read, 0 on EOF, 0 on no data event (non-blocking mode), or a negative
+    error code. Second item is the message content from the socket or None.
+    """
+    flags = 0
+    page_size = resource.getpagesize() * 4
+    if not nla:
+        return -NLE_INVAL, None
+    if sk.s_flags & NL_MSG_PEEK:
+        flags |= socket.MSG_PEEK | socket.MSG_TRUNC
+    iov_len = sk.s_bufsize or page_size
+
+    if creds and sk.s_flags & NL_SOCK_PASSCRED:
+        raise NotImplementedError  # TODO https://github.com/Robpol86/libnl/issues/2
+
+    while True:  # This is the `goto retry` implementation.
+        try:
+            iov, _, msg_flags, address = sk.socket_instance.recvmsg(iov_len, 0, flags)
+        except OSError as exc:
+            if exc.errno == errno.EINTR:
+                continue  # recvmsg() returned EINTR, retrying.
+            return -nl_syserr2nlerr(exc.errno)
+        if not iov:
+            return 0
+
+        if msg_flags & socket.MSG_CTRUNC:
+            raise NotImplementedError  # TODO https://github.com/Robpol86/libnl/issues/2
+
+        if iov_len < len(iov) or msg_flags & socket.MSG_TRUNC:
+            # Provided buffer is not long enough.
+            # Enlarge it to size of n (which should be total length of the message) and try again.
+            iov_len = len(iov)
+            continue
+
+        if flags:
+            # Buffer is big enough, do the actual reading.
+            flags = 0
+            continue
+
+        nla.nl_pid = address[0]
+        nla.nl_groups = address[1]
+
+        if creds and sk.s_flags * NL_SOCK_PASSCRED:
+            raise NotImplementedError  # TODO https://github.com/Robpol86/libnl/issues/2
+
+        return len(iov), iov

@@ -20,7 +20,7 @@ import resource
 from libnl.errno_ import NLE_BAD_SOCK, NLE_AF_NOSUPPORT, NLE_INVAL
 from libnl.error import nl_syserr2nlerr
 from libnl.handlers import NL_OK, NL_CB_MSG_OUT
-from libnl.linux_private.netlink import NLM_F_REQUEST, NLM_F_ACK
+from libnl.linux_private.netlink import NLM_F_REQUEST, NLM_F_ACK, sockaddr_nl
 from libnl.misc import msghdr
 from libnl.msg import (nlmsg_alloc_simple, nlmsg_append, NL_AUTO_PORT, nlmsg_get_dst, nlmsg_get_creds, nlmsg_set_src,
                        nlmsg_hdr, NL_AUTO_SEQ)
@@ -273,8 +273,9 @@ def nl_send_simple(sk, type_, flags, buf=None):
     return nl_send_auto(sk, msg)
 
 
-def nl_recv(sk, nla, creds=None):
+def nl_recv(sk, nla, buf, creds=None):
     """Receive data from netlink socket.
+    https://github.com/thom311/libnl/blob/master/lib/nl.c#L625
 
     Receives data from a connected netlink socket using recvmsg(). The peer's netlink address will be stored in `nla`
     (second argument passed to this function).
@@ -297,8 +298,9 @@ def nl_recv(sk, nla, creds=None):
 
     Positional arguments:
     sk -- netlink socket (nl_sock class instance).
-    nla -- netlink socket structure to hold address of peer (sockaddr_nl class instance) (mutable).
-    creds -- holds credentials (ucred class instance) (mutable).
+    nla -- netlink socket structure to hold address of peer (sockaddr_nl class instance).
+    buf -- destination bytearray() for message content.
+    creds -- destination class instance for credentials (ucred class instance).
 
     Returns:
     Two-item tuple. First item is number of bytes read, 0 on EOF, 0 on no data event (non-blocking mode), or a negative
@@ -307,7 +309,7 @@ def nl_recv(sk, nla, creds=None):
     flags = 0
     page_size = resource.getpagesize() * 4
     if not nla:
-        return -NLE_INVAL, None
+        return -NLE_INVAL
     if sk.s_flags & NL_MSG_PEEK:
         flags |= socket.MSG_PEEK | socket.MSG_TRUNC
     iov_len = sk.s_bufsize or page_size
@@ -345,4 +347,26 @@ def nl_recv(sk, nla, creds=None):
         if creds and sk.s_flags * NL_SOCK_PASSCRED:
             raise NotImplementedError  # TODO https://github.com/Robpol86/libnl/issues/2
 
-        return len(iov), iov
+        if iov:
+            buf += iov
+
+        return len(buf)
+
+
+def recvmsgs(sk, cb):
+    """https://github.com/thom311/libnl/blob/master/lib/nl.c#L775
+
+    This is where callbacks are called.
+
+    Positional arguments:
+    sk -- netlink socket (nl_sock class instance).
+    cb -- callbacks (nl_cb class instance).
+
+    Returns:
+    Number of bytes received or a negative error code.
+    """
+    buf = bytearray()
+    nla = sockaddr_nl()
+
+    #while True:  # This is the `goto continue_reading` implementation.
+    #    n = cb.cb_recv_ow(sk, nla, buf, creds) if cb.cb_recv_ow else nl_recv(sk, nla)

@@ -242,9 +242,6 @@ def nl_send_auto(sk, msg):
     return nl_send(sk, msg)
 
 
-nl_send_auto_complete = nl_send_auto  # Alias.
-
-
 def nl_send_simple(sk, type_, flags, buf=None):
     """Construct and transmit a Netlink message.
     https://github.com/thom311/libnl/blob/master/lib/nl.c#L549
@@ -371,3 +368,68 @@ def recvmsgs(sk, cb):
 
     #while True:  # This is the `goto continue_reading` implementation.
     #    n = cb.cb_recv_ow(sk, nla, buf, creds) if cb.cb_recv_ow else nl_recv(sk, nla)
+
+
+def nl_recvmsgs_report(sk, cb):
+    """Receive a set of messages from a netlink socket and report parsed messages.
+    https://github.com/thom311/libnl/blob/master/lib/nl.c#L998
+
+    This function is identical to nl_recvmsgs() to the point that it will return the number of parsed messages instead
+    of 0 on success.
+
+    See nl_recvmsgs().
+
+    Positional arguments:
+    sk -- netlink socket (nl_sock class instance).
+    cb -- set of callbacks to control behaviour (nl_cb class instance).
+
+    Returns:
+    Number of received messages or a negative error code from nl_recv().
+    """
+    if cb.cb_recvmsgs_ow:
+        return int(cb.cb_recvmsgs_ow(sk, cb))
+    return int(recvmsgs(sk, cb))
+
+
+def nl_recvmsgs(sk, cb):
+    """Receive a set of messages from a netlink socket.
+    https://github.com/thom311/libnl/blob/master/lib/nl.c#L1023
+
+    Repeatedly calls nl_recv() or the respective replacement if provided by the application (see nl_cb_overwrite_recv())
+    and parses the received data as netlink messages. Stops reading if one of the callbacks returns NL_STOP or nl_recv
+    returns either 0 or a negative error code.
+
+    A non-blocking sockets causes the function to return immediately if no data is available.
+
+    See nl_recvmsgs_report().
+
+    Positional arguments:
+    sk -- netlink socket (nl_sock class instance).
+    cb -- set of callbacks to control behaviour (nl_cb class instance).
+
+    Returns:
+    0 on success or a negative error code from nl_recv().
+    """
+    err = nl_recvmsgs_report(sk, cb)
+    if err > 0:
+        return 0
+    return int(err)
+
+
+def nl_recvmsgs_default(sk):
+    """Receive a set of message from a netlink socket using handlers in nl_sock.
+    https://github.com/thom311/libnl/blob/master/lib/nl.c#L1039
+
+    Calls nl_recvmsgs() with the handlers configured in the netlink socket.
+
+    Positional arguments:
+    sk -- netlink socket (nl_sock class instance).
+
+    Returns:
+    0 on success or a negative error code from nl_recvmsgs().
+    """
+    return int(nl_recvmsgs(sk, sk.s_cb))
+
+
+nl_auto_complete = nl_complete_msg  # @deprecated Please use nl_complete_msg().
+nl_send_auto_complete = nl_send_auto  # @deprecated Please use nl_send_auto().

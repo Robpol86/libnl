@@ -297,10 +297,10 @@ def nl_recv(sk, nla, buf, creds=None):
     update the class instance with the received credentials and assign it to `creds`.
 
     Positional arguments:
-    sk -- netlink socket (nl_sock class instance).
-    nla -- netlink socket structure to hold address of peer (sockaddr_nl class instance).
-    buf -- destination bytearray() for message content.
-    creds -- destination class instance for credentials (ucred class instance).
+    sk -- netlink socket (nl_sock class instance) (input).
+    nla -- netlink socket structure to hold address of peer (sockaddr_nl class instance) (output).
+    buf -- destination bytearray() for message content (output).
+    creds -- destination class instance for credentials (ucred class instance) (output).
 
     Returns:
     Two-item tuple. First item is number of bytes read, 0 on EOF, 0 on no data event (non-blocking mode), or a negative
@@ -324,6 +324,7 @@ def nl_recv(sk, nla, buf, creds=None):
             if exc.errno == errno.EINTR:
                 continue  # recvmsg() returned EINTR, retrying.
             return -nl_syserr2nlerr(exc.errno)
+        nla.nl_family = sk.socket_instance.family  # recvmsg() in C does this, but not Python's.
         if not iov:
             return 0
 

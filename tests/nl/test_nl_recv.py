@@ -1,46 +1,58 @@
-import pytest
+import binascii
+import re
+
+from libnl.linux_private.netlink import NETLINK_ROUTE, NLM_F_REQUEST, sockaddr_nl
+from libnl.nl import nl_connect, nl_send_simple, nl_recv
+from libnl.socket_ import nl_socket_alloc
 
 
-@pytest.mark.skipif('True')
 def test():
-    """// gcc $(pkg-config --cflags --libs libnl-genl-3.0) a.c && (nc -l 2000 |base64 &) && sleep 0.1 && ./a.out
+    """// gcc $(pkg-config --cflags --libs libnl-genl-3.0) a.c && ./a.out
     #include <netlink/msg.h>
     struct nl_sock {
         struct sockaddr_nl s_local; struct sockaddr_nl s_peer; int s_fd; int s_proto; unsigned int s_seq_next;
         unsigned int s_seq_expect; int s_flags; struct nl_cb *s_cb; size_t s_bufsize;
     };
     int main() {
+        // Send data to the kernel.
         struct nl_sock *sk = nl_socket_alloc();
+        sk->s_seq_next = 0;
         nl_connect(sk, NETLINK_ROUTE);
-        int ret = nl_send_simple(sk, 0, NLM_F_ECHO, "PleaseReply", sizeof("PleaseReply"));
+        int ret = nl_send_simple(sk, 0, NLM_F_REQUEST, NULL, 0);
         printf("Bytes Sent: %d\n", ret);
 
+        // Retrieve kernel's response.
+        // nl_recvmsgs_default(sk);
+        // return 0;
         unsigned char *buf = NULL;
         struct sockaddr_nl nla = {0};
+        printf("%d == nla.nl_family\n", nla.nl_family);
         int n = nl_recv(sk, &nla, &buf, NULL);
         printf("Bytes Recv: %d\n", n);
 
-        struct sockaddr_in sin = { .sin_port = htons(2000), .sin_family = AF_INET, };
-        sin.sin_addr.s_addr = inet_addr("127.0.0.1");
-        int fd = socket(AF_INET, SOCK_STREAM, 0);
-        connect(fd, (struct sockaddr *) &sin, sizeof(sin));
-
-        struct nl_msg *msg = nlmsg_alloc_simple(0, 0);
-        sk->s_fd = fd;
-        sk->s_local.nl_pid = 0;
-        nl_complete_msg(sk, msg);
-
-        struct iovec iov = { .iov_base = buf, .iov_len = n, };
-        struct msghdr hdr = { .msg_iov = &iov, .msg_iovlen = 1, };
-
-        ret = nl_sendmsg(sk, msg, &hdr);
-        printf("Bytes: %d\n", ret);
+        int i = 0; for (i = 0; i<n; i++) printf("%02x", buf[i]); printf("\n");
+        printf("%d == nla.nl_family\n", nla.nl_family);
         return 0;
     }
-    // Expected bash output:
-    // Bytes Sent: 28
+    // Expected output:
+    // Bytes Sent: 16
+    // 0 == nla.nl_family
     // Bytes Recv: 36
-    // Bytes: 36
-    // JAAAAAIAAABrIdhU2CkAAAAAAAAcAAAAAAANAGsh2FTYKQAA
+    // 240000000200000000000000844c000000000000100000000000050000000000844c0000
+    // 16 == nla.nl_family
+    // Output delta:
+    // 240000000200000000000000ac4e000000000000100000000000050000000000ac4e0000
     """
-    pass
+    sk = nl_socket_alloc()
+    sk.s_seq_next = 0
+    nl_connect(sk, NETLINK_ROUTE)
+    assert 16 == nl_send_simple(sk, 0, NLM_F_REQUEST, None)
+
+    buf = bytearray()
+    nla = sockaddr_nl()
+    assert 0 == nla.nl_family
+    assert 36 == nl_recv(sk, nla, buf, None)
+
+    buf_hex = binascii.hexlify(buf).decode('ascii')
+    assert re.match(r'240000000200000000000000....000000000000100000000000050000000000....0000', buf_hex)
+    assert 16 == nla.nl_family

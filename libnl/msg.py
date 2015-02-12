@@ -11,7 +11,7 @@ of the License.
 """
 
 from libnl.attr import nla_for_each_attr, nla_find
-from libnl.linux_private.netlink import nlmsghdr
+from libnl.linux_private.netlink import nlmsghdr, NLMSG_ERROR, NLMSG_HDRLEN
 from libnl.netlink_private.types import nl_msg, NL_MSG_CRED_PRESENT
 
 NL_AUTO_PORT = 0
@@ -20,7 +20,7 @@ NL_AUTO_SEQ = 0
 
 
 def nlmsg_data(nlh):
-    """Return pointer to message payload.
+    """Return the message payload.
     https://github.com/thom311/libnl/blob/master/lib/msg.c#L105
 
     Positional arguments:
@@ -43,6 +43,22 @@ def nlmsg_for_each_attr(nlh):
     Generator yielding nl_attr instances.
     """
     return nla_for_each_attr(nlh.payload)
+
+
+def nlmsg_datalen(nlh):
+    """Return length of message payload.
+    https://github.com/thom311/libnl/blob/master/lib/msg.c#L121
+
+    Positional arguments:
+    nlh -- netlink message header (nlmsghdr class instance).
+
+    Returns:
+    Length of message payload in bytes.
+    """
+    return nlh.nlmsg_len - NLMSG_HDRLEN
+
+
+nlmsg_len = nlmsg_datalen  # Alias. https://github.com/thom311/libnl/blob/master/lib/msg.c#L126
 
 
 def nlmsg_attrdata(nlh):
@@ -146,13 +162,13 @@ def nlmsg_hdr(msg):
     """Return actual netlink message.
     https://github.com/thom311/libnl/blob/master/lib/msg.c#L536
 
-    Returns the actual netlink message casted to the type of the netlink message header.
+    Returns the actual netlink message.
 
     Positional arguments:
-    msg -- netlink message.
+    msg -- netlink message (nl_msg class instance).
 
     Returns:
-    A pointer to the netlink message.
+    The netlink message object.
     """
     return msg.nm_nlh
 
@@ -172,3 +188,61 @@ def nlmsg_get_creds(msg):
     if msg.nm_flags & NL_MSG_CRED_PRESENT:
         return msg.nm_creds
     return None
+
+
+def print_hdr(ofd, msg):
+    """https://github.com/thom311/libnl/blob/master/lib/msg.c#L793
+
+    Positional arguments:
+    ofd -- handle to write to (open(), sys.stdout, etc.).
+    msg -- message to print (nl_msg class instance).
+    """
+    nlh = nlmsg_hdr(msg)
+    pass  # not done, TODO https://github.com/Robpol86/libnl/issues/7
+
+
+def dump_error_msg(msg, ofd):
+    """https://github.com/thom311/libnl/blob/master/lib/msg.c#L908
+    Positional arguments:
+    msg -- message to print (nl_msg class instance).
+    ofd -- handle to write to (open(), sys.stdout, etc.).
+    """
+    hdr = nlmsg_hdr(msg)
+    err = nlmsg_data(hdr)
+
+    ofd.write('  [ERRORMSG] {0} octets\n'.format(err.SIZEOF))
+    pass  # not done, TODO https://github.com/Robpol86/libnl/issues/7
+
+
+def print_msg(msg, ofd, hdr):
+    """https://github.com/thom311/libnl/blob/master/lib/msg.c#L929
+
+    Positional arguments:
+    msg -- netlink message (nl_msg class instance).
+    ofd -- handle to write to (open(), sys.stdout, etc.).
+    hdr -- netlink message header (nlmsghdr class instance).
+    """
+    pass  # TODO https://github.com/Robpol86/libnl/issues/7
+
+
+def nl_msg_dump(msg, ofd):
+    """Dump message in human readable format to handle.
+    https://github.com/thom311/libnl/blob/master/lib/msg.c#L970
+
+    Positional arguments:
+    msg -- message to print (nl_msg class instance).
+    ofd -- handle to write to (open(), sys.stdout, etc.).
+    """
+    hdr = nlmsg_hdr(msg)
+
+    ofd.write('--------------------------   BEGIN NETLINK MESSAGE ---------------------------\n')
+
+    ofd.write('  [NETLINK HEADER] {0} octets\n'.format(hdr.SIZEOF))
+    print_hdr(ofd, msg)
+
+    if hdr.nlmsg_type == NLMSG_ERROR:
+        dump_error_msg(msg, ofd)
+    elif nlmsg_len(hdr) > 0:
+        print_msg(msg, ofd, hdr)
+
+    ofd.write('---------------------------  END NETLINK MESSAGE   ---------------------------\n')

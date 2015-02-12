@@ -9,17 +9,40 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
+import logging
+import os
 import socket
 import time
 
 from libnl.errno_ import NLE_BAD_SOCK
 from libnl.error import nl_syserr2nlerr
-from libnl.handlers import NL_CB_DEFAULT, nl_cb_alloc
+from libnl.handlers import NL_CB_DEFAULT, nl_cb_alloc, NL_CB_VERBOSE, NL_CB_DEBUG
 from libnl.linux_private.netlink import NETLINK_ADD_MEMBERSHIP, NETLINK_DROP_MEMBERSHIP
+from libnl.misc import __init
 from libnl.netlink_private.types import nl_sock, NL_OWN_PORT, NL_SOCK_BUFSIZE_SET
 
+_LOGGER = logging.getLogger(__name__)
 _PREVIOUS_LOCAL_PORT = None
+default_cb = NL_CB_DEFAULT  # https://github.com/thom311/libnl/blob/master/lib/socket.c#L40
 SOL_NETLINK = 270
+
+
+@__init
+def init_default_cb():
+    """https://github.com/thom311/libnl/blob/master/lib/socket.c#L42"""
+    global default_cb
+    nlcb = os.environ.get('NLCB')
+    if not nlcb:
+        return
+
+    if nlcb.lower() == 'default':
+        default_cb = NL_CB_DEFAULT
+    elif nlcb.lower() == 'verbose':
+        default_cb = NL_CB_VERBOSE
+    elif nlcb.lower() == 'debug':
+        default_cb = NL_CB_DEBUG
+    else:
+        _LOGGER.warning('Unknown value for NLCB, valid values: {default | verbose | debug}')
 
 
 def generate_local_port():
@@ -46,7 +69,7 @@ def nl_socket_alloc(cb=None):
     Newly allocated netlink socket (nl_sock class instance) or None.
     """
     # Allocate the callback.
-    cb = cb or nl_cb_alloc(NL_CB_DEFAULT)
+    cb = cb or nl_cb_alloc(default_cb)
     if not cb:
         return None
 

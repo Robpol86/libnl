@@ -73,3 +73,20 @@ class msghdr(object):
         self.msg_iov = msg_iov
         self.msg_control = msg_control
         self.msg_flags = msg_flags
+
+
+def __init(func):
+    """Implements the equivalent of the GNU C __init initializer function.
+
+    https://gcc.gnu.org/onlinedocs/gccint/Initialization.html
+
+    Decorator used to call functions upon importing the module.
+
+    Positional arguments:
+    func -- the decorated function object.
+
+    Returns:
+    The same function.
+    """
+    func()
+    return func

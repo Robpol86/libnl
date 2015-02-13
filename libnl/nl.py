@@ -14,19 +14,22 @@ of the License.
 """
 
 import errno
+import logging
 import socket
 import resource
 
 from libnl.errno_ import NLE_BAD_SOCK, NLE_AF_NOSUPPORT, NLE_INVAL
 from libnl.error import nl_syserr2nlerr
 from libnl.handlers import NL_OK, NL_CB_MSG_OUT
-from libnl.linux_private.netlink import NLM_F_REQUEST, NLM_F_ACK, sockaddr_nl
-from libnl.misc import msghdr
+from libnl.linux_private.netlink import NLM_F_REQUEST, NLM_F_ACK, sockaddr_nl, nlmsghdr
+from libnl.misc import msghdr, ucred
 from libnl.msg import (nlmsg_alloc_simple, nlmsg_append, NL_AUTO_PORT, nlmsg_get_dst, nlmsg_get_creds, nlmsg_set_src,
                        nlmsg_hdr, NL_AUTO_SEQ)
 from libnl.netlink_private.netlink import nl_cb_call
 from libnl.netlink_private.types import NL_NO_AUTO_ACK, NL_SOCK_BUFSIZE_SET, NL_MSG_PEEK, NL_SOCK_PASSCRED
 from libnl.socket_ import nl_socket_set_buffer_size, nl_socket_get_local_port
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def nl_connect(sk, protocol):
@@ -364,10 +367,27 @@ def recvmsgs(sk, cb):
     Number of bytes received or a negative error code.
     """
     buf = bytearray()
-    nla = sockaddr_nl()
 
-    #while True:  # This is the `goto continue_reading` implementation.
-    #    n = cb.cb_recv_ow(sk, nla, buf, creds) if cb.cb_recv_ow else nl_recv(sk, nla)
+    # nla is passed on to not only to nl_recv() but may also be passed to a function pointer provided by the caller
+    # which may or may not initialize the variable. Thomas Graf.
+    nla = sockaddr_nl()
+    creds = ucred()
+
+    while True:  # This is the `goto continue_reading` implementation.
+        _LOGGER.debug('Attempting to read from %s', id(sk))
+        n = cb.cb_recv_ow(sk, nla, buf, creds) if cb.cb_recv_ow else nl_recv(sk, nla, buf, creds)
+        if n <= 0:
+            return n
+
+        _LOGGER.debug('recvmsgs(%s): Read %d bytes', id(sk), n)
+
+        hdr = nlmsghdr.from_buffer(buf)
+
+        while True:  # nlmsg_ok() loop.
+            _LOGGER.debug('recvmsgs(%s): Processing valid message...', id(sk))
+            #msg = nlmsg_convert(hdr)
+            #if not msg:
+            #    return -NLE_NOMEM
 
 
 def nl_recvmsgs_report(sk, cb):

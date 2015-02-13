@@ -1,8 +1,11 @@
 import base64
+import ctypes
 import socket
 
+import pytest
+
 from libnl.attr import nla_put_u32, nla_put_u64
-from libnl.linux_private.netlink import NETLINK_ROUTE
+from libnl.linux_private.netlink import NETLINK_ROUTE, nlmsghdr
 from libnl.misc import msghdr
 from libnl.msg import nlmsg_alloc, nlmsg_hdr
 from libnl.nl import nl_connect, nl_complete_msg, nl_sendmsg
@@ -128,3 +131,61 @@ def test_two_attrs():
     nlh.nlmsg_pid = 0  # sk.s_local.nl_pid is read-only in Python.
 
     assert b'JAAAAAAABQAAAAAAAAAAAAgABAAIAAAADAAFABEAAAAAAAAA' == base64.b64encode(bytes(nlh)[:nlh.nlmsg_len])
+
+
+@pytest.mark.skipif('True')
+def test_from_buffer_no_attrs():
+    nlh = nlmsghdr(1, 20, 300, 4000)
+    nlh.nlmsg_type = 1
+    nlh.nlmsg_flags = 20
+    nlh.nlmsg_seq = 300
+    nlh.nlmsg_pid = 4000
+
+    assert 24 == nlh.nlmsg_len
+    assert ctypes.c_uint16(1) == getattr(nlh, '_nlmsg_type')
+    assert ctypes.c_uint16(20) == getattr(nlh, '_nlmsg_flags')
+    assert ctypes.c_uint32(300) == getattr(nlh, '_nlmsg_seq')
+    assert ctypes.c_uint32(4000) == getattr(nlh, '_nlmsg_pid')
+    assert list() == nlh.payload
+
+    buf = bytearray(nlh)
+    assert b'JAAAAAAABQAAAAAAAAAAAAgABAAIAAAADAAFABEAAAAAAAAA' == bytes(buf)
+
+    nlh2 = nlmsghdr.from_buffer(buf)
+    assert 24 == nlh2.nlmsg_len
+    assert ctypes.c_uint16(1) == getattr(nlh2, '_nlmsg_type')
+    assert ctypes.c_uint16(20) == getattr(nlh2, '_nlmsg_flags')
+    assert ctypes.c_uint32(300) == getattr(nlh2, '_nlmsg_seq')
+    assert ctypes.c_uint32(4000) == getattr(nlh2, '_nlmsg_pid')
+    assert list() == nlh2.payload
+
+
+@pytest.mark.skipif('True')
+def test_from_buffer_with_attrs():
+    msg = nlmsg_alloc()
+    assert 0 == nla_put_u32(msg, 4, 8)
+    assert 0 == nla_put_u64(msg, 5, 17)
+    nlh = nlmsg_hdr(msg)
+    nlh.nlmsg_type = 1
+    nlh.nlmsg_flags = 20
+    nlh.nlmsg_seq = 300
+    nlh.nlmsg_pid = 4000
+
+    assert 24 == nlh.nlmsg_len
+    assert 1 == nlh.nlmsg_type
+    assert 20 == nlh.nlmsg_flags
+    assert 300 == nlh.nlmsg_seq
+    assert 4000 == nlh.nlmsg_pid
+    assert isinstance(nlh.payload[0], ctypes.c_uint32)
+
+    buf = bytearray(nlh)
+    assert b'JAAAAAAABQAAAAAAAAAAAAgABAAIAAAADAAFABEAAAAAAAAA' == bytes(buf)
+
+    nlh2 = nlmsghdr.from_buffer(buf)
+    assert 24 == nlh.nlmsg_len
+    assert 1 == nlh.nlmsg_type
+    assert 20 == nlh.nlmsg_flags
+    assert 300 == nlh.nlmsg_seq
+    assert 4000 == nlh.nlmsg_pid
+    assert 0 == nla_put_u64(msg, 5, 17)
+    assert 36 == nlh.nlmsg_len

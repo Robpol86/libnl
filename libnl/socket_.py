@@ -31,17 +31,17 @@ SOL_NETLINK = 270
 def init_default_cb():
     """https://github.com/thom311/libnl/blob/master/lib/socket.c#L42"""
     global default_cb
-    nlcb = os.environ.get('NLCB')
+    nlcb = os.environ.get('NLCB', '').lower()
     if not nlcb:
         return
 
-    if nlcb.lower() == 'default':
+    if nlcb == 'default':
         default_cb = NL_CB_DEFAULT
-    elif nlcb.lower() == 'verbose':
+    elif nlcb == 'verbose':
         default_cb = NL_CB_VERBOSE
-    elif nlcb.lower() == 'debug':
+    elif nlcb == 'debug':
         default_cb = NL_CB_DEBUG
-    else:
+    elif logging.getLogger().handlers:
         _LOGGER.warning('Unknown value for NLCB, valid values: {default | verbose | debug}')
 
 

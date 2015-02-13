@@ -9,6 +9,8 @@ of the License.
 
 import ctypes
 
+from libnl.misc import split_bytearray
+
 NETLINK_ROUTE = 0  # Routing/device hook.
 NETLINK_GENERIC = 16
 
@@ -107,6 +109,15 @@ class nlmsghdr(object):
     def _tlen(pl_bytes):
         """https://github.com/thom311/libnl/blob/master/lib/msg.c#L413"""
         return (len(pl_bytes) + (NLMSG_ALIGNTO - 1)) & ~(NLMSG_ALIGNTO - 1)
+
+    @classmethod
+    def from_buffer(cls, buf):
+        """Creates and returns a class instance based on data from a bytearray()."""
+        split = split_bytearray(buf, ctypes.c_uint32, ctypes.c_uint16, ctypes.c_uint16, ctypes.c_uint32,
+                                ctypes.c_uint32)
+        nlmsg_len, nlmsg_type, nlmsg_flags, nlmsg_seq, nlmsg_pid, buf = split
+        nlh = cls(nlmsg_type=nlmsg_type, nlmsg_flags=nlmsg_flags, nlmsg_seq=nlmsg_seq, nlmsg_pid=nlmsg_pid)
+        return nlh
 
     @property
     def nlmsg_len(self):

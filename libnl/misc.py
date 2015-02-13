@@ -90,3 +90,25 @@ def __init(func):
     """
     func()
     return func
+
+
+def split_bytearray(buf, *expected_c_types):
+    """Splits and parses bytearray() buffer into expected c_types.
+
+    Positional arguments:
+    buf -- bytearray() object to parse.
+
+    Keyword arguments:
+    expected_c_types -- one or more c_types object (not instance).
+
+    Returns:
+    Tuple of c_types.<type>.from_buffer() values. Last item is remainder of buf if too long or empty bytearray().
+    """
+    buf_remaining = buf.copy()
+    parsed = []
+    for type_ in expected_c_types:
+        size = ctypes.sizeof(type_)
+        parsed.append(type_(buf_remaining[:size]))
+        buf_remaining = buf_remaining[size:]
+    parsed.append(buf_remaining)
+    return tuple(parsed)

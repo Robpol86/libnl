@@ -1,4 +1,3 @@
-import os
 import socketserver
 import threading
 import time
@@ -41,13 +40,3 @@ def tcp_server(request):
     request.addfinalizer(fin)
 
     return Getter(thread, server, data)
-
-
-@pytest.fixture(scope='function', autouse=True)
-def verify_socket_closed(request):
-    sockets_open = len(os.listdir('/proc/self/fd'))
-
-    def fin():
-        assert sockets_open == len(os.listdir('/proc/self/fd'))
-
-    request.addfinalizer(fin)

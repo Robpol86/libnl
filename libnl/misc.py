@@ -108,7 +108,9 @@ def split_bytearray(buf, *expected_c_types):
     parsed = []
     for type_ in expected_c_types:
         size = ctypes.sizeof(type_)
-        parsed.append(type_(buf_remaining[:size]))
+        chunk = buf_remaining[:size]
+        restored = type_.from_buffer(chunk)
+        parsed.append(restored)
         buf_remaining = buf_remaining[size:]
     parsed.append(buf_remaining)
     return tuple(parsed)

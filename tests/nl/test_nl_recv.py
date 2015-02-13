@@ -5,7 +5,7 @@ import pytest
 
 from libnl.linux_private.netlink import NETLINK_ROUTE, NLM_F_REQUEST, sockaddr_nl
 from libnl.nl import nl_connect, nl_send_simple, nl_recv, nl_recvmsgs_default
-from libnl.socket_ import nl_socket_alloc
+from libnl.socket_ import nl_socket_alloc, nl_socket_free
 
 
 def test_nl_recv():
@@ -54,6 +54,7 @@ def test_nl_recv():
     nla = sockaddr_nl()
     assert 0 == nla.nl_family
     assert 36 == nl_recv(sk, nla, buf, None)
+    nl_socket_free(sk)
 
     buf_hex = binascii.hexlify(buf).decode('ascii')
     assert re.match(r'240000000200000000000000....000000000000100000000000050000000000....0000', buf_hex)
@@ -88,6 +89,7 @@ def test_nl_recvmsgs_default():
     nl_connect(sk, NETLINK_ROUTE)
     assert 16 == nl_send_simple(sk, 0, NLM_F_REQUEST, None)
     assert 0 == nl_recvmsgs_default(sk)
+    nl_socket_free(sk)
 
 
 @pytest.mark.skipif('True')
@@ -120,3 +122,4 @@ def test_nl_recvmsgs_default_error():
     nl_connect(sk, NETLINK_ROUTE)
     assert 16 == nl_send_simple(sk, 0, NLM_F_REQUEST, None)
     assert 0 == nl_recvmsgs_default(sk)
+    nl_socket_free(sk)

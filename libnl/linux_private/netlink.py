@@ -113,10 +113,20 @@ class nlmsghdr(object):
     @classmethod
     def from_buffer(cls, buf):
         """Creates and returns a class instance based on data from a bytearray()."""
-        split = split_bytearray(buf, ctypes.c_uint32, ctypes.c_uint16, ctypes.c_uint16, ctypes.c_uint32,
-                                ctypes.c_uint32)
-        nlmsg_len, nlmsg_type, nlmsg_flags, nlmsg_seq, nlmsg_pid, buf = split
+        # First build the class instance.
+        types = (ctypes.c_uint32, ctypes.c_uint16, ctypes.c_uint16, ctypes.c_uint32, ctypes.c_uint32)
+        nlmsg_len, nlmsg_type, nlmsg_flags, nlmsg_seq, nlmsg_pid, buf_copy = split_bytearray(buf, *types)
         nlh = cls(nlmsg_type=nlmsg_type, nlmsg_flags=nlmsg_flags, nlmsg_seq=nlmsg_seq, nlmsg_pid=nlmsg_pid)
+        # Now build the payload.
+        while buf_copy:
+            if not buf_copy.rstrip(b'\0'):
+                break  # Only padding remains.
+            nla_len = ctypes.c_uint32.from_buffer(buf_copy[:ctypes.sizeof(ctypes.c_uint32)])
+            nla_total_size = NLA_ALIGN(nla_len)
+            chunk = buf_copy[:nla_total_size]
+            nla = nlattr.from_buffer(chunk)
+            nlh.payload.append(nla)
+            buf_copy = buf_copy[nla_total_size:]
         return nlh
 
     @property
@@ -229,6 +239,19 @@ class nlattr(object):
         padding = (b'\0' * (NLA_HDRLEN - self.SIZEOF), b'\0' * (NLA_ALIGN(nla_len) - nla_len))
         segments = (bytes(ctypes.c_uint16(nla_len)), bytes(self._nla_type), padding[0], payload, padding[1])
         return b''.join(segments)
+
+    @classmethod
+    def from_buffer(cls, buf):
+        """Creates and returns a class instance based on data from a bytearray()."""
+        # First build the class instance.
+        nla_len, nla_type, buf_copy = split_bytearray(buf, ctypes.c_uint16, ctypes.c_uint16)
+        nla = cls(nla_len=nla_len, nla_type=nla_type)
+        payload_size = nla_len - NLA_HDRLEN
+        if payload_size <= 0:
+            return nla
+        # Now build the payload.
+
+        return nla
 
     @property
     def nla_len(self):

@@ -133,7 +133,6 @@ def test_two_attrs():
     assert b'JAAAAAAABQAAAAAAAAAAAAgABAAIAAAADAAFABEAAAAAAAAA' == base64.b64encode(bytes(nlh)[:nlh.nlmsg_len])
 
 
-@pytest.mark.skipif('True')
 def test_from_buffer_no_attrs():
     nlh = nlmsghdr(1, 20, 300, 4000)
     nlh.nlmsg_type = 1
@@ -141,22 +140,20 @@ def test_from_buffer_no_attrs():
     nlh.nlmsg_seq = 300
     nlh.nlmsg_pid = 4000
 
-    assert 24 == nlh.nlmsg_len
-    assert ctypes.c_uint16(1) == getattr(nlh, '_nlmsg_type')
-    assert ctypes.c_uint16(20) == getattr(nlh, '_nlmsg_flags')
-    assert ctypes.c_uint32(300) == getattr(nlh, '_nlmsg_seq')
-    assert ctypes.c_uint32(4000) == getattr(nlh, '_nlmsg_pid')
+    assert 16 == nlh.nlmsg_len
+    assert bytes(ctypes.c_uint16(1)) == bytes(getattr(nlh, '_nlmsg_type'))
+    assert bytes(ctypes.c_uint16(20)) == bytes(getattr(nlh, '_nlmsg_flags'))
+    assert bytes(ctypes.c_uint32(300)) == bytes(getattr(nlh, '_nlmsg_seq'))
+    assert bytes(ctypes.c_uint32(4000)) == bytes(getattr(nlh, '_nlmsg_pid'))
     assert list() == nlh.payload
 
-    buf = bytearray(nlh)
-    assert b'JAAAAAAABQAAAAAAAAAAAAgABAAIAAAADAAFABEAAAAAAAAA' == bytes(buf)
-
+    buf = bytearray(bytes(nlh))
     nlh2 = nlmsghdr.from_buffer(buf)
-    assert 24 == nlh2.nlmsg_len
-    assert ctypes.c_uint16(1) == getattr(nlh2, '_nlmsg_type')
-    assert ctypes.c_uint16(20) == getattr(nlh2, '_nlmsg_flags')
-    assert ctypes.c_uint32(300) == getattr(nlh2, '_nlmsg_seq')
-    assert ctypes.c_uint32(4000) == getattr(nlh2, '_nlmsg_pid')
+    assert 16 == nlh2.nlmsg_len
+    assert bytes(ctypes.c_uint16(1)) == bytes(getattr(nlh2, '_nlmsg_type'))
+    assert bytes(ctypes.c_uint16(20)) == bytes(getattr(nlh2, '_nlmsg_flags'))
+    assert bytes(ctypes.c_uint32(300)) == bytes(getattr(nlh2, '_nlmsg_seq'))
+    assert bytes(ctypes.c_uint32(4000)) == bytes(getattr(nlh2, '_nlmsg_pid'))
     assert list() == nlh2.payload
 
 

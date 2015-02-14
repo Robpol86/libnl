@@ -62,6 +62,7 @@ class nlmsghdr(object):
     nlmsg_flags -- additional flags.
     nlmsg_seq -- sequence number.
     nlmsg_pid -- sending process port ID.
+    payload -- list of data of any type.
     """
     SIZEOF = sum([ctypes.sizeof(ctypes.c_uint16) * 2, ctypes.sizeof(ctypes.c_uint32) * 3])
 
@@ -113,20 +114,16 @@ class nlmsghdr(object):
     @classmethod
     def from_buffer(cls, buf):
         """Creates and returns a class instance based on data from a bytearray()."""
-        # First build the class instance.
         types = (ctypes.c_uint32, ctypes.c_uint16, ctypes.c_uint16, ctypes.c_uint32, ctypes.c_uint32)
-        nlmsg_len, nlmsg_type, nlmsg_flags, nlmsg_seq, nlmsg_pid, buf_copy = split_bytearray(buf, *types)
+        nlmsg_len, nlmsg_type, nlmsg_flags, nlmsg_seq, nlmsg_pid, buf_remaining = split_bytearray(buf, *types)
         nlh = cls(nlmsg_type=nlmsg_type, nlmsg_flags=nlmsg_flags, nlmsg_seq=nlmsg_seq, nlmsg_pid=nlmsg_pid)
         # Now build the payload.
-        while buf_copy:
-            if not buf_copy.rstrip(b'\0'):
-                break  # Only padding remains.
-            nla_len = ctypes.c_uint32.from_buffer(buf_copy[:ctypes.sizeof(ctypes.c_uint32)])
+        while buf_remaining.rstrip(b'\0'):
+            nla_len = ctypes.c_uint32.from_buffer(buf_remaining[:ctypes.sizeof(ctypes.c_uint32)])
             nla_total_size = NLA_ALIGN(nla_len)
-            chunk = buf_copy[:nla_total_size]
-            nla = nlattr.from_buffer(chunk)
-            nlh.payload.append(nla)
-            buf_copy = buf_copy[nla_total_size:]
+            chunk = buf_remaining[:nla_total_size]
+            nlh.payload.append(chunk)
+            buf_remaining = buf_remaining[nla_total_size:]
         return nlh
 
     @property
@@ -243,14 +240,11 @@ class nlattr(object):
     @classmethod
     def from_buffer(cls, buf):
         """Creates and returns a class instance based on data from a bytearray()."""
-        # First build the class instance.
         nla_len, nla_type, buf_copy = split_bytearray(buf, ctypes.c_uint16, ctypes.c_uint16)
         nla = cls(nla_len=nla_len, nla_type=nla_type)
         payload_size = nla_len - NLA_HDRLEN
-        if payload_size <= 0:
-            return nla
-        # Now build the payload.
-
+        if payload_size > 0:
+            nla.payload = buf_copy
         return nla
 
     @property

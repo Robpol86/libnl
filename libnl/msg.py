@@ -143,6 +143,23 @@ def nlmsg_alloc_simple(nlmsgtype, flags):
     return msg
 
 
+def nlmsg_convert(hdr):
+    """Convert a netlink message received from a netlink socket to a nl_msg.
+    https://github.com/thom311/libnl/blob/master/lib/msg.c#L382
+
+    Allocates a new netlink message and copies all of the data pointed to by `hdr` into the new message object.
+
+    Positional arguments:
+    hdr -- nlmsghdr class instance.
+
+    Returns:
+    New nl_msg class instance derived,
+    """
+    nm = nlmsg_alloc()
+    nm.nm_nlh = hdr
+    return nm
+
+
 def nlmsg_append(msg, data):
     """Append data to tail of a netlink message.
     https://github.com/thom311/libnl/blob/master/lib/msg.c#L442
@@ -171,6 +188,16 @@ def nlmsg_hdr(msg):
     The netlink message object.
     """
     return msg.nm_nlh
+
+
+def nlmsg_set_proto(msg, protocol):
+    """https://github.com/thom311/libnl/blob/master/lib/msg.c#L584
+
+    Positional arguments:
+    msg -- netlink message (nl_msg class instance).
+    protocol -- integer.
+    """
+    msg.nm_protocol = protocol
 
 
 def nlmsg_set_src(msg, addr):

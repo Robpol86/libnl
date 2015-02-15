@@ -1,3 +1,4 @@
+import logging
 import socketserver
 import threading
 import time
@@ -40,3 +41,15 @@ def tcp_server(request):
     request.addfinalizer(fin)
 
     return Getter(thread, server, data)
+
+
+@pytest.fixture(scope='session', autouse=True)
+def log():
+    """Stores libnl log statements in a list."""
+    log_statements = list()
+
+    class ListHandler(logging.StreamHandler):
+        def emit(self, record):
+            log_statements.append(self.format(record))
+    logging.basicConfig(format='%(message)s', level=logging.DEBUG, handlers=[ListHandler()])
+    return log_statements

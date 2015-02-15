@@ -51,5 +51,5 @@ def log():
     class ListHandler(logging.StreamHandler):
         def emit(self, record):
             log_statements.append(self.format(record))
-    logging.basicConfig(format='%(message)s', level=logging.DEBUG, handlers=[ListHandler()])
+    logging.basicConfig(format='%(funcName)s: %(message)s', level=logging.DEBUG, handlers=[ListHandler()])
     return log_statements

@@ -7,7 +7,10 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-from libnl.linux_private.netlink import NLMSG_MIN_TYPE
+import ctypes
+
+from libnl.linux_private.netlink import NLMSG_MIN_TYPE, NLMSG_ALIGN
+from libnl.misc import split_bytearray
 
 
 GENL_NAMSIZ = 16  # Length of family name.
@@ -15,7 +18,77 @@ GENL_MIN_ID = NLMSG_MIN_TYPE
 GENL_MAX_ID = 1023
 
 
-#GENL_HDRLEN = NLMSG_ALIGN(genlmsghdr.SIZEOF)
+class genlmsghdr(object):
+    """https://github.com/thom311/libnl/blob/master/include/linux-private/linux/genetlink.h#L12
+
+    Instance variables:
+    cmd -- c_uint8
+    version -- c_uint8
+    reserved -- c_uint16
+    """
+    SIZEOF = (ctypes.sizeof(ctypes.c_uint8) * 2) + ctypes.sizeof(ctypes.c_uint16)
+
+    def __init__(self, cmd=None, version=None, reserved=None):
+        self._cmd = None
+        self._version = None
+        self._reserved = None
+
+        self.cmd = cmd
+        self.version = version
+        self.reserved = reserved
+
+    def __bytes__(self):
+        """Returns a bytes object formatted for the kernel."""
+        padding = b'\0' * (GENL_HDRLEN - self.SIZEOF)
+        segments = (
+            bytes(self._cmd),
+            bytes(self._version),
+            bytes(self._reserved),
+            padding,
+        )
+        return b''.join(segments)
+
+    @classmethod
+    def from_buffer(cls, buf):
+        """Creates and returns a class instance based on data from a bytearray()."""
+        cmd, version, reserved, _ = split_bytearray(buf, ctypes.c_uint8, ctypes.c_uint8, ctypes.c_uint16)
+        return cls(cmd=cmd, version=version, reserved=reserved)
+
+    @property
+    def cmd(self):
+        return self._cmd.value
+
+    @cmd.setter
+    def cmd(self, value):
+        if value is None:
+            self._cmd = ctypes.c_uint8()
+            return
+        self._cmd = value if isinstance(value, ctypes.c_uint8) else ctypes.c_uint8(value)
+
+    @property
+    def version(self):
+        return self._version.value
+
+    @version.setter
+    def version(self, value):
+        if value is None:
+            self._version = ctypes.c_uint8()
+            return
+        self._version = value if isinstance(value, ctypes.c_uint8) else ctypes.c_uint8(value)
+
+    @property
+    def reserved(self):
+        return self._reserved.value
+
+    @reserved.setter
+    def reserved(self, value):
+        if value is None:
+            self._reserved = ctypes.c_uint16()
+            return
+        self._reserved = value if isinstance(value, ctypes.c_uint16) else ctypes.c_uint16(value)
+
+
+GENL_HDRLEN = NLMSG_ALIGN(genlmsghdr.SIZEOF)
 GENL_ADMIN_PERM = 0x01
 GENL_CMD_CAP_DO = 0x02
 GENL_CMD_CAP_DUMP = 0x04

@@ -8,8 +8,13 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
+import logging
+
 from libnl.errno_ import NLE_RANGE
+from libnl.msg import nl_msg_dump
 from libnl.netlink_private.types import nl_cb
+
+_LOGGER = logging.getLogger(__name__)
 
 NL_OK = 0  # Proceed with whatever would come next.
 NL_SKIP = 1  # Skip this message.
@@ -80,7 +85,8 @@ def nl_msg_in_handler_debug(msg, arg):
 
 def nl_msg_out_handler_debug(msg, arg):
     """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L124"""
-    # TODO implement https://github.com/Robpol86/libnl/issues/1
+    _LOGGER.debug('-- Debug: Sent Message:')
+    nl_msg_dump(msg)
     return NL_OK
 
 

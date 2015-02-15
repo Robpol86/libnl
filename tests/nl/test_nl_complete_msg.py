@@ -1,11 +1,13 @@
+import re
+
 from libnl.linux_private.netlink import NETLINK_ROUTE
 from libnl.msg import nlmsg_alloc_simple
 from libnl.nl import nl_complete_msg, nl_connect
 from libnl.socket_ import nl_socket_alloc, nl_socket_get_local_port
 
 
-def test_defaults():  # TODO test nlmsg_seq https://github.com/Robpol86/libnl/issues/5
-    """// gcc $(pkg-config --cflags --libs libnl-genl-3.0) a.c && ./a.out
+def test_defaults(log):  # TODO test nlmsg_seq https://github.com/Robpol86/libnl/issues/5
+    """// gcc $(pkg-config --cflags --libs libnl-genl-3.0) a.c && NLDBG=4 ./a.out
     #include <netlink/msg.h>
     struct ucred { __u32 pid; __u32 uid; __u32 gid; };
     struct nl_msg {
@@ -30,8 +32,11 @@ def test_defaults():  # TODO test nlmsg_seq https://github.com/Robpol86/libnl/is
         printf("%d == msg.nm_nlh.nlmsg_pid\n", msg->nm_nlh->nlmsg_pid);
     }
     int main() {
+        printf("Begin main()\n");
         struct nl_sock *sk = nl_socket_alloc();
+        printf("Allocated socket.\n");
         struct nl_msg *msg = nlmsg_alloc_simple(0, 0);
+        printf("Allocated message.\n");
         printf("%d == nl_socket_get_local_port(sk)\n", nl_socket_get_local_port(sk));
         printf("%d == sk.s_proto\n", sk->s_proto);
         printf("\n");
@@ -41,7 +46,13 @@ def test_defaults():  # TODO test nlmsg_seq https://github.com/Robpol86/libnl/is
         print(msg);
         return 0;
     }
-    // Expected output:
+    // Expected output (trimmed):
+    // nl_cache_mngt_register: Registered cache operations genl/family
+    // Begin main()
+    // Allocated socket.
+    // __nlmsg_alloc: msg 0x1e9c0b8: Allocated new message, maxlen=4096
+    // nlmsg_alloc_simple: msg 0x1e9c0b8: Allocated new simple message
+    // Allocated message.
     // 10083 == nl_socket_get_local_port(sk)
     // 0 == sk.s_proto
     //
@@ -68,9 +79,13 @@ def test_defaults():  # TODO test nlmsg_seq https://github.com/Robpol86/libnl/is
     // 0 == msg.nm_nlh.nlmsg_type
     // 5 == msg.nm_nlh.nlmsg_flags
     // 10083 == msg.nm_nlh.nlmsg_pid
+    // nl_cache_mngt_unregister: Unregistered cache operations genl/family
     """
+    log.clear()
     sk = nl_socket_alloc()
     msg = nlmsg_alloc_simple(0, 0)
+    assert re.match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message', log.pop(0))
+    assert re.match('nlmsg_alloc_simple: msg 0x[a-f0-9]+: Allocated new simple message', log.pop(0))
     local_port = int(nl_socket_get_local_port(sk))
     proto = int(sk.s_proto)
 
@@ -101,6 +116,8 @@ def test_defaults():  # TODO test nlmsg_seq https://github.com/Robpol86/libnl/is
     assert 0 == msg.nm_nlh.nlmsg_type
     assert 5 == msg.nm_nlh.nlmsg_flags
     assert local_port == msg.nm_nlh.nlmsg_pid
+
+    assert not log
 
 
 def test_nlmsg_pid():

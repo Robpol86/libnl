@@ -1,3 +1,5 @@
+import re
+
 import pytest
 
 from libnl.linux_private.netlink import NLM_F_REQUEST, NETLINK_ROUTE
@@ -28,12 +30,12 @@ def test_nl_recvmsgs_default(log):
         return 0;
     }
     // Expected output (trimmed):
-    // Registered cache operations genl/family
+    // nl_cache_mngt_register: Registered cache operations genl/family
     // Begin main()
     // Allocated socket.
     // 0 == nl_connect(sk, NETLINK_ROUTE)
-    // msg 0x10ae0b8: Allocated new message, maxlen=4096
-    // msg 0x10ae0b8: Allocated new simple message
+    // __nlmsg_alloc: msg 0x3df0b8: Allocated new message, maxlen=4096
+    // nlmsg_alloc_simple: msg 0x3df0b8: Allocated new simple message
     // -- Debug: Sent Message:
     // --------------------------   BEGIN NETLINK MESSAGE ---------------------------
     //   [NETLINK HEADER] 16 octets
@@ -43,14 +45,14 @@ def test_nl_recvmsgs_default(log):
     //     .seq = 1423967746
     //     .port = 29930
     // ---------------------------  END NETLINK MESSAGE   ---------------------------
-    // sent 16 bytes
-    // Returned message reference 0x10ae0b8, 0 remaining
-    // msg 0x10ae0b8: Freed
+    // nl_sendmsg: sent 16 bytes
+    // nlmsg_free: Returned message reference 0x3df0b8, 0 remaining
+    // nlmsg_free: msg 0x3df0b8: Freed
     // Bytes Sent: 16
-    // Attempting to read from 0x10ae080
-    // recvmsgs(0x10ae080): Read 36 bytes
-    // recvmsgs(0x10ae080): Processing valid message...
-    // msg 0x10b20c0: Allocated new message, maxlen=36
+    // recvmsgs: Attempting to read from 0x3df080
+    // recvmsgs: recvmsgs(0x3df080): Read 36 bytes
+    // recvmsgs: recvmsgs(0x3df080): Processing valid message...
+    // __nlmsg_alloc: msg 0x3e30c0: Allocated new message, maxlen=36
     // -- Debug: Received Message:
     // --------------------------   BEGIN NETLINK MESSAGE ---------------------------
     //   [NETLINK HEADER] 16 octets
@@ -62,28 +64,44 @@ def test_nl_recvmsgs_default(log):
     //   [ERRORMSG] 20 octets
     //     .error = 0 "Success"
     //   [ORIGINAL MESSAGE] 16 octets
-    // msg 0x10b2128: Allocated new message, maxlen=4096
+    // __nlmsg_alloc: msg 0x3e3128: Allocated new message, maxlen=4096
     //     .nlmsg_len = 16
     //     .type = 0 <0x0>
     //     .flags = 5 <REQUEST,ACK>
     //     .seq = 1423967746
     //     .port = 29930
-    // Returned message reference 0x10b2128, 0 remaining
-    // msg 0x10b2128: Freed
+    // nlmsg_free: Returned message reference 0x3e3128, 0 remaining
+    // nlmsg_free: msg 0x3e3128: Freed
     // ---------------------------  END NETLINK MESSAGE   ---------------------------
-    // recvmsgs(0x10ae080): Increased expected sequence number to 1423971272
+    // recvmsgs: recvmsgs(0x3df080): Increased expected sequence number to 1423967746
     // -- Debug: ACK: type=ERROR length=36 flags=<> sequence-nr=1423967746 pid=29930
-    // Returned message reference 0x10b20c0, 0 remaining
-    // msg 0x10b20c0: Freed
+    // nlmsg_free: Returned message reference 0x3e30c0, 0 remaining
+    // nlmsg_free: msg 0x3e30c0: Freed
     // 0 == nl_recvmsgs_default(sk)
-    // Unregistered cache operations genl/family
+    // nl_cache_mngt_unregister: Unregistered cache operations genl/family
     """
     log.clear()
     sk = nl_socket_alloc()
     nl_connect(sk, NETLINK_ROUTE)
     assert 16 == nl_send_simple(sk, 0, NLM_F_REQUEST, None)
+
+    assert re.match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message', log.pop(0))
+    assert re.match('nlmsg_alloc_simple: msg 0x[a-f0-9]+: Allocated new simple message', log.pop(0))
+    assert '-- Debug: Sent Message:' == log.pop(0)
+    assert '--------------------------   BEGIN NETLINK MESSAGE ---------------------------' == log.pop(0)
+    assert '  [NETLINK HEADER] 16 octets' == log.pop(0)
+    assert '    .nlmsg_len = 16' == log.pop(0)
+    assert '    .type = 0 <0x0>' == log.pop(0)
+    assert '    .flags = 5 <REQUEST,ACK>' == log.pop(0)
+    assert re.match('    .seq = \d+', log.pop(0))
+    assert re.match('    .port = \d+', log.pop(0))
+    assert '---------------------------  END NETLINK MESSAGE   ---------------------------' == log.pop(0)
+    assert 'nl_sendmsg: sent 16 bytes' == log.pop(0)
+    assert not log
+
     assert 0 == nl_recvmsgs_default(sk)
     nl_socket_free(sk)
+    assert not log
 
 
 @pytest.mark.skipif('True')

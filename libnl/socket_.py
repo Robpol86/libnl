@@ -41,7 +41,7 @@ def init_default_cb():
         default_cb = NL_CB_VERBOSE
     elif nlcb == 'debug':
         default_cb = NL_CB_DEBUG
-    elif logging.getLogger().handlers:
+    else:
         _LOGGER.warning('Unknown value for NLCB, valid values: {default | verbose | debug}')
 
 

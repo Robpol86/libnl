@@ -10,10 +10,16 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
+import ctypes
+import logging
+import os
+
 from libnl.attr import nla_for_each_attr, nla_find
-from libnl.linux_private.netlink import nlmsghdr, NLMSG_ERROR, NLMSG_HDRLEN
+from libnl.linux_private.genetlink import GENL_HDRLEN, genlmsghdr
+from libnl.linux_private.netlink import nlmsghdr, NLMSG_ERROR, NLMSG_HDRLEN, NETLINK_GENERIC
 from libnl.netlink_private.types import nl_msg, NL_MSG_CRED_PRESENT
 
+_LOGGER = logging.getLogger(__name__)
 NL_AUTO_PORT = 0
 NL_AUTO_PID = NL_AUTO_PORT
 NL_AUTO_SEQ = 0
@@ -111,12 +117,13 @@ def nlmsg_alloc():
     Instantiates a new netlink message without any further payload.
 
     Returns:
-    Newly allocated netlink message.
+    Newly allocated netlink message (nl_msg class instance).
     """
     nm = nl_msg()
     nm.nm_nlh = nlmsghdr()
     nm.nm_refcnt = 1
     nm.nm_protocol = -1
+    _LOGGER.debug('msg 0x%x: Allocated new message', id(nm))
     return nm
 
 
@@ -131,7 +138,7 @@ def nlmsg_inherit(hdr=None):
     hdr -- netlink message header template (nlmsghdr class instance).
 
     Returns:
-    Newly allocated netlink message (nl_msg class instance) or None.
+    Newly allocated netlink message (nl_msg class instance).
     """
     nm = nlmsg_alloc()
     if hdr:
@@ -152,10 +159,11 @@ def nlmsg_alloc_simple(nlmsgtype, flags):
     flags -- message flags (integer).
 
     Returns:
-    Newly allocated netlink message (nl_msg class instance) or None.
+    Newly allocated netlink message (nl_msg class instance).
     """
     nlh = nlmsghdr(nlmsg_type=nlmsgtype, nlmsg_flags=flags)
     msg = nlmsg_inherit(nlh)
+    _LOGGER.debug('msg 0x%x: Allocated new simple message', id(msg))
     return msg
 
 
@@ -188,6 +196,7 @@ def nlmsg_append(msg, data):
     0 on success or a negative error code.
     """
     msg.nm_nlh.payload.append(data)
+    _LOGGER.debug('msg 0x%x: Appended %s', id(msg), type(data).__name__)
     return 0
 
 
@@ -233,59 +242,126 @@ def nlmsg_get_creds(msg):
     return None
 
 
-def print_hdr(ofd, msg):
+def dump_hex(start, len_, prefix):
+    """https://github.com/thom311/libnl/blob/master/lib/msg.c#L760"""
+    pass  # TODO https://github.com/Robpol86/libnl/issues/7
+
+
+def print_hdr(msg):
     """https://github.com/thom311/libnl/blob/master/lib/msg.c#L793
 
     Positional arguments:
-    ofd -- handle to write to (open(), sys.stdout, etc.).
     msg -- message to print (nl_msg class instance).
     """
     nlh = nlmsg_hdr(msg)
     pass  # not done, TODO https://github.com/Robpol86/libnl/issues/7
 
 
-def dump_error_msg(msg, ofd):
-    """https://github.com/thom311/libnl/blob/master/lib/msg.c#L908
+def print_genl_hdr(start):
+    """https://github.com/thom311/libnl/blob/master/lib/msg.c#L831
+
+    Positional arguments:
+    start -- bytearray() instance.
+    """
+    ghdr = genlmsghdr.from_buffer(start)
+    _LOGGER.debug('  [GENERIC NETLINK HEADER] %d octets', GENL_HDRLEN)
+    _LOGGER.debug('    .cmd = %d', ghdr.cmd)
+    _LOGGER.debug('    .version = %d', ghdr.version)
+    _LOGGER.debug('    .unused = %#d', ghdr.reserved)
+
+
+def print_genl_msg(msg, hdr, ops, payloadlen):
+    """https://github.com/thom311/libnl/blob/master/lib/msg.c#L831
+
     Positional arguments:
     msg -- message to print (nl_msg class instance).
-    ofd -- handle to write to (open(), sys.stdout, etc.).
+    hdr -- netlink message header (nlmsghdr class instance).
+    ops -- TODO issues/8
+    payloadlen -- length of payload in message (ctypes.c_int instance).
+
+    Returns:
+    data
+    """
+    data = nlmsg_data(hdr)
+    if payloadlen.value < GENL_HDRLEN:
+        return data
+
+    print_genl_hdr(data)
+    payloadlen.value -= GENL_HDRLEN
+
+    if ops:
+        hdrsize = ops.co_hdrsize - GENL_HDRLEN
+        if hdrsize > 0:
+            if payloadlen.value < hdrsize:
+                return data
+            _LOGGER.debug('  [HEADER] %d octets', hdrsize)
+            dump_hex(data, hdrsize, 0)
+            payloadlen.value -= hdrsize
+
+    return data
+
+
+def dump_error_msg(msg):
+    """https://github.com/thom311/libnl/blob/master/lib/msg.c#L908
+
+    Positional arguments:
+    msg -- message to print (nl_msg class instance).
     """
     hdr = nlmsg_hdr(msg)
     err = nlmsg_data(hdr)
 
-    ofd.write('  [ERRORMSG] {0} octets\n'.format(err.SIZEOF))
-    pass  # not done, TODO https://github.com/Robpol86/libnl/issues/7
+    _LOGGER.debug('  [ERRORMSG] %d octets', err.SIZEOF)
+
+    if nlmsg_len(hdr) >= err.SIZEOF:
+        _LOGGER.debug('    .error = %d "%s"', err.error, os.strerror(-err.error))
+        _LOGGER.debug('  [ORIGINAL MESSAGE] %d octets', hdr.SIZEOF)
+        errmsg = nlmsg_inherit(err.msg)
+        print_hdr(errmsg)
 
 
-def print_msg(msg, ofd, hdr):
+def print_msg(msg, hdr):
     """https://github.com/thom311/libnl/blob/master/lib/msg.c#L929
 
     Positional arguments:
     msg -- netlink message (nl_msg class instance).
-    ofd -- handle to write to (open(), sys.stdout, etc.).
     hdr -- netlink message header (nlmsghdr class instance).
     """
-    pass  # TODO https://github.com/Robpol86/libnl/issues/7
+    payloadlen = ctypes.c_int(nlmsg_len(hdr))
+    attrlen = 0
+    data = None
+    ops = None  # = nl_cache_ops_associate_safe(nlmsg_get_proto(msg), hdr.nlmsg_type) # TODO issues/8
+    if ops:
+        raise NotImplementedError
+    if msg.nm_protocol == NETLINK_GENERIC:
+        data = print_genl_msg(msg, hdr, ops, payloadlen)
+    if payloadlen:
+        _LOGGER.debug('  [PAYLOAD] %d octets', payloadlen)
+        dump_hex(data, payloadlen, 0)
+    if attrlen:
+        raise NotImplementedError
+    if ops:
+        raise NotImplementedError
 
 
-def nl_msg_dump(msg, ofd):
+
+
+def nl_msg_dump(msg):
     """Dump message in human readable format to handle.
     https://github.com/thom311/libnl/blob/master/lib/msg.c#L970
 
     Positional arguments:
     msg -- message to print (nl_msg class instance).
-    ofd -- handle to write to (open(), sys.stdout, etc.).
     """
     hdr = nlmsg_hdr(msg)
 
-    ofd.write('--------------------------   BEGIN NETLINK MESSAGE ---------------------------\n')
+    _LOGGER.debug('--------------------------   BEGIN NETLINK MESSAGE ---------------------------\n')
 
-    ofd.write('  [NETLINK HEADER] {0} octets\n'.format(hdr.SIZEOF))
-    print_hdr(ofd, msg)
+    _LOGGER.debug('  [NETLINK HEADER] %d octets', hdr.SIZEOF)
+    print_hdr(msg)
 
     if hdr.nlmsg_type == NLMSG_ERROR:
-        dump_error_msg(msg, ofd)
+        dump_error_msg(msg)
     elif nlmsg_len(hdr) > 0:
-        print_msg(msg, ofd, hdr)
+        print_msg(msg, hdr)
 
-    ofd.write('---------------------------  END NETLINK MESSAGE   ---------------------------\n')
+    _LOGGER.debug('---------------------------  END NETLINK MESSAGE   ---------------------------\n')

@@ -76,7 +76,6 @@ def test_nl_socket_alloc():
     assert 0 == sk.s_proto
     assert 0 == sk.s_flags
     assert 11 == sk.s_cb.cb_active
-    assert sk.s_cb.cb_err is None
     nl_socket_free(sk)
 
     first_pid = int(sk.s_local.nl_pid)
@@ -91,5 +90,4 @@ def test_nl_socket_alloc():
     assert 0 == sk.s_proto
     assert 0 == sk.s_flags
     assert 11 == sk.s_cb.cb_active
-    assert sk.s_cb.cb_err is not None
     nl_socket_free(sk)

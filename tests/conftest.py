@@ -1,9 +1,12 @@
 import logging
+import os
 import socketserver
 import threading
 import time
 
 import pytest
+
+os.environ.setdefault('NLCB', 'debug')
 
 
 @pytest.fixture(scope='function')

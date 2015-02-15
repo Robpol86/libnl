@@ -132,7 +132,6 @@ def test_nl_connect():
     assert 0 == sk.s_proto
     assert 0 == sk.s_flags
     assert 11 == sk.s_cb.cb_active
-    assert sk.s_cb.cb_err is None
     persistent_pid = int(sk.s_local.nl_pid)
 
     # Connect, then close the socket at the end.
@@ -148,7 +147,6 @@ def test_nl_connect():
     assert 0 == sk.s_proto
     assert 1 == sk.s_flags
     assert 11 == sk.s_cb.cb_active
-    assert sk.s_cb.cb_err is None
     persistent_fd = int(sk.s_fd)
     nl_socket_free(sk)
     assert initial_fd_count == len(os.listdir('/proc/self/fd'))
@@ -162,7 +160,6 @@ def test_nl_connect():
     assert 0 == sk.s_proto
     assert 1 == sk.s_flags
     #assert 11 == sk.s_cb.cb_active  # In C, pointer points to deallocated memory. In Python, leave alone.
-    #assert sk.s_cb.cb_err is None  # In C, pointer points to deallocated memory. In Python, leave alone.
 
     # Re-allocate and connect again, pid should be the same as the previous session.
     sk = nl_socket_alloc()
@@ -178,6 +175,5 @@ def test_nl_connect():
     assert 16 == sk.s_proto
     assert 1 == sk.s_flags
     assert 11 == sk.s_cb.cb_active
-    assert sk.s_cb.cb_err is None
     nl_socket_free(sk)
     assert initial_fd_count == len(os.listdir('/proc/self/fd'))

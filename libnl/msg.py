@@ -334,15 +334,13 @@ def print_msg(msg, hdr):
         raise NotImplementedError
     if msg.nm_protocol == NETLINK_GENERIC:
         data = print_genl_msg(msg, hdr, ops, payloadlen)
-    if payloadlen:
-        _LOGGER.debug('  [PAYLOAD] %d octets', payloadlen)
+    if payloadlen.value:
+        _LOGGER.debug('  [PAYLOAD] %d octets', payloadlen.value)
         dump_hex(data, payloadlen, 0)
     if attrlen:
         raise NotImplementedError
     if ops:
         raise NotImplementedError
-
-
 
 
 def nl_msg_dump(msg):
@@ -354,7 +352,7 @@ def nl_msg_dump(msg):
     """
     hdr = nlmsg_hdr(msg)
 
-    _LOGGER.debug('--------------------------   BEGIN NETLINK MESSAGE ---------------------------\n')
+    _LOGGER.debug('--------------------------   BEGIN NETLINK MESSAGE ---------------------------')
 
     _LOGGER.debug('  [NETLINK HEADER] %d octets', hdr.SIZEOF)
     print_hdr(msg)
@@ -364,4 +362,4 @@ def nl_msg_dump(msg):
     elif nlmsg_len(hdr) > 0:
         print_msg(msg, hdr)
 
-    _LOGGER.debug('---------------------------  END NETLINK MESSAGE   ---------------------------\n')
+    _LOGGER.debug('---------------------------  END NETLINK MESSAGE   ---------------------------')

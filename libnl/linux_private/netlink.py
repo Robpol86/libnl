@@ -121,7 +121,7 @@ class nlmsghdr(object):
         buf_remaining = buf[NLMSG_ALIGN(cls.SIZEOF):nlmsg_len.value]
         while buf_remaining.rstrip(b'\0'):
             nla_len = ctypes.c_uint32.from_buffer(buf_remaining[:ctypes.sizeof(ctypes.c_uint32)])
-            nla_total_size = NLA_ALIGN(nla_len)
+            nla_total_size = NLA_ALIGN(nla_len.value)
             chunk = buf_remaining[:nla_total_size]
             nlh.payload.append(chunk)
             buf_remaining = buf_remaining[nla_total_size:]
@@ -263,8 +263,8 @@ class nlattr(object):
     def from_buffer(cls, buf):
         """Creates and returns a class instance based on data from a bytearray()."""
         nla_len, nla_type, _ = split_bytearray(buf, ctypes.c_uint16, ctypes.c_uint16)
-        nla = cls(nla_len=nla_len, nla_type=nla_type)
-        payload_size = nla_len - NLA_HDRLEN
+        nla = cls(nla_type=nla_type)
+        payload_size = nla_len.value - NLA_HDRLEN
         if payload_size > 0:
             buf_remaining = buf[NLA_HDRLEN:nla_len.value]
             nla.payload = buf_remaining

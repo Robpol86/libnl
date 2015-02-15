@@ -20,6 +20,13 @@ class ucred(object):
         self.uid = uid
         self.gid = gid
 
+    def __bool__(self):
+        return any(not not getattr(v, 'value', v) for v in self.__dict__.values())
+
+    def __nonzero__(self):
+        """Python 2.x compatibility."""
+        return self.__bool__()
+
     @property
     def pid(self):
         """c_int32 process ID of the sending process."""

@@ -16,8 +16,12 @@ import os
 
 from libnl.attr import nla_for_each_attr, nla_find
 from libnl.linux_private.genetlink import GENL_HDRLEN, genlmsghdr
-from libnl.linux_private.netlink import nlmsghdr, NLMSG_ERROR, NLMSG_HDRLEN, NETLINK_GENERIC
+from libnl.linux_private.netlink import (nlmsghdr, NLMSG_ERROR, NLMSG_HDRLEN, NETLINK_GENERIC, NLMSG_NOOP, NLMSG_DONE,
+                                         NLMSG_OVERRUN, NLM_F_REQUEST, NLM_F_MULTI, NLM_F_ACK, NLM_F_ECHO, NLM_F_ROOT,
+                                         NLM_F_MATCH, NLM_F_ATOMIC, NLM_F_REPLACE, NLM_F_EXCL, NLM_F_CREATE,
+                                         NLM_F_APPEND)
 from libnl.netlink_private.types import nl_msg, NL_MSG_CRED_PRESENT
+from libnl.utils import __type2str
 
 _LOGGER = logging.getLogger(__name__)
 NL_AUTO_PORT = 0
@@ -242,6 +246,59 @@ def nlmsg_get_creds(msg):
     return None
 
 
+nl_msgtypes = {
+    NLMSG_NOOP: 'NOOP',
+    NLMSG_ERROR: 'ERROR',
+    NLMSG_DONE: 'DONE',
+    NLMSG_OVERRUN: 'OVERRUN',
+}
+
+
+def nl_nlmsgtype2str(type_):
+    """https://github.com/thom311/libnl/blob/master/lib/msg.c#L646
+
+    Positional arguments:
+    type_ -- integer (e.g. nlh.nlmsg_type).
+
+    Returns:
+    String.
+    """
+    return str(__type2str(type_, nl_msgtypes))
+
+
+def nl_nlmsg_flags2str(flags):
+    """Netlink Message Flags Translations.
+    https://github.com/thom311/libnl/blob/master/lib/msg.c#L664
+
+    Positional arguments:
+    flags -- integer.
+
+    Returns:
+    String.
+    """
+    all_flags = (
+        ('REQUEST', NLM_F_REQUEST),
+        ('MULTI', NLM_F_MULTI),
+        ('ACK', NLM_F_ACK),
+        ('ECHO', NLM_F_ECHO),
+        ('ROOT', NLM_F_ROOT),
+        ('MATCH', NLM_F_MATCH),
+        ('ATOMIC', NLM_F_ATOMIC),
+        ('REPLACE', NLM_F_REPLACE),
+        ('EXCL', NLM_F_EXCL),
+        ('CREATE', NLM_F_CREATE),
+        ('APPEND', NLM_F_APPEND),
+    )
+    matching_flags = [(k, v) for k, v in all_flags if flags & v]
+
+    # Modify `flags`.
+    for _, v in matching_flags:
+        flags &= ~v
+
+    keys = ([i[0] for i in matching_flags] + ['0x{0:x}'.format(flags)]) if flags else [i[0] for i in matching_flags]
+    return ','.join(keys)
+
+
 def dump_hex(start, len_, prefix):
     """https://github.com/thom311/libnl/blob/master/lib/msg.c#L760"""
     pass  # TODO https://github.com/Robpol86/libnl/issues/7
@@ -254,7 +311,19 @@ def print_hdr(msg):
     msg -- message to print (nl_msg class instance).
     """
     nlh = nlmsg_hdr(msg)
-    pass  # not done, TODO https://github.com/Robpol86/libnl/issues/7
+
+    _LOGGER.debug('    .nlmsg_len = %d', nlh.nlmsg_len)
+
+    ops = None  # ops = nl_cache_ops_associate_safe(nlmsg_get_proto(msg), nlh.nlmsg_type) # TODO issues/8
+    if ops:
+        raise NotImplementedError
+    else:
+        buf = nl_nlmsgtype2str(nlh.nlmsg_type)
+
+    _LOGGER.debug('    .type = %d <%s>', nlh.nlmsg_type, buf)
+    _LOGGER.debug('    .flags = %d <%s>', nlh.nlmsg_flags, nl_nlmsg_flags2str(nlh.nlmsg_flags))
+    _LOGGER.debug('    .seq = %d', nlh.nlmsg_seq)
+    _LOGGER.debug('    .port = %d', nlh.nlmsg_pid)
 
 
 def print_genl_hdr(start):

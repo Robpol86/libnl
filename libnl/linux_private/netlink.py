@@ -115,16 +115,10 @@ class nlmsghdr(object):
     def from_buffer(cls, buf):
         """Creates and returns a class instance based on data from a bytearray()."""
         types = (ctypes.c_uint32, ctypes.c_uint16, ctypes.c_uint16, ctypes.c_uint32, ctypes.c_uint32)
-        nlmsg_len, nlmsg_type, nlmsg_flags, nlmsg_seq, nlmsg_pid, _ = split_bytearray(buf, *types)
+        nlmsg_len, nlmsg_type, nlmsg_flags, nlmsg_seq, nlmsg_pid, buf_remaining = split_bytearray(buf, *types)
         nlh = cls(nlmsg_type=nlmsg_type, nlmsg_flags=nlmsg_flags, nlmsg_seq=nlmsg_seq, nlmsg_pid=nlmsg_pid)
-        # Now build the payload.
-        buf_remaining = buf[NLMSG_ALIGN(cls.SIZEOF):nlmsg_len.value]
-        while buf_remaining.rstrip(b'\0'):
-            nla_len = ctypes.c_uint32.from_buffer(buf_remaining[:ctypes.sizeof(ctypes.c_uint32)])
-            nla_total_size = NLA_ALIGN(nla_len.value)
-            chunk = buf_remaining[:nla_total_size]
-            nlh.payload.append(chunk)
-            buf_remaining = buf_remaining[nla_total_size:]
+        if buf_remaining.rstrip(b'\0'):
+            nlh.payload.append(buf_remaining)
         return nlh
 
     @property
@@ -197,12 +191,13 @@ class nlmsgerr(object):
     """https://github.com/thom311/libnl/blob/master/include/linux-private/linux/netlink.h#L95
 
     Instance variables:
-    error -- integer.
+    error -- c_int.
     msg -- nlmsghdr class instance.
     """
     SIZEOF = ctypes.sizeof(ctypes.c_int) + nlmsghdr.SIZEOF
 
     def __init__(self, error=None, msg=None):
+        self._error = None
         self.error = error
         self.msg = msg
 
@@ -212,6 +207,17 @@ class nlmsgerr(object):
         error, buf_remaining = split_bytearray(buf, ctypes.c_int)
         nlh = nlmsghdr.from_buffer(buf_remaining)
         return cls(error=error, msg=nlh)
+
+    @property
+    def error(self):
+        return self._error.value
+
+    @error.setter
+    def error(self, value):
+        if value is None:
+            self._error = ctypes.c_int()
+            return
+        self._error = value if isinstance(value, ctypes.c_int) else ctypes.c_int(value)
 
 
 NETLINK_ADD_MEMBERSHIP = 1

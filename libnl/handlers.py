@@ -9,9 +9,11 @@ of the License.
 """
 
 import logging
+from os import strerror
 
 from libnl.errno_ import NLE_RANGE
-from libnl.msg import nl_msg_dump
+from libnl.error import nl_syserr2nlerr
+from libnl.msg import nl_msg_dump, nlmsg_hdr, nl_nlmsgtype2str, nl_nlmsg_flags2str
 from libnl.netlink_private.types import nl_cb
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,46 +42,64 @@ NL_CB_DUMP_INTR = 10  # Flag NLM_F_DUMP_INTR is set in message.
 NL_CB_TYPE_MAX = NL_CB_DUMP_INTR
 
 
+def print_header_content(nlh):
+    """Returns header content (doesn't actually print like the C library does).
+    https://github.com/thom311/libnl/blob/master/lib/handlers.c#L34
+
+    Positional arguments:
+    nlh -- nlmsghdr class instance.
+    """
+    answer = 'type=%s length=%d flags=<%s> sequence-nr=%d pid=%d'.format(
+        nl_nlmsgtype2str(nlh.nlmsg_type),
+        nlh.nlmsg_len,
+        nl_nlmsg_flags2str(nlh.nlmsg_flags),
+        nlh.nlmsg_seq,
+        nlh.nlmsg_pid,
+    )
+    return answer
+
+
 def nl_valid_handler_verbose(msg, arg):
     """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L45"""
-    # TODO implement https://github.com/Robpol86/libnl/issues/1
+    _LOGGER.debug('-- Warning: unhandled valid message: ' + print_header_content(nlmsg_hdr(msg)))
     return NL_OK
 
 
 def nl_invalid_handler_verbose(msg, arg):
     """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L56"""
-    # TODO implement https://github.com/Robpol86/libnl/issues/1
+    _LOGGER.debug('-- Error: Invalid message: ' + print_header_content(nlmsg_hdr(msg)))
     return NL_STOP
 
 
 def nl_overrun_handler_verbose(msg, arg):
     """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L67"""
-    # TODO implement https://github.com/Robpol86/libnl/issues/1
+    _LOGGER.debug('-- Error: Netlink Overrun: ' + print_header_content(nlmsg_hdr(msg)))
     return NL_STOP
 
 
 def nl_error_handler_verbose(who, err, arg):
     """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L78"""
-    # TODO implement https://github.com/Robpol86/libnl/issues/1
-    #return -nl_syserr2nlerr(err.error)
-    raise NotImplementedError
+    _LOGGER.debug('-- Error received: ' + strerror(-err.error))
+    _LOGGER.debug('-- Original message: ' + print_header_content(err.msg))
+    return -nl_syserr2nlerr(err.error)
 
 
 def nl_valid_handler_debug(msg, arg):
     """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L92"""
-    # TODO implement https://github.com/Robpol86/libnl/issues/1
+    _LOGGER.debug('-- Debug: Unhandled Valid message: ' + print_header_content(nlmsg_hdr(msg)))
     return NL_OK
 
 
 def nl_finish_handler_debug(msg, arg):
     """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L103"""
-    # TODO implement https://github.com/Robpol86/libnl/issues/1
+    _LOGGER.debug('-- Debug: End of multipart message block: ' + print_header_content(nlmsg_hdr(msg)))
     return NL_STOP
 
 
 def nl_msg_in_handler_debug(msg, arg):
     """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L114"""
-    # TODO implement https://github.com/Robpol86/libnl/issues/1
+    _LOGGER.debug('-- Debug: Received Message:')
+    nl_msg_dump(msg)
     return NL_OK
 
 
@@ -92,13 +112,13 @@ def nl_msg_out_handler_debug(msg, arg):
 
 def nl_skipped_handler_debug(msg, arg):
     """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L134"""
-    # TODO implement https://github.com/Robpol86/libnl/issues/1
+    _LOGGER.debug('-- Debug: Skipped message: ' + print_header_content(nlmsg_hdr(msg)))
     return NL_SKIP
 
 
 def nl_ack_handler_debug(msg, arg):
     """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L145"""
-    # TODO implement https://github.com/Robpol86/libnl/issues/1
+    _LOGGER.debug('-- Debug: ACK: ' + print_header_content(nlmsg_hdr(msg)))
     return NL_STOP
 
 

@@ -131,6 +131,8 @@ def nl_sendmsg(sk, msg, hdr):
             ret = sk.socket_instance.send(hdr.msg_iov, hdr.msg_flags)
     except OSError as exc:
         return -nl_syserr2nlerr(exc.errno)
+
+    _LOGGER.debug('sent %d bytes', ret)
     return ret
 
 
@@ -381,17 +383,17 @@ def recvmsgs(sk, cb):
     creds = ucred()
 
     while True:  # This is the `goto continue_reading` implementation.
-        _LOGGER.debug('Attempting to read from %s', id(sk))
+        _LOGGER.debug('Attempting to read from 0x%x', id(sk))
         n = cb.cb_recv_ow(sk, nla, buf, creds) if cb.cb_recv_ow else nl_recv(sk, nla, buf, creds)
         if n <= 0:
             return n
 
-        _LOGGER.debug('recvmsgs(%s): Read %d bytes', id(sk), n)
+        _LOGGER.debug('recvmsgs(0x%x): Read %d bytes', id(sk), n)
 
         while buf.rstrip(b'\0'):  # nlmsg_ok() loop.
             hdr = nlmsghdr.from_buffer(buf)
             buf = buf[NLMSG_ALIGN(hdr.nlmsg_len):]
-            _LOGGER.debug('recvmsgs(%s): Processing valid message...', id(sk))
+            _LOGGER.debug('recvmsgs(0x%x): Processing valid message...', id(sk))
             msg = nlmsg_convert(hdr)
             nlmsg_set_proto(msg, sk.s_proto)
             nlmsg_set_src(msg, nla)
@@ -442,7 +444,7 @@ def recvmsgs(sk, cb):
             if hdr.nlmsg_type in (NLMSG_DONE, NLMSG_ERROR, NLMSG_NOOP, NLMSG_OVERRUN):
                 # We can't check for !NLM_F_MULTI since some netlink users in the kernel are broken.
                 sk.s_seq_expect += 1
-                _LOGGER.debug('recvmsgs(%s): Increased expected sequence number to %d', id(sk), sk.s_seq_expect)
+                _LOGGER.debug('recvmsgs(0x%x): Increased expected sequence number to %d', id(sk), sk.s_seq_expect)
 
             if hdr.nlmsg_flags & NLM_F_MULTI:
                 multipart = 1

@@ -19,7 +19,7 @@ from libnl.linux_private.genetlink import GENL_HDRLEN, genlmsghdr
 from libnl.linux_private.netlink import (nlmsghdr, NLMSG_ERROR, NLMSG_HDRLEN, NETLINK_GENERIC, NLMSG_NOOP, NLMSG_DONE,
                                          NLMSG_OVERRUN, NLM_F_REQUEST, NLM_F_MULTI, NLM_F_ACK, NLM_F_ECHO, NLM_F_ROOT,
                                          NLM_F_MATCH, NLM_F_ATOMIC, NLM_F_REPLACE, NLM_F_EXCL, NLM_F_CREATE,
-                                         NLM_F_APPEND)
+                                         NLM_F_APPEND, nlmsgerr)
 from libnl.netlink_private.types import nl_msg, NL_MSG_CRED_PRESENT
 from libnl.utils import __type2str
 
@@ -55,6 +55,8 @@ def nlmsg_data(nlh):
     Returns:
     Message payload (list of objects).
     """
+    if len(nlh.payload) == 1 and isinstance(nlh.payload[0], bytearray):
+        return nlh.payload[0]
     return nlh.payload
 
 
@@ -377,7 +379,7 @@ def dump_error_msg(msg):
     msg -- message to print (nl_msg class instance).
     """
     hdr = nlmsg_hdr(msg)
-    err = nlmsg_data(hdr)
+    err = nlmsgerr.from_buffer(nlmsg_data(hdr))
 
     _LOGGER.debug('  [ERRORMSG] %d octets', err.SIZEOF)
 

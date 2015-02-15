@@ -102,65 +102,28 @@ def test_nl_recvmsgs_default(log):
 
     assert 0 == nl_recvmsgs_default(sk)
     assert re.match('recvmsgs: Attempting to read from 0x[a-f0-9]+', log.pop(0))
-    assert re.match('recvmsgs: recvmsgs(0x[a-f0-9]+): Read 36 bytes', log.pop(0))
-    assert re.match('recvmsgs: recvmsgs(0x[a-f0-9]+): Processing valid message...', log.pop(0))
+    assert re.match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Read 36 bytes', log.pop(0))
+    assert re.match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Processing valid message...', log.pop(0))
     assert re.match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message', log.pop(0))
-    assert '-- Debug: Received Message:' == log.pop(0)
+    assert 'nl_msg_in_handler_debug: -- Debug: Received Message:' == log.pop(0)
     assert 'nl_msg_dump: --------------------------   BEGIN NETLINK MESSAGE ---------------------------' == log.pop(0)
     assert 'nl_msg_dump:   [NETLINK HEADER] 16 octets' == log.pop(0)
-    assert '    .nlmsg_len = 36' == log.pop(0)
-    assert '    .type = 2 <ERROR>' == log.pop(0)
-    assert '    .flags = 0 <>' == log.pop(0)
-    assert re.match('    .seq = \d+', log.pop(0))
-    assert re.match('    .port = \d+', log.pop(0))
+    assert 'print_hdr:     .nlmsg_len = 36' == log.pop(0)
+    assert 'print_hdr:     .type = 2 <ERROR>' == log.pop(0)
+    assert 'print_hdr:     .flags = 0 <>' == log.pop(0)
+    assert re.match('print_hdr:     .seq = \d+', log.pop(0))
+    assert re.match('print_hdr:     .port = \d+', log.pop(0))
     assert 'dump_error_msg:   [ERRORMSG] 20 octets' == log.pop(0)
     assert 'dump_error_msg:     .error = 0 "Success"' == log.pop(0)
     assert 'dump_error_msg:   [ORIGINAL MESSAGE] 16 octets' == log.pop(0)
     assert re.match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message', log.pop(0))
-    assert '    .nlmsg_len = 16' == log.pop(0)
-    assert '    .type = 0 <0x0>' == log.pop(0)
-    assert '    .flags = 5 <REQUEST,ACK>' == log.pop(0)
-    assert re.match('    .seq = \d+', log.pop(0))
-    assert re.match('    .port = \d+', log.pop(0))
-    assert re.match('nlmsg_free: Returned message reference 0x[a-f0-9]+, 0 remaining', log.pop(0))
-    assert re.match('nlmsg_free: msg 0x[a-f0-9]+: Freed', log.pop(0))
+    assert 'print_hdr:     .nlmsg_len = 16' == log.pop(0)
+    assert 'print_hdr:     .type = 0 <0x0>' == log.pop(0)
+    assert 'print_hdr:     .flags = 5 <REQUEST,ACK>' == log.pop(0)
+    assert re.match('print_hdr:     .seq = \d+', log.pop(0))
+    assert re.match('print_hdr:     .port = \d+', log.pop(0))
     assert 'nl_msg_dump: ---------------------------  END NETLINK MESSAGE   ---------------------------' == log.pop(0)
-    assert re.match('recvmsgs: recvmsgs(0x[a-f0-9]+): Increased expected sequence number to \d+', log.pop(0))
+    assert re.match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Increased expected sequence number to \d+', log.pop(0))
     assert re.match('-- Debug: ACK: type=ERROR length=36 flags=<> sequence-nr=\d+ pid=\d+', log.pop(0))
-    assert re.match('nlmsg_free: Returned message reference 0x[a-f0-9]+, 0 remaining', log.pop(0))
-    assert re.match('nlmsg_free: msg 0x[a-f0-9]+: Freed', log.pop(0))
     nl_socket_free(sk)
     assert not log
-
-
-@pytest.mark.skipif('True')
-def test_nl_recvmsgs_default_error():
-    """// gcc $(pkg-config --cflags --libs libnl-genl-3.0) a.c && ./a.out
-    #include <netlink/msg.h>
-    struct nl_sock {
-        struct sockaddr_nl s_local; struct sockaddr_nl s_peer; int s_fd; int s_proto; unsigned int s_seq_next;
-        unsigned int s_seq_expect; int s_flags; struct nl_cb *s_cb; size_t s_bufsize;
-    };
-    int main() {
-        // Send data to the kernel.
-        struct nl_sock *sk = nl_socket_alloc();
-        sk->s_seq_next = 0;
-        nl_connect(sk, NETLINK_ROUTE);
-        int ret = nl_send_simple(sk, 0, NLM_F_REQUEST, NULL, 0);
-        printf("Bytes Sent: %d\n", ret);
-
-        // Retrieve kernel's response.
-        printf("%d == nl_recvmsgs_default(sk)\n", nl_recvmsgs_default(sk));
-
-        return 0;
-    }
-    // Expected output:
-    // Bytes Sent: 16
-    // -16 == nl_recvmsgs_default(sk)
-    """
-    sk = nl_socket_alloc()
-    sk.s_seq_next = 0
-    nl_connect(sk, NETLINK_ROUTE)
-    assert 16 == nl_send_simple(sk, 0, NLM_F_REQUEST, None)
-    assert 0 == nl_recvmsgs_default(sk)
-    nl_socket_free(sk)

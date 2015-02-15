@@ -19,6 +19,22 @@ NL_AUTO_PID = NL_AUTO_PORT
 NL_AUTO_SEQ = 0
 
 
+def nlmsg_size(payload):
+    """Calculates size of netlink message based on payload length.
+    https://github.com/thom311/libnl/blob/master/lib/msg.c#L54
+
+    Positional arguments:
+    payload -- length of payload (integer).
+
+    Returns:
+    Size of netlink message without padding.
+    """
+    return NLMSG_HDRLEN + payload
+
+
+nlmsg_msg_size = nlmsg_size  # Alias. https://github.com/thom311/libnl/blob/master/lib/msg.c#L59
+
+
 def nlmsg_data(nlh):
     """Return the message payload.
     https://github.com/thom311/libnl/blob/master/lib/msg.c#L105

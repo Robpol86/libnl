@@ -18,13 +18,17 @@ import logging
 import socket
 import resource
 
-from libnl.errno_ import NLE_BAD_SOCK, NLE_AF_NOSUPPORT, NLE_INVAL
+from libnl.errno_ import (NLE_BAD_SOCK, NLE_AF_NOSUPPORT, NLE_INVAL, NLE_SEQ_MISMATCH, NLE_DUMP_INTR, NLE_MSG_OVERFLOW,
+                          NLE_MSG_TRUNC)
 from libnl.error import nl_syserr2nlerr
-from libnl.handlers import NL_OK, NL_CB_MSG_OUT
-from libnl.linux_private.netlink import NLM_F_REQUEST, NLM_F_ACK, sockaddr_nl, nlmsghdr
+from libnl.handlers import (NL_OK, NL_CB_MSG_OUT, NL_CB_MSG_IN, NL_CB_SEQ_CHECK, NL_CB_INVALID, NL_SKIP,
+                            NL_CB_DUMP_INTR, NL_CB_SEND_ACK, NL_CB_OVERRUN, NL_CB_SKIPPED, NL_CB_FINISH, NL_CB_ACK,
+                            NL_STOP, NL_CB_VALID)
+from libnl.linux_private.netlink import (NLM_F_REQUEST, NLM_F_ACK, sockaddr_nl, nlmsghdr, NLMSG_DONE, NLMSG_ERROR,
+                                         NLMSG_NOOP, NLMSG_OVERRUN, NLM_F_MULTI, NLM_F_DUMP_INTR, nlmsgerr, NLMSG_ALIGN)
 from libnl.misc import msghdr, ucred
 from libnl.msg import (nlmsg_alloc_simple, nlmsg_append, NL_AUTO_PORT, nlmsg_get_dst, nlmsg_get_creds, nlmsg_set_src,
-                       nlmsg_hdr, NL_AUTO_SEQ)
+                       nlmsg_hdr, NL_AUTO_SEQ, nlmsg_convert, nlmsg_set_proto, nlmsg_data, nlmsg_size)
 from libnl.netlink_private.netlink import nl_cb_call
 from libnl.netlink_private.types import NL_NO_AUTO_ACK, NL_SOCK_BUFSIZE_SET, NL_MSG_PEEK, NL_SOCK_PASSCRED
 from libnl.socket_ import nl_socket_set_buffer_size, nl_socket_get_local_port
@@ -366,6 +370,9 @@ def recvmsgs(sk, cb):
     Returns:
     Number of bytes received or a negative error code.
     """
+    multipart = 0
+    interrupted = 0
+    nrecv = 0
     buf = bytearray()
 
     # nla is passed on to not only to nl_recv() but may also be passed to a function pointer provided by the caller
@@ -381,13 +388,205 @@ def recvmsgs(sk, cb):
 
         _LOGGER.debug('recvmsgs(%s): Read %d bytes', id(sk), n)
 
-        hdr = nlmsghdr.from_buffer(buf)
-
-        while True:  # nlmsg_ok() loop.
+        while buf.rstrip(b'\0'):  # nlmsg_ok() loop.
+            hdr = nlmsghdr.from_buffer(buf)
+            buf = buf[NLMSG_ALIGN(hdr.nlmsg_len):]
             _LOGGER.debug('recvmsgs(%s): Processing valid message...', id(sk))
-            #msg = nlmsg_convert(hdr)
-            #if not msg:
-            #    return -NLE_NOMEM
+            msg = nlmsg_convert(hdr)
+            nlmsg_set_proto(msg, sk.s_proto)
+            nlmsg_set_src(msg, nla)
+            if creds:
+                raise NotImplementedError  # nlmsg_set_creds(msg, creds)
+            nrecv += 1
+
+            # Raw callback is the first, it gives the most control to the user and he can do his very own parsing.
+            if cb.cb_set[NL_CB_MSG_IN]:
+                err = nl_cb_call(cb, NL_CB_MSG_IN, msg)  # NL_CB_CALL(cb, NL_CB_MSG_IN, msg)
+                if err == NL_OK:
+                    break
+                elif err == NL_SKIP:
+                    continue
+                elif err == NL_STOP:
+                    return -NLE_DUMP_INTR if interrupted else nrecv
+                else:
+                    return -NLE_DUMP_INTR if interrupted else (err or nrecv)
+
+            if cb.cb_set[NL_CB_SEQ_CHECK]:
+                # Sequence number checking. The check may be done by the user, otherwise a very simple check is applied
+                # enforcing strict ordering.
+                err = nl_cb_call(cb, NL_CB_SEQ_CHECK, msg)  # NL_CB_CALL(cb, NL_CB_SEQ_CHECK, msg)
+                if err == NL_OK:
+                    break
+                elif err == NL_SKIP:
+                    continue
+                elif err == NL_STOP:
+                    return -NLE_DUMP_INTR if interrupted else nrecv
+                else:
+                    return -NLE_DUMP_INTR if interrupted else (err or nrecv)
+            elif not sk.s_flags & NL_NO_AUTO_ACK:
+                # Only do sequence checking if auto-ack mode is enabled.
+                if hdr.nlmsg_seq != sk.s_seq_expect:
+                    if cb.cb_set[NL_CB_INVALID]:
+                        err = nl_cb_call(cb, NL_CB_INVALID, msg)  # NL_CB_CALL(cb, NL_CB_INVALID, msg)
+                        if err == NL_OK:
+                            break
+                        elif err == NL_SKIP:
+                            continue
+                        elif err == NL_STOP:
+                            return -NLE_DUMP_INTR if interrupted else nrecv
+                        else:
+                            return -NLE_DUMP_INTR if interrupted else (err or nrecv)
+                    else:
+                        return -NLE_SEQ_MISMATCH
+
+            if hdr.nlmsg_type in (NLMSG_DONE, NLMSG_ERROR, NLMSG_NOOP, NLMSG_OVERRUN):
+                # We can't check for !NLM_F_MULTI since some netlink users in the kernel are broken.
+                sk.s_seq_expect += 1
+                _LOGGER.debug('recvmsgs(%s): Increased expected sequence number to %d', id(sk), sk.s_seq_expect)
+
+            if hdr.nlmsg_flags & NLM_F_MULTI:
+                multipart = 1
+
+            if hdr.nlmsg_flags & NLM_F_DUMP_INTR:
+                if cb.cb_set[NL_CB_DUMP_INTR]:
+                    err = nl_cb_call(cb, NL_CB_DUMP_INTR, msg)  # NL_CB_CALL(cb, NL_CB_DUMP_INTR, msg)
+                    if err == NL_OK:
+                        break
+                    elif err == NL_SKIP:
+                        continue
+                    elif err == NL_STOP:
+                        return -NLE_DUMP_INTR if interrupted else nrecv
+                    else:
+                        return -NLE_DUMP_INTR if interrupted else (err or nrecv)
+                else:
+                    # We have to continue reading to clear all messages until a NLMSG_DONE is received and report the
+                    # inconsistency.
+                    interrupted = 1
+
+            if hdr.nlmsg_flags & NLM_F_ACK:
+                # Other side wishes to see an ack for this message.
+                if cb.cb_set[NL_CB_SEND_ACK]:
+                    err = nl_cb_call(cb, NL_CB_SEND_ACK, msg)  # NL_CB_CALL(cb, NL_CB_SEND_ACK, msg)
+                    if err == NL_OK:
+                        break
+                    elif err == NL_SKIP:
+                        continue
+                    elif err == NL_STOP:
+                        return -NLE_DUMP_INTR if interrupted else nrecv
+                    else:
+                        return -NLE_DUMP_INTR if interrupted else (err or nrecv)
+
+            if hdr.nlmsg_type == NLMSG_DONE:
+                # Messages terminates a multipart message, this is usually the end of a message and therefore we slip
+                # out of the loop by default. the user may overrule this action by skipping this packet.
+                multipart = 0
+                if cb.cb_set[NL_CB_FINISH]:
+                    err = nl_cb_call(cb, NL_CB_FINISH, msg)  # NL_CB_CALL(cb, NL_CB_FINISH, msg)
+                    if err == NL_OK:
+                        break
+                    elif err == NL_SKIP:
+                        continue
+                    elif err == NL_STOP:
+                        return -NLE_DUMP_INTR if interrupted else nrecv
+                    else:
+                        return -NLE_DUMP_INTR if interrupted else (err or nrecv)
+            elif hdr.nlmsg_type == NLMSG_NOOP:
+                # Message to be ignored, the default action is to skip this message if no callback is specified. The
+                # user may overrule this action by returning NL_PROCEED.
+                if cb.cb_set[NL_CB_SKIPPED]:
+                    err = nl_cb_call(cb, NL_CB_SKIPPED, msg)  # NL_CB_CALL(cb, NL_CB_SKIPPED, msg)
+                    if err == NL_OK:
+                        break
+                    elif err == NL_SKIP:
+                        continue
+                    elif err == NL_STOP:
+                        return -NLE_DUMP_INTR if interrupted else nrecv
+                    else:
+                        return -NLE_DUMP_INTR if interrupted else (err or nrecv)
+                else:
+                    continue
+            elif hdr.nlmsg_type == NLMSG_OVERRUN:
+                # Data got lost, report back to user. The default action is to quit parsing. The user may overrule this
+                # action by retuning NL_SKIP or NL_PROCEED (dangerous).
+                if cb.cb_set[NL_CB_OVERRUN]:
+                    err = nl_cb_call(cb, NL_CB_OVERRUN, msg)  # NL_CB_CALL(cb, NL_CB_OVERRUN, msg)
+                    if err == NL_OK:
+                        break
+                    elif err == NL_SKIP:
+                        continue
+                    elif err == NL_STOP:
+                        return -NLE_DUMP_INTR if interrupted else nrecv
+                    else:
+                        return -NLE_DUMP_INTR if interrupted else (err or nrecv)
+                else:
+                    return -NLE_DUMP_INTR if interrupted else -NLE_MSG_OVERFLOW
+            elif hdr.nlmsg_type == NLMSG_ERROR:
+                # Message carries a nlmsgerr.
+                e = nlmsgerr.from_buffer(nlmsg_data(hdr))
+                if hdr.nlmsg_len < nlmsg_size(len(e.payload.rstrip(b'\0'))):
+                    # Truncated error message, the default action is to stop parsing. The user may overrule this action
+                    # by returning NL_SKIP or NL_PROCEED (dangerous).
+                    if cb.cb_set[NL_CB_INVALID]:
+                        err = nl_cb_call(cb, NL_CB_INVALID, msg)  # NL_CB_CALL(cb, NL_CB_INVALID, msg)
+                        if err == NL_OK:
+                            break
+                        elif err == NL_SKIP:
+                            continue
+                        elif err == NL_STOP:
+                            return -NLE_DUMP_INTR if interrupted else nrecv
+                        else:
+                            return -NLE_DUMP_INTR if interrupted else (err or nrecv)
+                    else:
+                        return -NLE_DUMP_INTR if interrupted else -NLE_MSG_TRUNC
+                elif e.error:
+                    # Error message reported back from kernel.
+                    if cb.cb_err:
+                        err = cb.cb_err(nla, e, cb.cb_err_arg)
+                        if err < 0:
+                            return -NLE_DUMP_INTR if interrupted else err
+                        elif err == NL_SKIP:
+                            continue
+                        elif err == NL_STOP:
+                            return -NLE_DUMP_INTR if interrupted else -nl_syserr2nlerr(e.error)
+                    else:
+                        return -NLE_DUMP_INTR if interrupted else -nl_syserr2nlerr(e.error)
+                elif cb.cb_set[NL_CB_ACK]:
+                    err = nl_cb_call(cb, NL_CB_ACK, msg)  # NL_CB_CALL(cb, NL_CB_ACK, msg)
+                    if err == NL_OK:
+                        break
+                    elif err == NL_SKIP:
+                        continue
+                    elif err == NL_STOP:
+                        return -NLE_DUMP_INTR if interrupted else nrecv
+                    else:
+                        return -NLE_DUMP_INTR if interrupted else (err or nrecv)
+            else:
+                # Valid message (not checking for MULTIPART bit to get along with broken kernels. NL_SKIP has no effect
+                # on this.
+                if cb.cb_set(NL_CB_VALID):
+                    err = nl_cb_call(cb, NL_CB_VALID, msg)  # NL_CB_CALL(cb, NL_CB_VALID, msg)
+                    if err == NL_OK:
+                        break
+                    elif err == NL_SKIP:
+                        continue
+                    elif err == NL_STOP:
+                        return -NLE_DUMP_INTR if interrupted else nrecv
+                    else:
+                        return -NLE_DUMP_INTR if interrupted else (err or nrecv)
+
+        buf.clear()
+        creds = None
+
+        if multipart:
+            # Multipart message not yet complete, continue reading.
+            continue
+
+        err = 0
+        if interrupted:
+            return -NLE_DUMP_INTR
+        if not err:
+            err = nrecv
+        return err
 
 
 def nl_recvmsgs_report(sk, cb):

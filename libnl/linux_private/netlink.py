@@ -115,9 +115,10 @@ class nlmsghdr(object):
     def from_buffer(cls, buf):
         """Creates and returns a class instance based on data from a bytearray()."""
         types = (ctypes.c_uint32, ctypes.c_uint16, ctypes.c_uint16, ctypes.c_uint32, ctypes.c_uint32)
-        nlmsg_len, nlmsg_type, nlmsg_flags, nlmsg_seq, nlmsg_pid, buf_remaining = split_bytearray(buf, *types)
+        nlmsg_len, nlmsg_type, nlmsg_flags, nlmsg_seq, nlmsg_pid, _ = split_bytearray(buf, *types)
         nlh = cls(nlmsg_type=nlmsg_type, nlmsg_flags=nlmsg_flags, nlmsg_seq=nlmsg_seq, nlmsg_pid=nlmsg_pid)
         # Now build the payload.
+        buf_remaining = buf[NLMSG_ALIGN(cls.SIZEOF):nlmsg_len.value]
         while buf_remaining.rstrip(b'\0'):
             nla_len = ctypes.c_uint32.from_buffer(buf_remaining[:ctypes.sizeof(ctypes.c_uint32)])
             nla_total_size = NLA_ALIGN(nla_len)
@@ -192,6 +193,27 @@ NLMSG_OVERRUN = 0x4  # Data lost.
 NLMSG_MIN_TYPE = 0x10  # < 0x10: reserved control messages.
 
 
+class nlmsgerr(object):
+    """https://github.com/thom311/libnl/blob/master/include/linux-private/linux/netlink.h#L95
+
+    Instance variables:
+    error -- integer.
+    msg -- nlmsghdr class instance.
+    """
+    SIZEOF = ctypes.sizeof(ctypes.c_int) + nlmsghdr.SIZEOF
+
+    def __init__(self, error=None, msg=None):
+        self.error = error
+        self.msg = msg
+
+    @classmethod
+    def from_buffer(cls, buf):
+        """Creates and returns a class instance based on data from a bytearray()."""
+        error, buf_remaining = split_bytearray(buf, ctypes.c_int)
+        nlh = nlmsghdr.from_buffer(buf_remaining)
+        return cls(error=error, msg=nlh)
+
+
 NETLINK_ADD_MEMBERSHIP = 1
 NETLINK_DROP_MEMBERSHIP = 2
 NETLINK_PKTINFO = 3
@@ -240,11 +262,12 @@ class nlattr(object):
     @classmethod
     def from_buffer(cls, buf):
         """Creates and returns a class instance based on data from a bytearray()."""
-        nla_len, nla_type, buf_copy = split_bytearray(buf, ctypes.c_uint16, ctypes.c_uint16)
+        nla_len, nla_type, _ = split_bytearray(buf, ctypes.c_uint16, ctypes.c_uint16)
         nla = cls(nla_len=nla_len, nla_type=nla_type)
         payload_size = nla_len - NLA_HDRLEN
         if payload_size > 0:
-            nla.payload = buf_copy
+            buf_remaining = buf[NLA_HDRLEN:nla_len.value]
+            nla.payload = buf_remaining
         return nla
 
     @property

@@ -1,6 +1,6 @@
 """Default Netlink Message Handlers (netlink/handlers.h) (lib/handlers.c).
-https://github.com/thom311/libnl/blob/master/include/netlink/handlers.h
-https://github.com/thom311/libnl/blob/master/lib/handlers.c
+https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/handlers.h
+https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -44,7 +44,7 @@ NL_CB_TYPE_MAX = NL_CB_DUMP_INTR
 
 def print_header_content(nlh):
     """Returns header content (doesn't actually print like the C library does).
-    https://github.com/thom311/libnl/blob/master/lib/handlers.c#L34
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L34
 
     Positional arguments:
     nlh -- nlmsghdr class instance.
@@ -60,64 +60,64 @@ def print_header_content(nlh):
 
 
 def nl_valid_handler_verbose(msg, arg):
-    """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L45"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L45"""
     _LOGGER.debug('-- Warning: unhandled valid message: ' + print_header_content(nlmsg_hdr(msg)))
     return NL_OK
 
 
 def nl_invalid_handler_verbose(msg, arg):
-    """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L56"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L56"""
     _LOGGER.debug('-- Error: Invalid message: ' + print_header_content(nlmsg_hdr(msg)))
     return NL_STOP
 
 
 def nl_overrun_handler_verbose(msg, arg):
-    """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L67"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L67"""
     _LOGGER.debug('-- Error: Netlink Overrun: ' + print_header_content(nlmsg_hdr(msg)))
     return NL_STOP
 
 
 def nl_error_handler_verbose(who, err, arg):
-    """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L78"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L78"""
     _LOGGER.debug('-- Error received: ' + strerror(-err.error))
     _LOGGER.debug('-- Original message: ' + print_header_content(err.msg))
     return -nl_syserr2nlerr(err.error)
 
 
 def nl_valid_handler_debug(msg, arg):
-    """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L92"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L92"""
     _LOGGER.debug('-- Debug: Unhandled Valid message: ' + print_header_content(nlmsg_hdr(msg)))
     return NL_OK
 
 
 def nl_finish_handler_debug(msg, arg):
-    """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L103"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L103"""
     _LOGGER.debug('-- Debug: End of multipart message block: ' + print_header_content(nlmsg_hdr(msg)))
     return NL_STOP
 
 
 def nl_msg_in_handler_debug(msg, arg):
-    """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L114"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L114"""
     _LOGGER.debug('-- Debug: Received Message:')
     nl_msg_dump(msg)
     return NL_OK
 
 
 def nl_msg_out_handler_debug(msg, arg):
-    """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L124"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L124"""
     _LOGGER.debug('-- Debug: Sent Message:')
     nl_msg_dump(msg)
     return NL_OK
 
 
 def nl_skipped_handler_debug(msg, arg):
-    """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L134"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L134"""
     _LOGGER.debug('-- Debug: Skipped message: ' + print_header_content(nlmsg_hdr(msg)))
     return NL_SKIP
 
 
 def nl_ack_handler_debug(msg, arg):
-    """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L145"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L145"""
     _LOGGER.debug('-- Debug: ACK: ' + print_header_content(nlmsg_hdr(msg)))
     return NL_STOP
 
@@ -137,7 +137,7 @@ cb_err_def.update({NL_CB_VERBOSE: nl_error_handler_verbose, NL_CB_DEBUG: nl_erro
 
 def nl_cb_alloc(kind):
     """Allocate a new callback handle.
-    https://github.com/thom311/libnl/blob/master/lib/handlers.c#L201
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L201
 
     Positional arguments:
     kind -- callback kind to be used for initialization.
@@ -156,13 +156,13 @@ def nl_cb_alloc(kind):
 
 
 def nl_cb_get(cb):
-    """https://github.com/thom311/libnl/blob/master/lib/handlers.c#L244"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L244"""
     return cb
 
 
 def nl_cb_set(cb, type_, kind, func, arg):
     """Set up a callback. Updates `cb` in place.
-    https://github.com/thom311/libnl/blob/master/lib/handlers.c#L293
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L293
 
     Positional arguments:
     cb -- callback class instance.
@@ -189,7 +189,7 @@ def nl_cb_set(cb, type_, kind, func, arg):
 
 def nl_cb_err(cb, kind, func, arg):
     """Set up an error callback. Updates `cb` in place.
-    https://github.com/thom311/libnl/blob/master/lib/handlers.c#L343
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L343
 
     Positional arguments:
     cb -- callback class instance.
@@ -215,7 +215,7 @@ def nl_cb_err(cb, kind, func, arg):
 
 def nl_cb_overwrite_send(cb, func):
     """Overwrite internal calls to nl_send().
-    https://github.com/thom311/libnl/blob/master/lib/handlers.c#L293
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L293
 
     Positional arguments:
     cb -- callback class instance.

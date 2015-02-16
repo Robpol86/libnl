@@ -1,5 +1,5 @@
 """Core Netlink Interface (lib/nl.c).
-https://github.com/thom311/libnl/blob/master/lib/nl.c
+https://github.com/thom311/libnl/blob/libnl3_2_25/lib/nl.c
 
 Socket handling, connection management, sending and receiving of data, message construction and parsing, object caching
 system, ...
@@ -38,7 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def nl_connect(sk, protocol):
     """Create file descriptor and bind socket.
-    https://github.com/thom311/libnl/blob/master/lib/nl.c#L96
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/nl.c#L96
 
     Creates a new Netlink socket using `socket.socket()` and binds the socket to the protocol and local port specified
     in the `sk` socket object (if any). Fails if the socket is already connected.
@@ -81,7 +81,7 @@ def nl_connect(sk, protocol):
 
 def nl_sendmsg(sk, msg, hdr):
     """Transmit Netlink message using socket.sendmsg|sendto|send().
-    https://github.com/thom311/libnl/blob/master/lib/nl.c#L299
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/nl.c#L299
 
     Transmits the message specified in `hdr` over the Netlink socket using Python's socket.sendmsg().
 
@@ -138,7 +138,7 @@ def nl_sendmsg(sk, msg, hdr):
 
 def nl_send_iovec(sk, msg, iov):
     """Transmit Netlink message.
-    https://github.com/thom311/libnl/blob/master/lib/nl.c#L342
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/nl.c#L342
 
     This function is identical to nl_send().
 
@@ -169,7 +169,7 @@ def nl_send_iovec(sk, msg, iov):
 
 def nl_send(sk, msg):
     """Transmit Netlink message.
-    https://github.com/thom311/libnl/blob/master/lib/nl.c#L416
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/nl.c#L416
 
     Transmits the Netlink message `msg` over the Netlink socket using the `socket.sendmsg()`. This function is based on
     `nl_send_iovec()`.
@@ -204,7 +204,7 @@ def nl_send(sk, msg):
 
 def nl_complete_msg(sk, msg):
     """Finalize Netlink message.
-    https://github.com/thom311/libnl/blob/master/lib/nl.c#L450
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/nl.c#L450
 
     This function finalizes a Netlink message by completing the message with desirable flags and values depending on the
     socket configuration.
@@ -234,7 +234,7 @@ def nl_complete_msg(sk, msg):
 
 def nl_send_auto(sk, msg):
     """Finalize and transmit Netlink message.
-    https://github.com/thom311/libnl/blob/master/lib/nl.c#L485
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/nl.c#L485
 
     Finalizes the message by passing it to `nl_complete_msg()` and transmits it by passing it to `nl_send()`.
 
@@ -253,7 +253,7 @@ def nl_send_auto(sk, msg):
 
 def nl_send_simple(sk, type_, flags, buf=None):
     """Construct and transmit a Netlink message.
-    https://github.com/thom311/libnl/blob/master/lib/nl.c#L549
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/nl.c#L549
 
     Allocates a new Netlink message based on `type_` and `flags`. If `buf` is specified that payload will be appended to
     the message.
@@ -281,7 +281,7 @@ def nl_send_simple(sk, type_, flags, buf=None):
 
 def nl_recv(sk, nla, buf, creds=None):
     """Receive data from netlink socket.
-    https://github.com/thom311/libnl/blob/master/lib/nl.c#L625
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/nl.c#L625
 
     Receives data from a connected netlink socket using recvmsg(). The peer's netlink address will be stored in `nla`
     (second argument passed to this function).
@@ -361,7 +361,7 @@ def nl_recv(sk, nla, buf, creds=None):
 
 
 def recvmsgs(sk, cb):
-    """https://github.com/thom311/libnl/blob/master/lib/nl.c#L775
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/nl.c#L775
 
     This is where callbacks are called.
 
@@ -593,7 +593,7 @@ def recvmsgs(sk, cb):
 
 def nl_recvmsgs_report(sk, cb):
     """Receive a set of messages from a netlink socket and report parsed messages.
-    https://github.com/thom311/libnl/blob/master/lib/nl.c#L998
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/nl.c#L998
 
     This function is identical to nl_recvmsgs() to the point that it will return the number of parsed messages instead
     of 0 on success.
@@ -614,7 +614,7 @@ def nl_recvmsgs_report(sk, cb):
 
 def nl_recvmsgs(sk, cb):
     """Receive a set of messages from a netlink socket.
-    https://github.com/thom311/libnl/blob/master/lib/nl.c#L1023
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/nl.c#L1023
 
     Repeatedly calls nl_recv() or the respective replacement if provided by the application (see nl_cb_overwrite_recv())
     and parses the received data as netlink messages. Stops reading if one of the callbacks returns NL_STOP or nl_recv
@@ -639,7 +639,7 @@ def nl_recvmsgs(sk, cb):
 
 def nl_recvmsgs_default(sk):
     """Receive a set of message from a netlink socket using handlers in nl_sock.
-    https://github.com/thom311/libnl/blob/master/lib/nl.c#L1039
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/nl.c#L1039
 
     Calls nl_recvmsgs() with the handlers configured in the netlink socket.
 

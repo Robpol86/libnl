@@ -1,6 +1,6 @@
 """Netlink Attributes (netlink/attr.h) (lib/attr.c).
-https://github.com/thom311/libnl/blob/master/include/netlink/attr.h
-https://github.com/thom311/libnl/blob/master/lib/attr.c
+https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/attr.h
+https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -26,7 +26,7 @@ NLA_TYPE_MAX = NLA_NESTED
 
 def nla_type(nla):
     """Return type of the attribute.
-    https://github.com/thom311/libnl/blob/master/lib/attr.c#L109
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L109
 
     Positional arguments:
     nla -- attribute.
@@ -39,7 +39,7 @@ def nla_type(nla):
 
 def nla_data(nla):
     """Return payload section.
-    https://github.com/thom311/libnl/blob/master/lib/attr.c#L120
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L120
 
     Positional arguments:
     nla -- attribute.
@@ -52,7 +52,7 @@ def nla_data(nla):
 
 def nla_len(nla):
     """Return length of the payload.
-    https://github.com/thom311/libnl/blob/master/lib/attr.c#L131
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L131
 
     Positional arguments:
     nla -- attribute.
@@ -65,7 +65,7 @@ def nla_len(nla):
 
 def nla_ok(nla, remaining):
     """Check if the attribute header and payload can be accessed safely.
-    https://github.com/thom311/libnl/blob/master/lib/attr.c#L148
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L148
 
     Verifies that the header and payload do not exceed the number of bytes left in the attribute stream. This function
     must be called before access the attribute header or payload when iterating over the attribute stream using
@@ -83,7 +83,7 @@ def nla_ok(nla, remaining):
 
 def nla_next(nla, remaining):
     """Return next attribute in a stream of attributes.
-    https://github.com/thom311/libnl/blob/master/lib/attr.c#L171
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L171
 
     Calculates the offset to the next attribute based on the attribute given. The attribute provided is assumed to be
     accessible, the caller is responsible to use nla_ok() beforehand. The offset (length of specified attribute
@@ -102,7 +102,7 @@ def nla_next(nla, remaining):
 
 def nla_for_each_attr(head):
     """Iterate over a list of attributes.
-    https://github.com/thom311/libnl/blob/master/include/netlink/attr.h#L262
+    https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/attr.h#L262
 
     Positional arguments:
     head -- list of attributes.
@@ -115,7 +115,7 @@ def nla_for_each_attr(head):
 
 def nla_find(attrs, attrtype):
     """Find a single attribute in a list of attributes.
-    https://github.com/thom311/libnl/blob/master/lib/attr.c#L323
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L323
 
     Iterates over the stream of attributes and compares each type with the type specified. Returns the first attribute
     which matches the type.
@@ -135,7 +135,7 @@ def nla_find(attrs, attrtype):
 
 def nla_put(msg, attrtype, data):
     """Add a unspecific attribute to netlink message.
-    https://github.com/thom311/libnl/blob/master/lib/attr.c#L497
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L497
 
     Copies the provided data into the message as payload of the attribute.
 
@@ -154,7 +154,7 @@ def nla_put(msg, attrtype, data):
 
 def nla_put_u8(msg, attrtype, value):
     """Add 8 bit integer attribute to netlink message.
-    https://github.com/thom311/libnl/blob/master/lib/attr.c#L563
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L563
 
     Positional arguments:
     msg -- netlink message (nl_msg class instance).
@@ -169,7 +169,7 @@ def nla_put_u8(msg, attrtype, value):
 
 def nla_get_u8(nla):
     """Return value of 8 bit integer attribute as an int().
-    https://github.com/thom311/libnl/blob/master/lib/attr.c#L574
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L574
 
     Positional arguments:
     nla -- 8 bit integer attribute.
@@ -183,7 +183,7 @@ def nla_get_u8(nla):
 
 def nla_put_u16(msg, attrtype, value):
     """Add 16 bit integer attribute to netlink message.
-    https://github.com/thom311/libnl/blob/master/lib/attr.c#L588
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L588
 
     Positional arguments:
     msg -- netlink message (nl_msg class instance).
@@ -198,7 +198,7 @@ def nla_put_u16(msg, attrtype, value):
 
 def nla_get_u16(nla):
     """Return value of 16 bit integer attribute as an int().
-    https://github.com/thom311/libnl/blob/master/lib/attr.c#L599
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L599
 
     Positional arguments:
     nla -- 16 bit integer attribute.
@@ -212,7 +212,7 @@ def nla_get_u16(nla):
 
 def nla_put_u32(msg, attrtype, value):
     """Add 32 bit integer attribute to netlink message.
-    https://github.com/thom311/libnl/blob/master/lib/attr.c#L613
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L613
 
     Positional arguments:
     msg -- netlink message (nl_msg class instance).
@@ -227,7 +227,7 @@ def nla_put_u32(msg, attrtype, value):
 
 def nla_get_u32(nla):
     """Return value of 32 bit integer attribute as an int().
-    https://github.com/thom311/libnl/blob/master/lib/attr.c#L624
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L624
 
     Returns:
     Payload as an int().
@@ -238,7 +238,7 @@ def nla_get_u32(nla):
 
 def nla_put_u64(msg, attrtype, value):
     """Add 64 bit integer attribute to netlink message.
-    https://github.com/thom311/libnl/blob/master/lib/attr.c#L638
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L638
 
     Positional arguments:
     msg -- netlink message (nl_msg class instance).
@@ -253,7 +253,7 @@ def nla_put_u64(msg, attrtype, value):
 
 def nla_get_u64(nla):
     """Return value of 64 bit integer attribute as an int().
-    https://github.com/thom311/libnl/blob/master/lib/attr.c#L649
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L649
 
     Returns:
     Payload as an int().
@@ -264,7 +264,7 @@ def nla_get_u64(nla):
 
 def nla_put_string(msg, attrtype, value):
     """Add string attribute to netlink message.
-    https://github.com/thom311/libnl/blob/master/lib/attr.c#L674
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L674
 
     Positional arguments:
     msg -- netlink message (nl_msg class instance).
@@ -279,7 +279,7 @@ def nla_put_string(msg, attrtype, value):
 
 def nla_get_string(nla):
     """Return string attribute.
-    https://github.com/thom311/libnl/blob/master/lib/attr.c#L685
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L685
 
     Returns:
     bytes() string value.
@@ -289,7 +289,7 @@ def nla_get_string(nla):
 
 def nla_put_flag(msg, attrtype):
     """Add flag netlink attribute to netlink message.
-    https://github.com/thom311/libnl/blob/master/lib/attr.c#L709
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L709
 
     Positional arguments:
     msg -- netlink message (nl_msg class instance).
@@ -303,7 +303,7 @@ def nla_put_flag(msg, attrtype):
 
 def nla_get_flag(nla):
     """Return True if flag attribute is set.
-    https://github.com/thom311/libnl/blob/master/lib/attr.c#L720
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L720
 
     Returns:
     True if flag is set, otherwise False.
@@ -313,7 +313,7 @@ def nla_get_flag(nla):
 
 def nla_put_msecs(msg, attrtype, value):
     """Add msecs attribute to netlink message.
-    https://github.com/thom311/libnl/blob/master/lib/attr.c#L737
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L737
 
     Positional arguments:
     msg -- netlink message (nl_msg class instance).
@@ -334,7 +334,7 @@ def nla_put_msecs(msg, attrtype, value):
 
 def nla_get_msecs(nla):
     """Return value of msecs attribute as an int().
-    https://github.com/thom311/libnl/blob/master/lib/attr.c#L748
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L748
 
     Returns:
     Payload as an int().

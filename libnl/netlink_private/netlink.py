@@ -1,5 +1,5 @@
 """Local Netlink Interface (netlink-private/netlink.h).
-https://github.com/thom311/libnl/blob/master/include/netlink-private/netlink.h
+https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/netlink.h
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -11,13 +11,13 @@ from libnl.handlers import NL_CB_TYPE_MAX
 
 
 class BUG(Exception):
-    """https://github.com/thom311/libnl/blob/master/include/netlink-private/netlink.h#L99"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/netlink.h#L99"""
     pass
 
 
 def nl_cb_call(cb, type_, msg):
     """Calls a callback function.
-    https://github.com/thom311/libnl/blob/master/include/netlink-private/netlink.h#L137
+    https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/netlink.h#L137
 
     Positional arguments:
     cb -- callback class instance

@@ -1,5 +1,5 @@
 """Utility Functions (lib/utils.c).
-https://github.com/thom311/libnl/blob/master/lib/utils.c
+https://github.com/thom311/libnl/blob/libnl3_2_25/lib/utils.c
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -9,7 +9,7 @@ of the License.
 
 
 def __type2str(type_, tbl):
-    """https://github.com/thom311/libnl/blob/master/lib/utils.c#L968
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/utils.c#L968
 
     Positional arguments:
     type_ -- integer, key to lookup in `tbl`.

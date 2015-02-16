@@ -1,5 +1,5 @@
 """netlink.h.
-https://github.com/thom311/libnl/blob/master/include/linux-private/linux/netlink.h
+https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux-private/linux/netlink.h
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -35,7 +35,7 @@ NLM_F_APPEND = 0x800  # Add to end of list.
 
 class sockaddr_nl(object):
     """Netlink sockaddr class (C struct equivalent).
-    https://github.com/thom311/libnl/blob/master/include/linux-private/linux/netlink.h#L31
+    https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux-private/linux/netlink.h#L31
 
     Instance variables:
     nl_family -- AF_NETLINK.
@@ -63,7 +63,7 @@ class sockaddr_nl(object):
 
 class nlmsghdr(object):
     """Netlink message header (holds actual payload of netlink message).
-    https://github.com/thom311/libnl/blob/master/include/linux-private/linux/netlink.h#L38
+    https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux-private/linux/netlink.h#L38
 
     Instance variables:
     nlmsg_type -- message content.
@@ -126,7 +126,7 @@ class nlmsghdr(object):
 
     @staticmethod
     def _tlen(pl_bytes):
-        """https://github.com/thom311/libnl/blob/master/lib/msg.c#L413"""
+        """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L413"""
         return (len(pl_bytes) + (NLMSG_ALIGNTO - 1)) & ~(NLMSG_ALIGNTO - 1)
 
     @classmethod
@@ -207,7 +207,7 @@ NLMSG_MIN_TYPE = 0x10  # < 0x10: reserved control messages.
 
 
 class nlmsgerr(object):
-    """https://github.com/thom311/libnl/blob/master/include/linux-private/linux/netlink.h#L95
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux-private/linux/netlink.h#L95
 
     Instance variables:
     error -- c_int.
@@ -255,7 +255,7 @@ NETLINK_NO_ENOBUFS = 5
 
 
 class nlattr(object):
-    """https://github.com/thom311/libnl/blob/master/include/linux-private/linux/netlink.h#L126
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux-private/linux/netlink.h#L126
 
     Holds a netlink attribute along with a payload/data (such as a c_uint32 instance).
 

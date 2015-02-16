@@ -1,5 +1,5 @@
 """Error Handling (lib/error.c).
-https://github.com/thom311/libnl/blob/master/lib/error.c
+https://github.com/thom311/libnl/blob/libnl3_2_25/lib/error.c
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -51,7 +51,7 @@ errmsg.update({
 
 
 def nl_syserr2nlerr(error_):
-    """https://github.com/thom311/libnl/blob/master/lib/error.c#L84"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/error.c#L84"""
     error_ = abs(error_)
     legend = {
         EBADF: NLE_BAD_SOCK,

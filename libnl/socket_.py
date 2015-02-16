@@ -1,5 +1,5 @@
 """Netlink Socket (lib/socket.c).
-https://github.com/thom311/libnl/blob/master/lib/socket.c
+https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c
 
 Representation of a netlink socket.
 
@@ -23,13 +23,13 @@ from libnl.netlink_private.types import nl_sock, NL_OWN_PORT, NL_SOCK_BUFSIZE_SE
 
 _LOGGER = logging.getLogger(__name__)
 _PREVIOUS_LOCAL_PORT = None
-default_cb = NL_CB_DEFAULT  # https://github.com/thom311/libnl/blob/master/lib/socket.c#L40
+default_cb = NL_CB_DEFAULT  # https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L40
 SOL_NETLINK = 270
 
 
 @__init
 def init_default_cb():
-    """https://github.com/thom311/libnl/blob/master/lib/socket.c#L42"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L42"""
     global default_cb
     nlcb = os.environ.get('NLCB', '').lower()
     if not nlcb:
@@ -46,7 +46,7 @@ def init_default_cb():
 
 
 def generate_local_port():
-    """https://github.com/thom311/libnl/blob/master/lib/socket.c#L63"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L63"""
     global _PREVIOUS_LOCAL_PORT
     if _PREVIOUS_LOCAL_PORT is None:
         with socket.socket(socket.AF_NETLINK, socket.SOCK_RAW) as s:
@@ -57,10 +57,10 @@ def generate_local_port():
 
 def nl_socket_alloc(cb=None):
     """Allocate new netlink socket. Does not yet actually open a socket.
-    https://github.com/thom311/libnl/blob/master/lib/socket.c#L206
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L206
 
     Also has code for generating local port once.
-    https://github.com/thom311/libnl/blob/master/lib/nl.c#L123
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/nl.c#L123
 
     Keyword arguments:
     cb -- custom callback handler.
@@ -89,7 +89,7 @@ def nl_socket_alloc(cb=None):
 
 def nl_socket_free(sk):
     """Free a netlink socket (closes the socket).
-    https://github.com/thom311/libnl/blob/master/lib/socket.c#L244
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L244
 
     Positional arguments:
     sk -- netlink socket (nl_sock class instance).
@@ -99,9 +99,9 @@ def nl_socket_free(sk):
 
 
 def nl_socket_get_local_port(sk):
-    """https://github.com/thom311/libnl/blob/master/lib/socket.c#L357
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L357
 
-    Also https://github.com/thom311/libnl/blob/master/lib/socket.c#L338
+    Also https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L338
     """
     if not sk.s_local.nl_pid:
         port = generate_local_port()
@@ -113,7 +113,7 @@ def nl_socket_get_local_port(sk):
 
 def nl_socket_add_memberships(sk, *group):
     """Join groups.
-    https://github.com/thom311/libnl/blob/master/lib/socket.c#L417
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L417
 
     Joins the specified groups using the modern socket option which is available since kernel version 2.6.14. It allows
     joining an almost arbitrary number of groups without limitation. The list of groups has to be terminated by 0
@@ -134,7 +134,7 @@ def nl_socket_add_memberships(sk, *group):
 
 def nl_socket_add_membership(sk, group):
     """Join a group.
-    https://github.com/thom311/libnl/blob/master/lib/socket.c#L448
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L448
 
     Positional arguments:
     sk -- AF_NETLINK socket.
@@ -148,7 +148,7 @@ def nl_socket_add_membership(sk, group):
 
 def nl_socket_drop_memberships(sk, *group):
     """Leave groups.
-    https://github.com/thom311/libnl/blob/master/lib/socket.c#L465
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L465
 
     Leaves the specified groups using the modern socket option which is available since kernel version 2.6.14. The list
     of groups has to terminated by 0 (%NFNLGRP_NONE).
@@ -166,7 +166,7 @@ def nl_socket_drop_memberships(sk, *group):
 
 def nl_socket_drop_membership(sk, group):
     """Leave a group.
-    https://github.com/thom311/libnl/blob/master/lib/socket.c#L496
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L496
 
     Positional arguments:
     sk -- AF_NETLINK socket.
@@ -180,7 +180,7 @@ def nl_socket_drop_membership(sk, group):
 
 def nl_socket_set_buffer_size(sk, rxbuf, txbuf):
     """Set socket buffer size of netlink socket.
-    https://github.com/thom311/libnl/blob/master/lib/socket.c#L675
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L675
 
     Sets the socket buffer size of a netlink socket to the specified values `rxbuf` and `txbuf`. Providing a value of 0
     assumes a good default value.

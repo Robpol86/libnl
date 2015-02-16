@@ -1,5 +1,5 @@
 """Netlink Types (netlink-private/types.h).
-https://github.com/thom311/libnl/blob/master/include/netlink-private/types.h
+https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@ NL_MSG_CRED_PRESENT = 1
 
 class nl_cb(object):  # TODO https://github.com/Robpol86/libnl/issues/4
     """Netlink callback class (C struct equivalent).
-    https://github.com/thom311/libnl/blob/master/include/netlink-private/types.h#L40
+    https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L40
 
     Instance variables:
     cb_set -- dictionary of callback functions (values), indexed by callback type (keys).
@@ -45,7 +45,7 @@ class nl_cb(object):  # TODO https://github.com/Robpol86/libnl/issues/4
 
 class nl_sock(object):
     """Netlink socket class (C struct equivalent).
-    https://github.com/thom311/libnl/blob/master/include/netlink-private/types.h#L70
+    https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L70
 
     Instance variables:
     s_local -- struct sockaddr_nl.
@@ -88,7 +88,7 @@ class nl_sock(object):
 
 
 class nl_msg(object):
-    """https://github.com/thom311/libnl/blob/master/include/netlink-private/types.h#L133"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L133"""
 
     def __init__(self):
         self.nm_protocol = 0

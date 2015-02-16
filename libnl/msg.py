@@ -1,6 +1,6 @@
 """Netlink Messages Interface (lib/msg.c).
-https://github.com/thom311/libnl/blob/master/lib/msg.c
-https://github.com/thom311/libnl/blob/master/include/netlink/msg.h
+https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c
+https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/msg.h
 
 Netlink message construction/parsing interface.
 
@@ -32,7 +32,7 @@ NL_AUTO_SEQ = 0
 
 def nlmsg_size(payload):
     """Calculates size of netlink message based on payload length.
-    https://github.com/thom311/libnl/blob/master/lib/msg.c#L54
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L54
 
     Positional arguments:
     payload -- length of payload (integer).
@@ -43,12 +43,12 @@ def nlmsg_size(payload):
     return NLMSG_HDRLEN + payload
 
 
-nlmsg_msg_size = nlmsg_size  # Alias. https://github.com/thom311/libnl/blob/master/lib/msg.c#L59
+nlmsg_msg_size = nlmsg_size  # Alias. https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L59
 
 
 def nlmsg_data(nlh):
     """Return the message payload.
-    https://github.com/thom311/libnl/blob/master/lib/msg.c#L105
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L105
 
     Positional arguments:
     nlh -- netlink message header (nlmsghdr class instance).
@@ -67,7 +67,7 @@ def nlmsg_data(nlh):
 
 def nlmsg_for_each_attr(nlh):
     """Iterate over a stream of attributes in a message.
-    https://github.com/thom311/libnl/blob/master/include/netlink/msg.h#L123
+    https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/msg.h#L123
 
     Positional arguments:
     nlh -- netlink message header (nlmsghdr class instance).
@@ -80,7 +80,7 @@ def nlmsg_for_each_attr(nlh):
 
 def nlmsg_datalen(nlh):
     """Return length of message payload.
-    https://github.com/thom311/libnl/blob/master/lib/msg.c#L121
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L121
 
     Positional arguments:
     nlh -- netlink message header (nlmsghdr class instance).
@@ -91,12 +91,12 @@ def nlmsg_datalen(nlh):
     return nlh.nlmsg_len - NLMSG_HDRLEN
 
 
-nlmsg_len = nlmsg_datalen  # Alias. https://github.com/thom311/libnl/blob/master/lib/msg.c#L126
+nlmsg_len = nlmsg_datalen  # Alias. https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L126
 
 
 def nlmsg_attrdata(nlh):
     """Returns list of attributes/payload from netlink message header.
-    https://github.com/thom311/libnl/blob/master/lib/msg.c#L143
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L143
 
     Positional arguments:
     nlh -- netlink message header (nlmsghdr class instance).
@@ -109,7 +109,7 @@ def nlmsg_attrdata(nlh):
 
 def nlmsg_find_attr(nlh, attrtype):
     """Find a specific attribute in a netlink message.
-    https://github.com/thom311/libnl/blob/master/lib/msg.c#L231
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L231
 
     Positional arguments:
     nlh -- netlink message header (nlmsghdr class instance).
@@ -123,7 +123,7 @@ def nlmsg_find_attr(nlh, attrtype):
 
 def nlmsg_alloc():
     """Instantiate a new netlink message.
-    https://github.com/thom311/libnl/blob/master/lib/msg.c#L299
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L299
 
     Instantiates a new netlink message without any further payload.
 
@@ -140,7 +140,7 @@ def nlmsg_alloc():
 
 def nlmsg_inherit(hdr=None):
     """Allocate a new netlink message and inherit netlink message header.
-    https://github.com/thom311/libnl/blob/master/lib/msg.c#L322
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L322
 
     Allocates a new netlink message and inherits the original message header. If `hdr` is not None it will be used as a
     template for the netlink message header, otherwise the header is left blank.
@@ -163,7 +163,7 @@ def nlmsg_inherit(hdr=None):
 
 def nlmsg_alloc_simple(nlmsgtype, flags):
     """Allocate a new netlink message.
-    https://github.com/thom311/libnl/blob/master/lib/msg.c#L346
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L346
 
     Positional arguments:
     nlmsgtype -- netlink message type (integer).
@@ -180,7 +180,7 @@ def nlmsg_alloc_simple(nlmsgtype, flags):
 
 def nlmsg_convert(hdr):
     """Convert a netlink message received from a netlink socket to a nl_msg.
-    https://github.com/thom311/libnl/blob/master/lib/msg.c#L382
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L382
 
     Allocates a new netlink message and copies all of the data pointed to by `hdr` into the new message object.
 
@@ -197,7 +197,7 @@ def nlmsg_convert(hdr):
 
 def nlmsg_append(msg, data):
     """Append data to tail of a netlink message.
-    https://github.com/thom311/libnl/blob/master/lib/msg.c#L442
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L442
 
     Positional arguments:
     msg -- netlink message (nl_msg class instance).
@@ -213,7 +213,7 @@ def nlmsg_append(msg, data):
 
 def nlmsg_hdr(msg):
     """Return actual netlink message.
-    https://github.com/thom311/libnl/blob/master/lib/msg.c#L536
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L536
 
     Returns the actual netlink message.
 
@@ -227,7 +227,7 @@ def nlmsg_hdr(msg):
 
 
 def nlmsg_set_proto(msg, protocol):
-    """https://github.com/thom311/libnl/blob/master/lib/msg.c#L584
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L584
 
     Positional arguments:
     msg -- netlink message (nl_msg class instance).
@@ -237,17 +237,17 @@ def nlmsg_set_proto(msg, protocol):
 
 
 def nlmsg_set_src(msg, addr):
-    """https://github.com/thom311/libnl/blob/master/lib/msg.c#L599"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L599"""
     msg.nm_src = addr
 
 
 def nlmsg_get_dst(msg):
-    """https://github.com/thom311/libnl/blob/master/lib/msg.c#L614"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L614"""
     return msg.nm_dst
 
 
 def nlmsg_get_creds(msg):
-    """https://github.com/thom311/libnl/blob/master/lib/msg.c#L625"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L625"""
     if msg.nm_flags & NL_MSG_CRED_PRESENT:
         return msg.nm_creds
     return None
@@ -262,7 +262,7 @@ nl_msgtypes = {
 
 
 def nl_nlmsgtype2str(type_):
-    """https://github.com/thom311/libnl/blob/master/lib/msg.c#L646
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L646
 
     Positional arguments:
     type_ -- integer (e.g. nlh.nlmsg_type).
@@ -275,7 +275,7 @@ def nl_nlmsgtype2str(type_):
 
 def nl_nlmsg_flags2str(flags):
     """Netlink Message Flags Translations.
-    https://github.com/thom311/libnl/blob/master/lib/msg.c#L664
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L664
 
     Positional arguments:
     flags -- integer.
@@ -309,7 +309,7 @@ def nl_nlmsg_flags2str(flags):
 
 def dump_hex(start, prefix=0):
     """Converts `start` to hex and logs it, 16 bytes per log statement.
-    https://github.com/thom311/libnl/blob/master/lib/msg.c#L760
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L760
 
     Positional arguments:
     start -- bytearray() instance.
@@ -326,7 +326,7 @@ def dump_hex(start, prefix=0):
 
 
 def print_hdr(msg):
-    """https://github.com/thom311/libnl/blob/master/lib/msg.c#L793
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L793
 
     Positional arguments:
     msg -- message to print (nl_msg class instance).
@@ -348,7 +348,7 @@ def print_hdr(msg):
 
 
 def print_genl_hdr(start):
-    """https://github.com/thom311/libnl/blob/master/lib/msg.c#L831
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L831
 
     Positional arguments:
     start -- bytearray() instance.
@@ -361,7 +361,7 @@ def print_genl_hdr(start):
 
 
 def print_genl_msg(msg, hdr, ops, payloadlen):
-    """https://github.com/thom311/libnl/blob/master/lib/msg.c#L831
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L831
 
     Positional arguments:
     msg -- message to print (nl_msg class instance).
@@ -392,7 +392,7 @@ def print_genl_msg(msg, hdr, ops, payloadlen):
 
 
 def dump_error_msg(msg):
-    """https://github.com/thom311/libnl/blob/master/lib/msg.c#L908
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L908
 
     Positional arguments:
     msg -- message to print (nl_msg class instance).
@@ -410,7 +410,7 @@ def dump_error_msg(msg):
 
 
 def print_msg(msg, hdr):
-    """https://github.com/thom311/libnl/blob/master/lib/msg.c#L929
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L929
 
     Positional arguments:
     msg -- netlink message (nl_msg class instance).
@@ -435,7 +435,7 @@ def print_msg(msg, hdr):
 
 def nl_msg_dump(msg):
     """Dump message in human readable format to handle.
-    https://github.com/thom311/libnl/blob/master/lib/msg.c#L970
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L970
 
     Positional arguments:
     msg -- message to print (nl_msg class instance).

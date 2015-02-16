@@ -13,6 +13,7 @@ of the License.
 import ctypes
 import logging
 import os
+import string
 
 from libnl.attr import nla_for_each_attr, nla_find
 from libnl.linux_private.genetlink import GENL_HDRLEN, genlmsghdr
@@ -301,9 +302,22 @@ def nl_nlmsg_flags2str(flags):
     return ','.join(keys)
 
 
-def dump_hex(start, len_, prefix):
-    """https://github.com/thom311/libnl/blob/master/lib/msg.c#L760"""
-    pass  # TODO https://github.com/Robpol86/libnl/issues/7
+def dump_hex(start, prefix=0):
+    """Converts `start` to hex and logs it, 16 bytes per log statement.
+    https://github.com/thom311/libnl/blob/master/lib/msg.c#L760
+
+    Positional arguments:
+    start -- bytearray() instance.
+
+    Keyword arguments:
+    prefix -- additional number of whitespace pairs to prefix each log statement with.
+    """
+    prefix_whitespaces = '  ' * prefix
+    limit = 16 - (prefix * 2)
+    for line in (start[i:i+limit] for i in range(0, len(start), limit)):  # http://stackoverflow.com/a/9475354/1198943
+        hex_line = ' '.join('{0:02x}'.format(i) for i in line)
+        ascii_line = ''.join(c if c in string.printable else '.' for c in (chr(i) for i in line))
+        _LOGGER.debug('    %s%s %s', prefix_whitespaces, hex_line, ascii_line)
 
 
 def print_hdr(msg):
@@ -366,7 +380,7 @@ def print_genl_msg(msg, hdr, ops, payloadlen):
             if payloadlen.value < hdrsize:
                 return data
             _LOGGER.debug('  [HEADER] %d octets', hdrsize)
-            dump_hex(data, hdrsize, 0)
+            dump_hex(data)
             payloadlen.value -= hdrsize
 
     return data
@@ -399,7 +413,7 @@ def print_msg(msg, hdr):
     """
     payloadlen = ctypes.c_int(nlmsg_len(hdr))
     attrlen = 0
-    data = None
+    data = nlmsg_data(hdr)
     ops = None  # = nl_cache_ops_associate_safe(nlmsg_get_proto(msg), hdr.nlmsg_type) # TODO issues/8
     if ops:
         raise NotImplementedError
@@ -407,7 +421,7 @@ def print_msg(msg, hdr):
         data = print_genl_msg(msg, hdr, ops, payloadlen)
     if payloadlen.value:
         _LOGGER.debug('  [PAYLOAD] %d octets', payloadlen.value)
-        dump_hex(data, payloadlen, 0)
+        # dump_hex(data)
     if attrlen:
         raise NotImplementedError
     if ops:

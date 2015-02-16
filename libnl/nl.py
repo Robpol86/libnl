@@ -565,7 +565,7 @@ def recvmsgs(sk, cb):
             else:
                 # Valid message (not checking for MULTIPART bit to get along with broken kernels. NL_SKIP has no effect
                 # on this.
-                if cb.cb_set(NL_CB_VALID):
+                if cb.cb_set[NL_CB_VALID]:
                     err = nl_cb_call(cb, NL_CB_VALID, msg)  # NL_CB_CALL(cb, NL_CB_VALID, msg)
                     if err == NL_OK:
                         pass

@@ -54,11 +54,15 @@ def nlmsg_data(nlh):
     nlh -- netlink message header (nlmsghdr class instance).
 
     Returns:
-    Message payload (list of objects).
+    Bytes() or bytearray() representation of the payload.
     """
     if len(nlh.payload) == 1 and isinstance(nlh.payload[0], bytearray):
         return nlh.payload[0]
-    return nlh.payload
+    try:
+        iter(nlh.payload)
+    except TypeError:
+        return bytes(nlh.payload)
+    return b''.join(bytes(p) for p in nlh.payload)
 
 
 def nlmsg_for_each_attr(nlh):
@@ -292,14 +296,15 @@ def nl_nlmsg_flags2str(flags):
         ('CREATE', NLM_F_CREATE),
         ('APPEND', NLM_F_APPEND),
     )
-    matching_flags = [(k, v) for k, v in all_flags if flags & v]
-
-    # Modify `flags`.
-    for _, v in matching_flags:
+    print_flags = []
+    for k, v in all_flags:
+        if not flags & v:
+            continue
         flags &= ~v
-
-    keys = ([i[0] for i in matching_flags] + ['0x{0:x}'.format(flags)]) if flags else [i[0] for i in matching_flags]
-    return ','.join(keys)
+        print_flags.append(k)
+    if flags:
+        print_flags.append('0x{0:x}'.format(flags))
+    return ','.join(print_flags)
 
 
 def dump_hex(start, prefix=0):
@@ -315,9 +320,9 @@ def dump_hex(start, prefix=0):
     prefix_whitespaces = '  ' * prefix
     limit = 16 - (prefix * 2)
     for line in (start[i:i+limit] for i in range(0, len(start), limit)):  # http://stackoverflow.com/a/9475354/1198943
-        hex_line = ' '.join('{0:02x}'.format(i) for i in line)
+        hex_line = ''.join('{0:02x} '.format(i) for i in line).ljust(limit * 3)
         ascii_line = ''.join(c if c in string.printable else '.' for c in (chr(i) for i in line))
-        _LOGGER.debug('    %s%s %s', prefix_whitespaces, hex_line, ascii_line)
+        _LOGGER.debug('    %s%s%s', prefix_whitespaces, hex_line, ascii_line)
 
 
 def print_hdr(msg):
@@ -421,7 +426,7 @@ def print_msg(msg, hdr):
         data = print_genl_msg(msg, hdr, ops, payloadlen)
     if payloadlen.value:
         _LOGGER.debug('  [PAYLOAD] %d octets', payloadlen.value)
-        # dump_hex(data)
+        dump_hex(data.ljust(payloadlen.value, b'\0'))
     if attrlen:
         raise NotImplementedError
     if ops:

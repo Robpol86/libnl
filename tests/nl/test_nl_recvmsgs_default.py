@@ -274,15 +274,15 @@ def test_multipart(log):
     assert 'print_hdr:     .flags = 773 <REQUEST,ACK,ROOT,MATCH>' == log.pop(0)
     assert re.match('print_hdr:     .seq = \d+', log.pop(0))
     assert re.match('print_hdr:     .port = \d+', log.pop(0))
-    assert 'nl_msg_dump:   [PAYLOAD] 4 octets' == log.pop(0)
-    assert 'nl_msg_dump:     11 00 00 00                                     ....' == log.pop(0)
+    assert 'print_msg:   [PAYLOAD] 4 octets' == log.pop(0)
+    assert 'dump_hex:     11 00 00 00                                     ....' == log.pop(0)
     assert 'nl_msg_dump: ---------------------------  END NETLINK MESSAGE   ---------------------------' == log.pop(0)
     assert 'nl_sendmsg: sent 20 bytes' == log.pop(0)
     assert not log
 
     assert 0 == nl_recvmsgs_default(sk)
     assert re.match('recvmsgs: Attempting to read from 0x[a-f0-9]+', log.pop(0))
-    assert re.match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Read 36 bytes', log.pop(0))
+    assert re.match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Read 3364 bytes', log.pop(0))
     assert re.match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Processing valid message...', log.pop(0))
     assert re.match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message', log.pop(0))
     assert 'nl_msg_in_handler_debug: -- Debug: Received Message:' == log.pop(0)

@@ -321,7 +321,7 @@ def dump_hex(start, prefix=0):
     limit = 16 - (prefix * 2)
     for line in (start[i:i+limit] for i in range(0, len(start), limit)):  # http://stackoverflow.com/a/9475354/1198943
         hex_line = ''.join('{0:02x} '.format(i) for i in line).ljust(limit * 3)
-        ascii_line = ''.join(c if c in string.printable else '.' for c in (chr(i) for i in line))
+        ascii_line = ''.join(c if c in string.printable[:95] else '.' for c in (chr(i) for i in line))
         _LOGGER.debug('    %s%s%s', prefix_whitespaces, hex_line, ascii_line)
 
 

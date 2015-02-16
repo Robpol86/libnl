@@ -135,6 +135,7 @@ class nlmsghdr(object):
         types = (ctypes.c_uint32, ctypes.c_uint16, ctypes.c_uint16, ctypes.c_uint32, ctypes.c_uint32)
         nlmsg_len, nlmsg_type, nlmsg_flags, nlmsg_seq, nlmsg_pid, buf_remaining = split_bytearray(buf, *types)
         nlh = cls(nlmsg_type=nlmsg_type, nlmsg_flags=nlmsg_flags, nlmsg_seq=nlmsg_seq, nlmsg_pid=nlmsg_pid)
+        buf_remaining = buf_remaining[:nlmsg_len.value - cls.SIZEOF]
         if buf_remaining.rstrip(b'\0'):
             nlh.payload.append(buf_remaining)
         return nlh

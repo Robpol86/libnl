@@ -8,7 +8,7 @@ from libnl.socket_ import nl_socket_alloc, nl_socket_free
 
 
 @pytest.mark.skipif('True')
-def test_nl_recvmsgs_default(log):
+def test_error(log):
     """// gcc $(pkg-config --cflags --libs libnl-genl-3.0) a.c && NLDBG=4 NLCB=debug ./a.out
     #include <netlink/msg.h>
     struct nl_sock {

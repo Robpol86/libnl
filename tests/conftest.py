@@ -1,5 +1,6 @@
 import logging
 import os
+import socket
 import socketserver
 import threading
 import time
@@ -56,3 +57,9 @@ def log():
             log_statements.append(self.format(record))
     logging.basicConfig(format='%(funcName)s: %(message)s', level=logging.DEBUG, handlers=[ListHandler()])
     return log_statements
+
+
+@pytest.fixture(scope='session')
+def ifaces():
+    """Returns tuple of network interfaces (by name)."""
+    return tuple(i[1] for i in socket.if_nameindex())

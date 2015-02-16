@@ -49,7 +49,7 @@ def print_header_content(nlh):
     Positional arguments:
     nlh -- nlmsghdr class instance.
     """
-    answer = 'type=%s length=%d flags=<%s> sequence-nr=%d pid=%d'.format(
+    answer = 'type={0} length={1} flags=<{2}> sequence-nr={3} pid={4}'.format(
         nl_nlmsgtype2str(nlh.nlmsg_type),
         nlh.nlmsg_len,
         nl_nlmsg_flags2str(nlh.nlmsg_flags),

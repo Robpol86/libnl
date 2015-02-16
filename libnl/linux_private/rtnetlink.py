@@ -86,6 +86,15 @@ class rtattr(object):
         segments = (bytes(ctypes.c_uint16(rta_len)), bytes(self._rta_type), padding[0], payload, padding[1])
         return b''.join(segments)
 
+    def __repr__(self):
+        answer = '<{0}.{1} rta_len={2} rta_type={3} payload={4}>'.format(
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.rta_len, self.rta_type,
+            'yes' if self.payload else 'no',
+        )
+        return answer
+
     @property
     def rta_len(self):
         """c_ushort attribute length including payload, returns integer."""
@@ -125,6 +134,14 @@ class rtgenmsg(object):
 
     def __bytes__(self):
         return bytes(self._rtgen_family)
+
+    def __repr__(self):
+        answer = '<{0}.{1} rtgen_family={2}>'.format(
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.rtgen_family,
+        )
+        return answer
 
     @property
     def rtgen_family(self):

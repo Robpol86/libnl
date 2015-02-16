@@ -48,6 +48,14 @@ class genlmsghdr(object):
         )
         return b''.join(segments)
 
+    def __repr__(self):
+        answer = '<{0}.{1} cmd={2} version={3} reserved={4}>'.format(
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.cmd, self.version, self.reserved,
+        )
+        return answer
+
     @classmethod
     def from_buffer(cls, buf):
         """Creates and returns a class instance based on data from a bytearray()."""

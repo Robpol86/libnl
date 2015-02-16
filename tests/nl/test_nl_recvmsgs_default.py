@@ -1,13 +1,10 @@
 import re
 
-import pytest
-
 from libnl.linux_private.netlink import NLM_F_REQUEST, NETLINK_ROUTE
 from libnl.nl import nl_connect, nl_send_simple, nl_recvmsgs_default
 from libnl.socket_ import nl_socket_alloc, nl_socket_free
 
 
-@pytest.mark.skipif('True')
 def test_error(log):
     """// gcc $(pkg-config --cflags --libs libnl-genl-3.0) a.c && NLDBG=4 NLCB=debug ./a.out
     #include <netlink/msg.h>
@@ -124,6 +121,7 @@ def test_error(log):
     assert re.match('print_hdr:     .port = \d+', log.pop(0))
     assert 'nl_msg_dump: ---------------------------  END NETLINK MESSAGE   ---------------------------' == log.pop(0)
     assert re.match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Increased expected sequence number to \d+', log.pop(0))
-    assert re.match('-- Debug: ACK: type=ERROR length=36 flags=<> sequence-nr=\d+ pid=\d+', log.pop(0))
+    assert re.match('nl_ack_handler_debug: -- Debug: ACK: type=ERROR length=36 flags=<> sequence-nr=\d+ pid=\d+',
+                    log.pop(0))
     nl_socket_free(sk)
     assert not log

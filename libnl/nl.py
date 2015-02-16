@@ -405,7 +405,7 @@ def recvmsgs(sk, cb):
             if cb.cb_set[NL_CB_MSG_IN]:
                 err = nl_cb_call(cb, NL_CB_MSG_IN, msg)  # NL_CB_CALL(cb, NL_CB_MSG_IN, msg)
                 if err == NL_OK:
-                    break
+                    pass
                 elif err == NL_SKIP:
                     continue
                 elif err == NL_STOP:
@@ -418,7 +418,7 @@ def recvmsgs(sk, cb):
                 # enforcing strict ordering.
                 err = nl_cb_call(cb, NL_CB_SEQ_CHECK, msg)  # NL_CB_CALL(cb, NL_CB_SEQ_CHECK, msg)
                 if err == NL_OK:
-                    break
+                    pass
                 elif err == NL_SKIP:
                     continue
                 elif err == NL_STOP:
@@ -431,7 +431,7 @@ def recvmsgs(sk, cb):
                     if cb.cb_set[NL_CB_INVALID]:
                         err = nl_cb_call(cb, NL_CB_INVALID, msg)  # NL_CB_CALL(cb, NL_CB_INVALID, msg)
                         if err == NL_OK:
-                            break
+                            pass
                         elif err == NL_SKIP:
                             continue
                         elif err == NL_STOP:
@@ -453,7 +453,7 @@ def recvmsgs(sk, cb):
                 if cb.cb_set[NL_CB_DUMP_INTR]:
                     err = nl_cb_call(cb, NL_CB_DUMP_INTR, msg)  # NL_CB_CALL(cb, NL_CB_DUMP_INTR, msg)
                     if err == NL_OK:
-                        break
+                        pass
                     elif err == NL_SKIP:
                         continue
                     elif err == NL_STOP:
@@ -470,7 +470,7 @@ def recvmsgs(sk, cb):
                 if cb.cb_set[NL_CB_SEND_ACK]:
                     err = nl_cb_call(cb, NL_CB_SEND_ACK, msg)  # NL_CB_CALL(cb, NL_CB_SEND_ACK, msg)
                     if err == NL_OK:
-                        break
+                        pass
                     elif err == NL_SKIP:
                         continue
                     elif err == NL_STOP:
@@ -485,7 +485,7 @@ def recvmsgs(sk, cb):
                 if cb.cb_set[NL_CB_FINISH]:
                     err = nl_cb_call(cb, NL_CB_FINISH, msg)  # NL_CB_CALL(cb, NL_CB_FINISH, msg)
                     if err == NL_OK:
-                        break
+                        pass
                     elif err == NL_SKIP:
                         continue
                     elif err == NL_STOP:
@@ -498,7 +498,7 @@ def recvmsgs(sk, cb):
                 if cb.cb_set[NL_CB_SKIPPED]:
                     err = nl_cb_call(cb, NL_CB_SKIPPED, msg)  # NL_CB_CALL(cb, NL_CB_SKIPPED, msg)
                     if err == NL_OK:
-                        break
+                        pass
                     elif err == NL_SKIP:
                         continue
                     elif err == NL_STOP:
@@ -513,7 +513,7 @@ def recvmsgs(sk, cb):
                 if cb.cb_set[NL_CB_OVERRUN]:
                     err = nl_cb_call(cb, NL_CB_OVERRUN, msg)  # NL_CB_CALL(cb, NL_CB_OVERRUN, msg)
                     if err == NL_OK:
-                        break
+                        pass
                     elif err == NL_SKIP:
                         continue
                     elif err == NL_STOP:
@@ -525,13 +525,13 @@ def recvmsgs(sk, cb):
             elif hdr.nlmsg_type == NLMSG_ERROR:
                 # Message carries a nlmsgerr.
                 e = nlmsgerr.from_buffer(nlmsg_data(hdr))
-                if hdr.nlmsg_len < nlmsg_size(len(e.payload.rstrip(b'\0'))):
+                if hdr.nlmsg_len < nlmsg_size(e.SIZEOF):
                     # Truncated error message, the default action is to stop parsing. The user may overrule this action
                     # by returning NL_SKIP or NL_PROCEED (dangerous).
                     if cb.cb_set[NL_CB_INVALID]:
                         err = nl_cb_call(cb, NL_CB_INVALID, msg)  # NL_CB_CALL(cb, NL_CB_INVALID, msg)
                         if err == NL_OK:
-                            break
+                            pass
                         elif err == NL_SKIP:
                             continue
                         elif err == NL_STOP:
@@ -555,7 +555,7 @@ def recvmsgs(sk, cb):
                 elif cb.cb_set[NL_CB_ACK]:
                     err = nl_cb_call(cb, NL_CB_ACK, msg)  # NL_CB_CALL(cb, NL_CB_ACK, msg)
                     if err == NL_OK:
-                        break
+                        pass
                     elif err == NL_SKIP:
                         continue
                     elif err == NL_STOP:
@@ -568,7 +568,7 @@ def recvmsgs(sk, cb):
                 if cb.cb_set(NL_CB_VALID):
                     err = nl_cb_call(cb, NL_CB_VALID, msg)  # NL_CB_CALL(cb, NL_CB_VALID, msg)
                     if err == NL_OK:
-                        break
+                        pass
                     elif err == NL_SKIP:
                         continue
                     elif err == NL_STOP:

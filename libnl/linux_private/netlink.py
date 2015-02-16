@@ -52,6 +52,14 @@ class sockaddr_nl(object):
         yield self.nl_pid
         yield self.nl_groups
 
+    def __repr__(self):
+        answer = '<{0}.{1} nl_family={2} nl_pid={3} nl_groups={4}>'.format(
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.nl_family, self.nl_pid, self.nl_groups,
+        )
+        return answer
+
 
 class nlmsghdr(object):
     """Netlink message header (holds actual payload of netlink message).
@@ -105,6 +113,16 @@ class nlmsghdr(object):
             padding[1]
         )
         return b''.join(segments)
+
+    def __repr__(self):
+        answer_base = '<{0}.{1} nlmsg_len={2} nlmsg_type={3} nlmsg_flags={4} nlmsg_seq={5} nlmsg_pid={6} payload={7}>'
+        answer = answer_base.format(
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.nlmsg_len, self.nlmsg_type, self.nlmsg_flags, self.nlmsg_seq, self.nlmsg_pid,
+            'yes' if self.payload else 'no',
+        )
+        return answer
 
     @staticmethod
     def _tlen(pl_bytes):
@@ -201,6 +219,14 @@ class nlmsgerr(object):
         self.error = error
         self.msg = msg
 
+    def __repr__(self):
+        answer = "<{0}.{1} error={2} msg='{3}'>".format(
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.error, self.msg,
+        )
+        return answer
+
     @classmethod
     def from_buffer(cls, buf):
         """Creates and returns a class instance based on data from a bytearray()."""
@@ -264,6 +290,15 @@ class nlattr(object):
         padding = (b'\0' * (NLA_HDRLEN - self.SIZEOF), b'\0' * (NLA_ALIGN(nla_len) - nla_len))
         segments = (bytes(ctypes.c_uint16(nla_len)), bytes(self._nla_type), padding[0], payload, padding[1])
         return b''.join(segments)
+
+    def __repr__(self):
+        answer = '<{0}.{1} nla_len={2} nla_type={3} payload={4}>'.format(
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.nla_len, self.nla_type,
+            'yes' if self.payload else 'no',
+        )
+        return answer
 
     @classmethod
     def from_buffer(cls, buf):

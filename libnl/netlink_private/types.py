@@ -19,7 +19,7 @@ NL_MSG_CRED_PRESENT = 1
 
 class nl_cb(object):  # TODO https://github.com/Robpol86/libnl/issues/4
     """Netlink callback class (C struct equivalent).
-    https://github.com/thom311/libnl/blob/master/include/netlink-private/types.h#L39
+    https://github.com/thom311/libnl/blob/master/include/netlink-private/types.h#L40
 
     Instance variables:
     cb_set -- dictionary of callback functions (values), indexed by callback type (keys).
@@ -45,7 +45,7 @@ class nl_cb(object):  # TODO https://github.com/Robpol86/libnl/issues/4
 
 class nl_sock(object):
     """Netlink socket class (C struct equivalent).
-    https://github.com/thom311/libnl/blob/master/include/netlink-private/types.h#L69
+    https://github.com/thom311/libnl/blob/master/include/netlink-private/types.h#L70
 
     Instance variables:
     s_local -- struct sockaddr_nl.
@@ -70,6 +70,17 @@ class nl_sock(object):
         self.s_cb = None
         self.s_bufsize = None
         self.socket_instance = None
+
+    def __repr__(self):
+        answer_base = ("<{0}.{1} s_local='{2}' s_peer='{3}' s_fd={4} s_proto={5} s_seq_next={6} s_seq_expect={7} "
+                       "s_flags={8} s_cb='{9}' s_bufsize={10}>")
+        answer = answer_base.format(
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.s_local, self.s_peer, self.s_fd, self.s_proto, self.s_seq_next, self.s_seq_expect, self.s_flags,
+            self.s_cb, self.s_bufsize,
+        )
+        return answer
 
     @property
     def s_fd(self):

@@ -64,6 +64,12 @@ def ifaces():
     return tuple(i[1] for i in socket.if_nameindex())
 
 
+@pytest.fixture(scope='session')
+def ifacesi():
+    """Returns tuple of tuples of network interfaces (by name) (second item) and their indexes (first item)."""
+    return tuple(socket.if_nameindex())
+
+
 @pytest.fixture(scope='function')
 def nlcb_debug(request):
     """Sets the NLCB environment variable to 'debug' and reloads libnl.handlers to take effect."""

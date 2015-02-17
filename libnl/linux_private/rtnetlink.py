@@ -8,6 +8,7 @@ of the License.
 """
 
 import ctypes
+
 from libnl.misc import split_bytearray
 
 RTNL_FAMILY_IPMR = 128
@@ -96,6 +97,35 @@ class rtattr(object):
         )
         return answer
 
+    @classmethod
+    def from_buffer(cls, buf, next_rta=None):
+        """Creates and returns a class instance based on data from a bytearray().
+
+        Positional arguments:
+        buf -- source bytearray() to read.
+
+        Keyword arguments:
+        next_rta -- optional overflow bytearray() buffer for the next rtattr in the stream. Otherwise overflow ignored.
+        """
+        rta_len, rta_type, buf_remaining = split_bytearray(buf, ctypes.c_ushort, ctypes.c_ushort)
+        rta = cls(rta_type=rta_type)
+        limit = RTA_ALIGN(rta_len.value) - cls.SIZEOF
+        payload = buf_remaining[:limit]
+        if payload:
+            rta.payload = payload
+        if len(buf_remaining) > limit and next_rta is not None:
+            next_rta += buf_remaining[limit:]
+        return rta
+
+    @classmethod
+    def rta_next(cls, buf):
+        """Generator that yields aligned rtattr instances from a bytearray()."""
+        while buf:
+            next_rta = bytearray()
+            rta = cls.from_buffer(buf, next_rta)
+            buf = next_rta
+            yield rta
+
     @property
     def rta_len(self):
         """c_ushort attribute length including payload, returns integer."""
@@ -116,8 +146,10 @@ class rtattr(object):
 
 RTA_ALIGNTO = 4
 RTA_ALIGN = lambda len_: (len_ + RTA_ALIGNTO - 1) & ~(RTA_ALIGNTO - 1)
+RTA_NEXT = lambda rta: rtattr.rta_next(rta)
 RTA_LENGTH = lambda len_: RTA_ALIGN(rtattr.SIZEOF) + len_
 RTA_SPACE = lambda len_: RTA_ALIGN(RTA_LENGTH(len_))
+RTA_DATA = lambda rta: rta.payload.rstrip(b'\0')
 RTA_PAYLOAD = lambda rta: rta.rta_len - RTA_LENGTH(0)
 
 

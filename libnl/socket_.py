@@ -16,7 +16,7 @@ import time
 
 from libnl.errno_ import NLE_BAD_SOCK
 from libnl.error import nl_syserr2nlerr
-from libnl.handlers import NL_CB_DEFAULT, nl_cb_alloc, NL_CB_VERBOSE, NL_CB_DEBUG
+from libnl.handlers import NL_CB_DEFAULT, nl_cb_alloc, NL_CB_VERBOSE, NL_CB_DEBUG, nl_cb_set, nl_cb_err
 from libnl.linux_private.netlink import NETLINK_ADD_MEMBERSHIP, NETLINK_DROP_MEMBERSHIP
 from libnl.misc import __init
 from libnl.netlink_private.types import nl_sock, NL_OWN_PORT, NL_SOCK_BUFSIZE_SET
@@ -176,6 +176,67 @@ def nl_socket_drop_membership(sk, group):
     0 on success or a negative error code.
     """
     return nl_socket_drop_memberships(sk, group, 0)
+
+
+def nl_socket_get_cb(sk):
+    """Gets the current nl_cb callback handler stored in the nl_sock socket.
+
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L609
+
+    Positional arguments:
+    sk -- netlink socket (nl_sock class instance).
+
+    Returns:
+    nl_cb class instance.
+    """
+    return sk.s_cb
+
+
+def nl_socket_set_cb(sk, cb):
+    """Stores nl_cb callback handler in the nl_sock socket, overwriting the previous callbacks.
+
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L614
+
+    Positional arguments:
+    sk -- netlink socket (nl_sock class instance).
+    cb -- callbacks (nl_cb class instance).
+    """
+    sk.s_cb = cb
+
+
+def nl_socket_modify_cb(sk, type_, kind, func, arg):
+    """Modify the callback handler associated with the socket.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L633
+
+    Sets specific callback functions in the existing nl_cb class instance stored in the nl_sock socket.
+
+    Positional arguments:
+    sk -- netlink socket (nl_sock class instance).
+    type_ -- which type callback to set.
+    kind -- kind of callback.
+    func -- callback function.
+    arg -- argument to be passed to callback function.
+
+    Returns:
+    0 on success or a negative error code.
+    """
+    return int(nl_cb_set(sk.s_cb, type_, kind, func, arg))
+
+
+def nl_socket_modify_err_cb(sk, kind, func, arg):
+    """Modify the error callback handler associated with the socket.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L649
+
+    Positional arguments:
+    sk -- netlink socket (nl_sock class instance).
+    kind -- kind of callback.
+    func -- callback function.
+    arg -- argument to be passed to callback function.
+
+    Returns:
+    0 on success or a negative error code.
+    """
+    return int(nl_cb_err(sk.s_cb, kind, func, arg))
 
 
 def nl_socket_set_buffer_size(sk, rxbuf, txbuf):

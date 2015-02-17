@@ -1,11 +1,14 @@
 import re
 
+import pytest
+
 from libnl.linux_private.netlink import NETLINK_ROUTE
 from libnl.msg import nlmsg_alloc_simple
 from libnl.nl import nl_complete_msg, nl_connect
 from libnl.socket_ import nl_socket_alloc, nl_socket_get_local_port
 
 
+@pytest.mark.usefixtures('nlcb_debug')
 def test_defaults(log):  # TODO test nlmsg_seq https://github.com/Robpol86/libnl/issues/5
     """// gcc $(pkg-config --cflags --libs libnl-genl-3.0) a.c && NLDBG=4 ./a.out
     #include <netlink/msg.h>

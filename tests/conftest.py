@@ -1,3 +1,4 @@
+import importlib
 import logging
 import os
 import socket
@@ -6,8 +7,6 @@ import threading
 import time
 
 import pytest
-
-os.environ.setdefault('NLCB', 'debug')
 
 
 @pytest.fixture(scope='function')
@@ -63,3 +62,31 @@ def log():
 def ifaces():
     """Returns tuple of network interfaces (by name)."""
     return tuple(i[1] for i in socket.if_nameindex())
+
+
+@pytest.fixture(scope='function')
+def nlcb_debug(request):
+    """Sets the NLCB environment variable to 'debug' and reloads libnl.handlers to take effect."""
+    os.environ['NLCB'] = 'debug'
+    __import__('libnl').socket_.init_default_cb()
+    importlib.reload(__import__('libnl').handlers)
+
+    def fin():
+        os.environ['NLCB'] = 'default'
+        __import__('libnl').socket_.init_default_cb()
+        importlib.reload(__import__('libnl').handlers)
+    request.addfinalizer(fin)
+
+
+@pytest.fixture(scope='function')
+def nlcb_verbose(request):
+    """Sets the NLCB environment variable to 'verbose' and reloads libnl.handlers to take effect."""
+    os.environ['NLCB'] = 'verbose'
+    __import__('libnl').socket_.init_default_cb()
+    importlib.reload(__import__('libnl').handlers)
+
+    def fin():
+        os.environ['NLCB'] = 'default'
+        __import__('libnl').socket_.init_default_cb()
+        importlib.reload(__import__('libnl').handlers)
+    request.addfinalizer(fin)

@@ -1,3 +1,5 @@
+import pytest
+
 from libnl.handlers import nl_cb_alloc, NL_CB_VERBOSE
 from libnl.socket_ import nl_socket_alloc, nl_socket_free
 
@@ -76,6 +78,7 @@ def test_nl_socket_alloc():
     assert 0 == sk.s_proto
     assert 0 == sk.s_flags
     assert 11 == sk.s_cb.cb_active
+    assert sk.s_cb.cb_err is None
     nl_socket_free(sk)
 
     first_pid = int(sk.s_local.nl_pid)
@@ -90,4 +93,35 @@ def test_nl_socket_alloc():
     assert 0 == sk.s_proto
     assert 0 == sk.s_flags
     assert 11 == sk.s_cb.cb_active
+    assert sk.s_cb.cb_err is not None
     nl_socket_free(sk)
+
+
+@pytest.mark.skipif('True')
+def test_nl_socket_modify_cb():
+    """// gcc $(pkg-config --cflags --libs libnl-genl-3.0) a.c && NLDBG=4 ./a.out
+    #include <netlink/msg.h>
+    static int callback(struct nl_msg *msg, void *arg) {
+        printf("Got something.\n");
+        nl_msg_dump(msg, stdout);
+        return NL_OK;
+    }
+    int main() {
+        // Send data to the kernel.
+        struct nl_sock *sk = nl_socket_alloc();
+        printf("%d == nl_connect(sk, NETLINK_ROUTE)\n", nl_connect(sk, NETLINK_ROUTE));
+        struct rtgenmsg rt_hdr = { .rtgen_family = AF_PACKET, };
+        int ret = nl_send_simple(sk, RTM_GETLINK, NLM_F_REQUEST | NLM_F_DUMP, &rt_hdr, sizeof(rt_hdr));
+        printf("Bytes Sent: %d\n", ret);
+
+        // Retrieve kernel's response.
+        nl_socket_modify_cb(sk, NL_CB_VALID, NL_CB_CUSTOM, callback, NULL);
+        printf("%d == nl_recvmsgs_default(sk)\n", nl_recvmsgs_default(sk));
+
+        nl_socket_free(sk);
+        return 0;
+    }
+    // Expected output:
+    :return:
+    """
+    pass

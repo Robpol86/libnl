@@ -1,6 +1,8 @@
 import re
 import socket
 
+import pytest
+
 from libnl.linux_private.netlink import NLM_F_REQUEST, NETLINK_ROUTE, NLM_F_DUMP
 from libnl.linux_private.rtnetlink import RTM_GETLINK, rtgenmsg
 from libnl.nl import nl_connect, nl_send_simple, nl_recvmsgs_default
@@ -16,6 +18,7 @@ def match(expected, log, is_regex=False):
     return True
 
 
+@pytest.mark.usefixtures('nlcb_debug')
 def test_error(log):
     """// gcc $(pkg-config --cflags --libs libnl-genl-3.0) a.c && NLDBG=4 NLCB=debug ./a.out
     #include <netlink/msg.h>
@@ -196,6 +199,7 @@ def multipart_wlan0(log):
     return True
 
 
+@pytest.mark.usefixtures('nlcb_debug')
 def test_multipart(log, ifaces):
     """// gcc $(pkg-config --cflags --libs libnl-genl-3.0) a.c && NLDBG=4 NLCB=debug ./a.out
     #include <netlink/msg.h>
@@ -400,6 +404,80 @@ def test_multipart(log, ifaces):
     assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Increased expected sequence number to \d{4,}', log, True)
     assert match('nl_finish_handler_debug: -- Debug: End of multipart message block: type=DONE length=20 flags=<MULTI> '
                  'sequence-nr=\d{10,} pid=\d{4,}', log, True)
+
+    nl_socket_free(sk)
+    assert not log
+
+
+@pytest.mark.usefixtures('nlcb_verbose')
+def test_multipart_verbose(log, ifaces):
+    """Expected output (trimmed):
+    // nl_cache_mngt_register: Registered cache operations genl/family
+    // Begin main()
+    // Allocated socket.
+    // 0 == nl_connect(sk, NETLINK_ROUTE)
+    // __nlmsg_alloc: msg 0xa180b8: Allocated new message, maxlen=4096
+    // nlmsg_alloc_simple: msg 0xa180b8: Allocated new simple message
+    // nlmsg_reserve: msg 0xa180b8: Reserved 4 (1) bytes, pad=4, nlmsg_len=20
+    // nlmsg_append: msg 0xa180b8: Appended 1 bytes with padding 4
+    // nl_sendmsg: sent 20 bytes
+    // nlmsg_free: Returned message reference 0xa180b8, 0 remaining
+    // nlmsg_free: msg 0xa180b8: Freed
+    // Bytes Sent: 20
+    // recvmsgs: Attempting to read from 0xa18080
+    // recvmsgs: recvmsgs(0xa18080): Read 3364 bytes
+    // recvmsgs: recvmsgs(0xa18080): Processing valid message...
+    // __nlmsg_alloc: msg 0xa1c0c0: Allocated new message, maxlen=1116
+    // -- Warning: unhandled valid message: type=0x10 length=1116 flags=<MULTI> sequence-nr=1424132449 pid=5810
+    // recvmsgs: recvmsgs(0xa18080): Processing valid message...
+    // nlmsg_free: Returned message reference 0xa1c0c0, 0 remaining
+    // nlmsg_free: msg 0xa1c0c0: Freed
+    // __nlmsg_alloc: msg 0xa1c0c0: Allocated new message, maxlen=1124
+    // -- Warning: unhandled valid message: type=0x10 length=1124 flags=<MULTI> sequence-nr=1424132449 pid=5810
+    // recvmsgs: recvmsgs(0xa18080): Processing valid message...
+    // nlmsg_free: Returned message reference 0xa1c0c0, 0 remaining
+    // nlmsg_free: msg 0xa1c0c0: Freed
+    // __nlmsg_alloc: msg 0xa1c0c0: Allocated new message, maxlen=1124
+    // -- Warning: unhandled valid message: type=0x10 length=1124 flags=<MULTI> sequence-nr=1424132449 pid=5810
+    // nlmsg_free: Returned message reference 0xa1c0c0, 0 remaining
+    // nlmsg_free: msg 0xa1c0c0: Freed
+    // recvmsgs: Attempting to read from 0xa18080
+    // recvmsgs: recvmsgs(0xa18080): Read 20 bytes
+    // recvmsgs: recvmsgs(0xa18080): Processing valid message...
+    // __nlmsg_alloc: msg 0xa1c0c0: Allocated new message, maxlen=20
+    // recvmsgs: recvmsgs(0xa18080): Increased expected sequence number to 1424132450
+    // nlmsg_free: Returned message reference 0xa1c0c0, 0 remaining
+    // nlmsg_free: msg 0xa1c0c0: Freed
+    // 0 == nl_recvmsgs_default(sk)
+    // nl_cache_mngt_unregister: Unregistered cache operations genl/family
+    """
+    log.clear()
+    sk = nl_socket_alloc()
+    nl_connect(sk, NETLINK_ROUTE)
+    rt_hdr = rtgenmsg(rtgen_family=socket.AF_PACKET)
+    assert 20 == nl_send_simple(sk, RTM_GETLINK, NLM_F_REQUEST | NLM_F_DUMP, rt_hdr)
+
+    assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message', log, True)
+    assert match('nlmsg_alloc_simple: msg 0x[a-f0-9]+: Allocated new simple message', log, True)
+    assert match('nlmsg_append: msg 0x[a-f0-9]+: Appended \w+', log, True)
+    assert match('nl_sendmsg: sent 20 bytes', log)
+    assert not log
+
+    assert 0 == nl_recvmsgs_default(sk)
+    assert match('recvmsgs: Attempting to read from 0x[a-f0-9]+', log, True)
+    assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Read \d{4,} bytes', log, True)
+
+    for _ in ifaces:
+        assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Processing valid message...', log, True)
+        assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message', log, True)
+        assert match('nl_valid_handler_verbose: -- Warning: unhandled valid message: type=0x10 length=\d{3,} '
+                     'flags=<MULTI> sequence-nr=\d{10,} pid=\d{4,}', log, True)
+
+    assert match('recvmsgs: Attempting to read from 0x[a-f0-9]+', log, True)
+    assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Read 20 bytes', log, True)
+    assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Processing valid message...', log, True)
+    assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message', log, True)
+    assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Increased expected sequence number to \d{4,}', log, True)
 
     nl_socket_free(sk)
     assert not log

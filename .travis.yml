@@ -5,7 +5,7 @@ python:
 
 install:
   - python -c 'import setup; print(setup.REQUIRES_PIP)' |xargs pip install
-  - pip install codecov
+  - pip install codecov docopt
 
 script:
   - python setup.py test

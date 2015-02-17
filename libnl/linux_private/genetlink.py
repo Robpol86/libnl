@@ -1,5 +1,5 @@
 """genetlink.h.
-https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux-private/linux/genetlink.h
+https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/genetlink.h
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@ GENL_MAX_ID = 1023
 
 
 class genlmsghdr(object):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux-private/linux/genetlink.h#L12
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/genetlink.h#L12
 
     Instance variables:
     cmd -- c_uint8

@@ -1,5 +1,5 @@
 """rtnetlink.h.
-https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux-private/linux/rtnetlink.h
+https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/rtnetlink.h
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -8,6 +8,7 @@ of the License.
 """
 
 import ctypes
+from libnl.misc import split_bytearray
 
 RTNL_FAMILY_IPMR = 128
 RTNL_FAMILY_IP6MR = 129
@@ -62,7 +63,7 @@ RTM_FAM = lambda cmd: (cmd - RTM_BASE) >> 2
 
 
 class rtattr(object):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux-private/linux/rtnetlink.h#L137
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/rtnetlink.h#L137
 
     Generic structure for encapsulation of optional route information. It is reminiscent of sockaddr, but with sa_family
     replaced with attribute type.
@@ -121,7 +122,7 @@ RTA_PAYLOAD = lambda rta: rta.rta_len - RTA_LENGTH(0)
 
 
 class rtgenmsg(object):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux-private/linux/rtnetlink.h#L410
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/rtnetlink.h#L410
 
     Instance variables:
     rtgen_family -- c_ubyte rtgen family.
@@ -154,3 +155,107 @@ class rtgenmsg(object):
             self._rtgen_family = ctypes.c_ubyte()
             return
         self._rtgen_family = value if isinstance(value, ctypes.c_ubyte) else ctypes.c_ubyte(value)
+
+
+class ifinfomsg(object):
+    """Passes link level specific information, not dependent on network protocol.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/rtnetlink.h#L423
+
+    Instance variables:
+    ifi_family -- c_ubyte.
+    ifi_type -- ARPHRD_*, c_ushort.
+    ifi_index -- link index, c_int.
+    ifi_flags -- IFF_* flags, c_uint.
+    ifi_change -- IFF_* change mask, c_uint.
+    payload -- data of any type for this attribute. None means 0 byte payload.
+    """
+    SIZEOF = sum([ctypes.sizeof(ctypes.c_ubyte) * 2, ctypes.sizeof(ctypes.c_ushort), ctypes.sizeof(ctypes.c_int),
+                  ctypes.sizeof(ctypes.c_uint) * 2])
+
+    def __init__(self, ifi_family=None, ifi_type=None, ifi_index=None, ifi_flags=None, ifi_change=None, payload=None):
+        self._ifi_family = None
+        self._ifi_type = None
+        self._ifi_index = None
+        self._ifi_flags = None
+        self._ifi_change = None
+
+        self.payload = payload
+        self.ifi_family = ifi_family
+        self.ifi_type = ifi_type
+        self.ifi_index = ifi_index
+        self.ifi_flags = ifi_flags
+        self.ifi_change = ifi_change
+
+    def __repr__(self):
+        answer_base = '<{0}.{1} ifi_family={2} ifi_type={3} ifi_index={4} ifi_flags={5} ifi_change={6} payload={7}>'
+        answer = answer_base.format(
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.ifi_family, self.ifi_type, self.ifi_index, self.ifi_flags, self.ifi_change,
+            'yes' if self.payload else 'no',
+        )
+        return answer
+
+    @classmethod
+    def from_buffer(cls, buf):
+        """Creates and returns a class instance based on data from a bytearray()."""
+        types = (ctypes.c_ubyte, ctypes.c_ubyte, ctypes.c_ushort, ctypes.c_int, ctypes.c_uint, ctypes.c_uint)
+        ifi_family, __ifi_pad, ifi_type, ifi_index, ifi_flags, ifi_change, buf_remaining = split_bytearray(buf, *types)
+        nlh = cls(ifi_family=ifi_family, ifi_type=ifi_type, ifi_index=ifi_index, ifi_flags=ifi_flags,
+                  ifi_change=ifi_change, payload=buf_remaining)
+        return nlh
+
+    @property
+    def ifi_family(self):
+        return self._ifi_family.value
+
+    @ifi_family.setter
+    def ifi_family(self, value):
+        if value is None:
+            self._ifi_family = ctypes.c_ubyte()
+            return
+        self._ifi_family = value if isinstance(value, ctypes.c_ubyte) else ctypes.c_ubyte(value)
+
+    @property
+    def ifi_type(self):
+        return self._ifi_type.value
+
+    @ifi_type.setter
+    def ifi_type(self, value):
+        if value is None:
+            self._ifi_type = ctypes.c_ushort()
+            return
+        self._ifi_type = value if isinstance(value, ctypes.c_ushort) else ctypes.c_ushort(value)
+
+    @property
+    def ifi_index(self):
+        return self._ifi_index.value
+
+    @ifi_index.setter
+    def ifi_index(self, value):
+        if value is None:
+            self._ifi_index = ctypes.c_int()
+            return
+        self._ifi_index = value if isinstance(value, ctypes.c_int) else ctypes.c_int(value)
+
+    @property
+    def ifi_flags(self):
+        return self._ifi_flags.value
+
+    @ifi_flags.setter
+    def ifi_flags(self, value):
+        if value is None:
+            self._ifi_flags = ctypes.c_uint()
+            return
+        self._ifi_flags = value if isinstance(value, ctypes.c_uint) else ctypes.c_uint(value)
+
+    @property
+    def ifi_change(self):
+        return self._ifi_change.value
+
+    @ifi_change.setter
+    def ifi_change(self, value):
+        if value is None:
+            self._ifi_change = ctypes.c_uint()
+            return
+        self._ifi_change = value if isinstance(value, ctypes.c_uint) else ctypes.c_uint(value)

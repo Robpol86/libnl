@@ -9,9 +9,11 @@ of the License.
 """
 
 import ctypes
+import logging
 
 from libnl.linux_private.netlink import nlattr, NLA_ALIGN, NLA_TYPE_MASK, NLA_HDRLEN
 
+_LOGGER = logging.getLogger(__name__)
 NLA_UNSPEC = 0  # Unspecified type, binary data chunk.
 NLA_U8 = 1  # 8 bit integer.
 NLA_U16 = 2  # 16 bit integer.
@@ -145,10 +147,17 @@ def nla_put(msg, attrtype, data):
     data -- data to be used as attribute payload.
 
     Returns:
-    0 on success or a negative error code.
+    0
     """
     nla = nlattr(nla_type=attrtype, payload=data)
     msg.nm_nlh.payload.append(nla)
+    if not data:
+        return 0
+    try:
+        datalen = ctypes.sizeof(data)
+    except TypeError:
+        datalen = len(data)
+    _LOGGER.debug('msg 0x%x: attr <0x%x> %d: Wrote %d bytes', id(msg), id(nla), nla.nla_type, datalen)
     return 0
 
 
@@ -162,7 +171,7 @@ def nla_put_u8(msg, attrtype, value):
     value -- numeric value to store as payload (int() or c_uint8()).
 
     Returns:
-    0 on success or a negative error code.
+    0
     """
     return int(nla_put(msg, attrtype, value if isinstance(value, ctypes.c_uint8) else ctypes.c_uint8(value)))
 
@@ -191,7 +200,7 @@ def nla_put_u16(msg, attrtype, value):
     value -- numeric value to store as payload (int() or c_uint16()).
 
     Returns:
-    0 on success or a negative error code.
+    0
     """
     return int(nla_put(msg, attrtype, value if isinstance(value, ctypes.c_uint16) else ctypes.c_uint16(value)))
 
@@ -220,7 +229,7 @@ def nla_put_u32(msg, attrtype, value):
     value -- numeric value to store as payload (int() or c_uint32()).
 
     Returns:
-    0 on success or a negative error code.
+    0
     """
     return int(nla_put(msg, attrtype, value if isinstance(value, ctypes.c_uint32) else ctypes.c_uint32(value)))
 
@@ -246,7 +255,7 @@ def nla_put_u64(msg, attrtype, value):
     value -- numeric value to store as payload (int() or c_uint64()).
 
     Returns:
-    0 on success or a negative error code.
+    0
     """
     return int(nla_put(msg, attrtype, value if isinstance(value, ctypes.c_uint64) else ctypes.c_uint64(value)))
 
@@ -272,9 +281,9 @@ def nla_put_string(msg, attrtype, value):
     value -- bytes() string value (e.g. bytes('Test'.encode('ascii'))).
 
     Returns:
-    0 on success or a negative error code.
+    0
     """
-    return int(nla_put(msg, attrtype, ctypes.create_string_buffer(value)))
+    return int(nla_put(msg, attrtype, value if value.endswith(b'\0') else value + b'\0'))
 
 
 def nla_get_string(nla):
@@ -284,7 +293,7 @@ def nla_get_string(nla):
     Returns:
     bytes() string value.
     """
-    return nla.payload.value
+    return nla.payload.rstrip(b'\0')
 
 
 def nla_put_flag(msg, attrtype):
@@ -296,7 +305,7 @@ def nla_put_flag(msg, attrtype):
     attrtype -- attribute type.
 
     Returns:
-    0 on success or a negative error code.
+    0
     """
     return int(nla_put(msg, attrtype, None))
 
@@ -321,7 +330,7 @@ def nla_put_msecs(msg, attrtype, value):
     value -- numeric msecs (int(), c_uint64(), or c_ulong()).
 
     Returns:
-    0 on success or a negative error code.
+    0
     """
     if isinstance(value, ctypes.c_uint64):
         pass

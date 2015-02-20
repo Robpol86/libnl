@@ -315,7 +315,12 @@ class nlattr(object):
     @property
     def nla_len(self):
         """c_uint16 attribute length including payload, returns integer."""
-        return NLA_HDRLEN + (0 if self.payload is None else ctypes.sizeof(self.payload))
+        if self.payload is None:
+            return NLA_HDRLEN
+        try:
+            return NLA_HDRLEN + ctypes.sizeof(self.payload)
+        except TypeError:
+            return NLA_HDRLEN + len(self.payload)
 
     @property
     def nla_type(self):

@@ -170,7 +170,6 @@ def test_msecs():
     assert b'DAAMAGMAAAAAAAAA' == base64.b64encode(bytes(attr)[:attr.nla_len])
 
 
-@pytest.mark.skipif('True')
 def test_string_short():
     payload = bytes('test'.encode('ascii'))
     msg = nlmsg_alloc()
@@ -180,10 +179,9 @@ def test_string_short():
     assert 6 == nla_type(attr)
     assert payload == nla_get_string(attr)
     assert 9 == attr.nla_len
-    assert b'CQAMAHRlc3QA' == base64.b64encode(bytes(attr)[:attr.nla_len])
+    assert b'CQAGAHRlc3QA' == base64.b64encode(bytes(attr)[:attr.nla_len])
 
 
-@pytest.mark.skipif('True')
 def test_string_medium():
     payload = bytes('The quick br()wn f0x jumps over the l@zy dog!'.encode('ascii'))
     msg = nlmsg_alloc()
@@ -193,11 +191,10 @@ def test_string_medium():
     assert 6 == nla_type(attr)
     assert payload == nla_get_string(attr)
     assert 50 == attr.nla_len
-    expected = b'MgAMAFRoZSBxdWljayBicigpd24gZjB4IGp1bXBzIG92ZXIgdGhlIGxAenkgZG9nIQA='
+    expected = b'MgAGAFRoZSBxdWljayBicigpd24gZjB4IGp1bXBzIG92ZXIgdGhlIGxAenkgZG9nIQA='
     assert expected == base64.b64encode(bytes(attr)[:attr.nla_len])
 
 
-@pytest.mark.skipif('True')
 def test_string_long():
     payload = bytes(string.printable[:-2].encode('ascii'))
     msg = nlmsg_alloc()
@@ -207,7 +204,8 @@ def test_string_long():
     assert 6 == nla_type(attr)
     assert payload == nla_get_string(attr)
     assert 103 == attr.nla_len
-    expected = b'ZwAMADAxMjM0NTY3ODlhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ekFCQ0RFRkdISUpLTE1OT1BRQFtcXV5fYHt8fX4gCQoNAA=='
+    expected = (b'ZwAGADAxMjM0NTY3ODlhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ekFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaISIjJCUmJygp'
+                b'KissLS4vOjs8PT4/QFtcXV5fYHt8fX4gCQoNAA==')
     assert expected == base64.b64encode(bytes(attr)[:attr.nla_len])
 
 

@@ -211,6 +211,33 @@ def nlmsg_append(msg, data):
     return 0
 
 
+def nlmsg_put(n, pid, seq, type_, flags):
+    """Add a netlink message header to a netlink message.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L503
+
+    Adds or overwrites the netlink message header in an existing message object.
+
+    Positional arguments:
+    n -- netlink message (nl_msg class instance).
+    pid -- netlink process id or NL_AUTO_PID.
+    seq -- sequence number of message or NL_AUTO_SEQ.
+    type_ -- message type.
+    flags -- message flags.
+
+    Returns:
+    nlmsghdr class instance.
+    """
+    if not n.nm_nlh:
+        n.nm_nlh = nlmsghdr()
+    nlh = n.nm_nlh
+    nlh.nlmsg_type = type_
+    nlh.nlmsg_flags = flags
+    nlh.nlmsg_pid = pid
+    nlh.nlmsg_seq = seq
+    _LOGGER.debug('msg 0x%x: Added netlink header type=%d, flags=%d, pid=%d, seq=%d', id(n), type_, flags, pid, seq)
+    return nlh
+
+
 def nlmsg_hdr(msg):
     """Return actual netlink message.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L536
@@ -360,11 +387,10 @@ def print_genl_hdr(start):
     _LOGGER.debug('    .unused = %#d', ghdr.reserved)
 
 
-def print_genl_msg(msg, hdr, ops, payloadlen):
+def print_genl_msg(_, hdr, ops, payloadlen):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L831
 
     Positional arguments:
-    msg -- message to print (nl_msg class instance).
     hdr -- netlink message header (nlmsghdr class instance).
     ops -- TODO issues/8
     payloadlen -- length of payload in message (ctypes.c_int instance).
@@ -372,7 +398,7 @@ def print_genl_msg(msg, hdr, ops, payloadlen):
     Returns:
     data
     """
-    data = nlmsg_data(hdr)
+    data = bytearray(nlmsg_data(hdr))
     if payloadlen.value < GENL_HDRLEN:
         return data
 

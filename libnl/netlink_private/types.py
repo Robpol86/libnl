@@ -7,6 +7,8 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
+import ctypes
+
 from libnl.linux_private.netlink import sockaddr_nl
 
 NL_SOCK_BUFSIZE_SET = 1 << 0
@@ -98,3 +100,25 @@ class nl_msg(object):
         self.nm_creds = None
         self.nm_nlh = None
         self.nm_refcnt = 0
+
+
+class genl_family(object):
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L768"""
+    SIZEOF = 80
+
+    def __init__(self):
+        self.ce_refcnt = 0
+        self.ce_ops = None
+        self.ce_cache = None
+        self.ce_list = None
+        self.ce_msgtype = 0
+        self.ce_flags = 0
+        self.ce_mask = 0
+
+        self.gf_id = 0
+        self.gf_name = None
+        self.gf_version = 0
+        self.gf_hdrsize = 0
+        self.gf_maxattr = 0
+        self.gf_ops = None
+        self.gf_mc_grps = None

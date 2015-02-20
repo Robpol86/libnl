@@ -23,7 +23,7 @@ from libnl.errno_ import (NLE_BAD_SOCK, NLE_AF_NOSUPPORT, NLE_INVAL, NLE_SEQ_MIS
 from libnl.error import nl_syserr2nlerr
 from libnl.handlers import (NL_OK, NL_CB_MSG_OUT, NL_CB_MSG_IN, NL_CB_SEQ_CHECK, NL_CB_INVALID, NL_SKIP,
                             NL_CB_DUMP_INTR, NL_CB_SEND_ACK, NL_CB_OVERRUN, NL_CB_SKIPPED, NL_CB_FINISH, NL_CB_ACK,
-                            NL_STOP, NL_CB_VALID)
+                            NL_STOP, NL_CB_VALID, nl_cb_clone, nl_cb_set, NL_CB_CUSTOM)
 from libnl.linux_private.netlink import (NLM_F_REQUEST, NLM_F_ACK, sockaddr_nl, nlmsghdr, NLMSG_DONE, NLMSG_ERROR,
                                          NLMSG_NOOP, NLMSG_OVERRUN, NLM_F_MULTI, NLM_F_DUMP_INTR, nlmsgerr, NLMSG_ALIGN)
 from libnl.misc import msghdr, ucred
@@ -650,6 +650,39 @@ def nl_recvmsgs_default(sk):
     0 on success or a negative error code from nl_recvmsgs().
     """
     return int(nl_recvmsgs(sk, sk.s_cb))
+
+
+def wait_for_ack(sk):
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/netlink.h#L210
+
+    Placing this here to avoid circular imports.
+
+    Positional arguments:
+    sk -- nl_sock class instance.
+
+    Returns:
+    Number of received messages or a negative error code from nl_recvmsgs().
+    """
+    if sk.s_flags & NL_NO_AUTO_ACK:
+        return 0
+    return nl_wait_for_ack(sk)
+
+
+def nl_wait_for_ack(sk):
+    """Wait for ACK.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/nl.c#L1058
+
+    Waits until an ACK is received for the latest not yet acknowledged netlink message.
+
+    Positional arguments:
+    sk -- netlink socket (nl_sock class instance).
+
+    Returns:
+    Number of received messages or a negative error code from nl_recvmsgs().
+    """
+    cb = nl_cb_clone(sk.s_cb)
+    nl_cb_set(cb, NL_CB_ACK, NL_CB_CUSTOM, lambda *_: NL_STOP, None)
+    return int(nl_recvmsgs(sk, cb))
 
 
 nl_auto_complete = nl_complete_msg  # @deprecated Please use nl_complete_msg().

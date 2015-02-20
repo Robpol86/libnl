@@ -8,6 +8,7 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
+import copy
 import logging
 from os import strerror
 
@@ -153,6 +154,19 @@ def nl_cb_alloc(kind):
         nl_cb_set(cb, i, kind, None, None)
     nl_cb_err(cb, kind, None, None)
     return cb
+
+
+def nl_cb_clone(orig):
+    """Clone an existing callback handle.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L230
+
+    Positional arguments:
+    orig -- original callback handle (nl_cb class instance).
+
+    Returns:
+    New nl_cb instance being a duplicate of `orig`.
+    """
+    return copy.deepcopy(orig)
 
 
 def nl_cb_get(cb):

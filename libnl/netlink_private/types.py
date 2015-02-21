@@ -99,7 +99,15 @@ class nl_msg(object):
         self.nm_dst = sockaddr_nl()
         self.nm_creds = None
         self.nm_nlh = None
-        self.nm_refcnt = 0
+
+    def __repr__(self):
+        answer_base = "<{0}.{1} nm_protocol={2} nm_flags={3} nm_src='{4}' nm_dst='{5}' nm_creds='{6}' nm_nlh='{7}'>"
+        answer = answer_base.format(
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.nm_protocol, self.nm_flags, self.nm_src, self.nm_dst, self.nm_creds, self.nm_nlh,
+        )
+        return answer
 
 
 class genl_family(object):

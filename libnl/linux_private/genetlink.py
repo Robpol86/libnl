@@ -103,6 +103,7 @@ GENL_CMD_CAP_DUMP = 0x04
 GENL_CMD_CAP_HASPOL = 0x08
 GENL_ID_GENERATE = 0
 GENL_ID_CTRL = NLMSG_MIN_TYPE
+GENL_HDRSIZE = lambda hdrlen: GENL_HDRLEN + hdrlen  # /libnl/blob/libnl3_2_25/include/netlink-private/genl.h#L18
 
 
 CTRL_CMD_UNSPEC = 0

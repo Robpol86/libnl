@@ -26,6 +26,22 @@ NLA_NESTED = 8  # Nested attributes.
 NLA_TYPE_MAX = NLA_NESTED
 
 
+class nla_policy(object):
+    """Attribute validation policy
+    https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/attr.h#L60
+
+    Instance variables:
+    type_ -- type of attribute or NLA_UNSPEC (c_uint16).
+    minlen -- minimal length of payload required (c_uint16).
+    maxlen -- maximal length of payload allowed (c_uint16).
+    """
+
+    def __init__(self, type_=0, minlen=0, maxlen=0):
+        self.type_ = type_
+        self.minlen = minlen
+        self.maxlen = maxlen
+
+
 def nla_type(nla):
     """Return type of the attribute.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L109

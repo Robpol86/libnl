@@ -136,7 +136,7 @@ def test_genl_ctrl_resolve(log):
     sk = nl_socket_alloc()
     assert 0 == genl_connect(sk)
     assert not log
-    driver_id = genl_ctrl_resolve(sk, 'nl80211'.encode('ascii'))
+    assert 20 == genl_ctrl_resolve(sk, 'nl80211'.encode('ascii'))
 
     assert match('nl_object_alloc: Allocated new object 0x[a-f0-9]+', log, True)
     assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message', log, True)
@@ -160,5 +160,4 @@ def test_genl_ctrl_resolve(log):
     assert match('nl_msg_dump: ---------------------------  END NETLINK MESSAGE   ---------------------------', log)
     assert match('nl_sendmsg: sent 32 bytes', log)
 
-    assert 20 == driver_id
     assert not log

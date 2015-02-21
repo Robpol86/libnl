@@ -683,7 +683,3 @@ def nl_wait_for_ack(sk):
     cb = nl_cb_clone(sk.s_cb)
     nl_cb_set(cb, NL_CB_ACK, NL_CB_CUSTOM, lambda *_: NL_STOP, None)
     return int(nl_recvmsgs(sk, cb))
-
-
-nl_auto_complete = nl_complete_msg  # @deprecated Please use nl_complete_msg().
-nl_send_auto_complete = nl_send_auto  # @deprecated Please use nl_send_auto().

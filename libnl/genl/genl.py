@@ -98,7 +98,6 @@ def genlmsg_put(msg, port, seq, family, flags, cmd, version):
     port -- Netlink port or NL_AUTO_PORT.
     seq -- sequence number of message or NL_AUTO_SEQ.
     family -- numeric family identifier.
-    hdrlen -- length of user header.
     flags -- additional Netlink message flags.
     cmd -- numeric command identifier.
     version -- interface version.

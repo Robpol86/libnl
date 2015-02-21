@@ -16,6 +16,7 @@ import os
 import string
 
 from libnl.attr import nla_for_each_attr, nla_find
+from libnl.cache_mngt import nl_msgtype_lookup, nl_cache_ops_associate_safe
 from libnl.linux_private.genetlink import GENL_HDRLEN, genlmsghdr
 from libnl.linux_private.netlink import (nlmsghdr, NLMSG_ERROR, NLMSG_HDRLEN, NETLINK_GENERIC, NLMSG_NOOP, NLMSG_DONE,
                                          NLMSG_OVERRUN, NLM_F_REQUEST, NLM_F_MULTI, NLM_F_ACK, NLM_F_ECHO, NLM_F_ROOT,
@@ -362,9 +363,13 @@ def print_hdr(msg):
 
     _LOGGER.debug('    .nlmsg_len = %d', nlh.nlmsg_len)
 
-    ops = None  # ops = nl_cache_ops_associate_safe(nlmsg_get_proto(msg), nlh.nlmsg_type) # TODO issues/8
+    ops = nl_cache_ops_associate_safe(msg.nm_protocol, nlh.nlmsg_type)
     if ops:
-        raise NotImplementedError
+        mt = nl_msgtype_lookup(ops, nlh.nlmsg_type)
+        if not mt:
+            #raise BUG  TODO  https://github.com/Robpol86/libnl/issues/9
+            raise RuntimeError('TODO raise BUG')
+        buf = '{0}::{1}'.format(ops.co_name, mt.mt_name)
     else:
         buf = nl_nlmsgtype2str(nlh.nlmsg_type)
 

@@ -105,7 +105,7 @@ def genlmsg_parse(nlh, hdrlen, tb, maxtype, policy):
     if not genlmsg_valid_hdr(nlh, hdrlen):
         return -NLE_MSG_TOOSHORT
 
-    ghdr = nlmsg_data(nlh)
+    ghdr = genlmsghdr.from_buffer(nlmsg_data(nlh))
     return nla_parse(tb, maxtype, genlmsg_attrdata(ghdr, hdrlen), policy)
 
 

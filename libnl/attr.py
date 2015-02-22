@@ -43,6 +43,14 @@ class nla_policy(object):
         self.minlen = minlen
         self.maxlen = maxlen
 
+    def __repr__(self):
+        answer = '<{0}.{1} type_={2} minlen={3} maxlen={4}>'.format(
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.type_, self.minlen, self.maxlen,
+        )
+        return answer
+
 
 def nla_type(nla):
     """Return type of the attribute.
@@ -120,14 +128,15 @@ def nla_next(nla, remaining):
     return ctypes.cast(ctypes.byref(nla, totlen), ctypes.POINTER(nlattr))
 
 
-nla_attr_minlen = {  # https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L179
+nla_attr_minlen = {i: 0 for i in range(NLA_TYPE_MAX + 1)}
+nla_attr_minlen.update({  # https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L179
     NLA_U8: ctypes.sizeof(ctypes.c_uint8),
     NLA_U16: ctypes.sizeof(ctypes.c_uint16),
     NLA_U32: ctypes.sizeof(ctypes.c_uint32),
     NLA_U64: ctypes.sizeof(ctypes.c_uint64),
     NLA_STRING: 1,
     NLA_FLAG: 0,
-}
+})
 
 
 def validate_nla(nla, maxtype, policy):
@@ -152,8 +161,8 @@ def validate_nla(nla, maxtype, policy):
 
     if pt.minlen:
         minlen = pt.minlen
-    elif pt.type != NLA_UNSPEC:
-        minlen = nla_attr_minlen[pt.type]
+    elif pt.type_ != NLA_UNSPEC:
+        minlen = nla_attr_minlen[pt.type_]
 
     if nla_len(nla) < minlen:
         return -NLE_RANGE
@@ -161,9 +170,9 @@ def validate_nla(nla, maxtype, policy):
     if pt.maxlen and nla_len(nla) > pt.maxlen:
         return -NLE_RANGE
 
-    if pt.type == NLA_STRING:
+    if pt.type_ == NLA_STRING:
         data = nla_data(nla)
-        if data[nla_len(nla) - 1] != '\0':
+        if data[nla_len(nla) - 1] != 0:
             return -NLE_INVAL
 
     return 0
@@ -289,7 +298,10 @@ def nla_get_u8(nla):
     Returns:
     Payload as an int().
     """
-    value = nla.payload.value if isinstance(nla.payload, ctypes.c_uint8) else ctypes.c_uint8(nla.payload.value).value
+    if isinstance(nla.payload, ctypes.c_uint8):
+        value = nla.payload.value
+    else:
+        value = ctypes.c_uint8.from_buffer(nla.payload).value
     return int(value)
 
 
@@ -318,7 +330,10 @@ def nla_get_u16(nla):
     Returns:
     Payload as an int().
     """
-    value = nla.payload.value if isinstance(nla.payload, ctypes.c_uint16) else ctypes.c_uint16(nla.payload.value).value
+    if isinstance(nla.payload, ctypes.c_uint16):
+        value = nla.payload.value
+    else:
+        value = ctypes.c_uint16.from_buffer(nla.payload).value
     return int(value)
 
 
@@ -344,7 +359,10 @@ def nla_get_u32(nla):
     Returns:
     Payload as an int().
     """
-    value = nla.payload.value if isinstance(nla.payload, ctypes.c_uint32) else ctypes.c_uint32(nla.payload.value).value
+    if isinstance(nla.payload, ctypes.c_uint32):
+        value = nla.payload.value
+    else:
+        value = ctypes.c_uint32.from_buffer(nla.payload).value
     return int(value)
 
 
@@ -370,7 +388,10 @@ def nla_get_u64(nla):
     Returns:
     Payload as an int().
     """
-    value = nla.payload.value if isinstance(nla.payload, ctypes.c_uint64) else ctypes.c_uint64(nla.payload.value).value
+    if isinstance(nla.payload, ctypes.c_uint64):
+        value = nla.payload.value
+    else:
+        value = ctypes.c_uint64.from_buffer(nla.payload).value
     return int(value)
 
 

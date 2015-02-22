@@ -114,7 +114,7 @@ class rtattr(object):
         if payload:
             rta.payload = payload
         if len(buf_remaining) > limit and next_rta is not None:
-            next_rta += buf_remaining[limit:]
+            next_rta.extend(buf_remaining[limit:])
         return rta
 
     @classmethod

@@ -9,7 +9,7 @@ of the License.
 
 import ctypes
 
-from libnl.linux_private.netlink import NLMSG_MIN_TYPE, NLMSG_ALIGN
+from libnl.linux_private.netlink import NLMSG_MIN_TYPE, NLMSG_ALIGN, nlattr
 from libnl.misc import split_bytearray
 
 
@@ -25,6 +25,7 @@ class genlmsghdr(object):
     cmd -- c_uint8
     version -- c_uint8
     reserved -- c_uint16
+    payload -- list of nlattr instances.
     """
     SIZEOF = (ctypes.sizeof(ctypes.c_uint8) * 2) + ctypes.sizeof(ctypes.c_uint16)
 
@@ -33,6 +34,7 @@ class genlmsghdr(object):
         self._version = None
         self._reserved = None
 
+        self.payload = list()
         self.cmd = cmd
         self.version = version
         self.reserved = reserved
@@ -49,18 +51,25 @@ class genlmsghdr(object):
         return b''.join(segments)
 
     def __repr__(self):
-        answer = '<{0}.{1} cmd={2} version={3} reserved={4}>'.format(
+        answer = '<{0}.{1} cmd={2} version={3} reserved={4} payload={5}>'.format(
             self.__class__.__module__,
             self.__class__.__name__,
             self.cmd, self.version, self.reserved,
+            'yes' if self.payload else 'no',
         )
         return answer
 
     @classmethod
     def from_buffer(cls, buf):
         """Creates and returns a class instance based on data from a bytearray()."""
-        cmd, version, reserved, _ = split_bytearray(buf, ctypes.c_uint8, ctypes.c_uint8, ctypes.c_uint16)
-        return cls(cmd=cmd, version=version, reserved=reserved)
+        cmd, version, reserved, buf_remaining = split_bytearray(buf, ctypes.c_uint8, ctypes.c_uint8, ctypes.c_uint16)
+        ghdr = cls(cmd=cmd, version=version, reserved=reserved)
+        while buf_remaining:
+            next_nla = bytearray()
+            nla = nlattr.from_buffer(buf_remaining, next_nla)
+            buf_remaining = next_nla
+            ghdr.payload.append(nla)
+        return ghdr
 
     @property
     def cmd(self):

@@ -302,14 +302,23 @@ class nlattr(object):
         return answer
 
     @classmethod
-    def from_buffer(cls, buf):
-        """Creates and returns a class instance based on data from a bytearray()."""
-        nla_len, nla_type, _ = split_bytearray(buf, ctypes.c_uint16, ctypes.c_uint16)
+    def from_buffer(cls, buf, next_nla=None):
+        """Creates and returns a class instance based on data from a bytearray().
+
+        Positional arguments:
+        buf -- source bytearray() to read.
+
+        Keyword arguments:
+        next_nla -- optional overflow bytearray() buffer for the next nlattr in the stream. Otherwise overflow ignored.
+        """
+        nla_len, nla_type, buf_remaining = split_bytearray(buf, ctypes.c_uint16, ctypes.c_uint16)
         nla = cls(nla_type=nla_type)
-        payload_size = nla_len.value - NLA_HDRLEN
-        if payload_size > 0:
-            buf_remaining = buf[NLA_HDRLEN:nla_len.value]
-            nla.payload = buf_remaining
+        limit = NLA_ALIGN(nla_len.value) - cls.SIZEOF
+        payload = buf_remaining[:limit]
+        if payload:
+            nla.payload = payload
+        if len(buf_remaining) > limit and next_nla is not None:
+            next_nla.extend(buf_remaining[limit:])
         return nla
 
     @property

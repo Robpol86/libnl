@@ -321,6 +321,21 @@ class nlattr(object):
             next_nla.extend(buf_remaining[limit:])
         return nla
 
+    @classmethod
+    def from_buffer_multi(cls, buf):
+        """Creates multiple instances from a bytearray() and returns them in a list.
+
+        Positional arguments:
+        buf -- source bytearray() to read.
+        """
+        attributes = list()
+        while buf:
+            next_nla = bytearray()
+            nla = cls.from_buffer(buf, next_nla)
+            buf = next_nla
+            attributes.append(nla)
+        return attributes
+
     @property
     def nla_len(self):
         """c_uint16 attribute length including payload, returns integer."""

@@ -108,6 +108,15 @@ class nl_msg(object):
         return answer
 
 
+class genl_family_grp(object):
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L761"""
+
+    def __init__(self, family=None, name='', id_=0):
+        self.family = family
+        self.name = name
+        self.id_ = id_
+
+
 class genl_family(object):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L768"""
     SIZEOF = 80

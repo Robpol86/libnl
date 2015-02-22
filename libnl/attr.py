@@ -507,6 +507,24 @@ def nla_put_nested(msg, attrtype, nested):
     return int(nla_put(msg, attrtype, nested.nm_nlh.payload))
 
 
+def nla_parse_nested(tb, maxtype, nla, policy):
+    """Create attribute index based on nested attribute.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L885
+
+    Feeds the stream of attributes nested into the specified attribute to nla_parse().
+
+    Positional arguments:
+    tb -- dictionary to be filled (maxtype+1 elements).
+    maxtype -- maximum attribute type expected and accepted (integer).
+    nla -- nested attribute (nlattr class instance).
+    policy -- attribute validation policy.
+
+    Returns:
+    0 on success or a negative error code.
+    """
+    return nla_parse(tb, maxtype, nla_data(nla), policy)
+
+
 def nla_is_nested(attr):
     """Return True if attribute has NLA_F_NESTED flag set.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L897

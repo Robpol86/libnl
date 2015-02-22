@@ -9,7 +9,7 @@ of the License.
 
 from libnl.linux_private.genetlink import GENL_ID_GENERATE
 from libnl.netlink_private.object_api import nl_object_ops
-from libnl.netlink_private.types import genl_family
+from libnl.netlink_private.types import genl_family, genl_family_grp
 from libnl.object import nl_object_alloc
 from libnl.types import NL_DUMP_DETAILS, NL_DUMP_LINE, NL_DUMP_STATS
 
@@ -130,6 +130,21 @@ def genl_family_set_name(family, name):
     """
     family.gf_name = name
     family.ce_mask |= FAMILY_ATTR_NAME
+
+
+def genl_family_add_grp(family, id_, name):
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/family.c#L366
+
+    Positional arguments:
+    family -- Generic Netlink family object (genl_family class instance).
+    id_ -- new numeric identifier.
+    name -- new human readable name (string).
+
+    Returns:
+    0
+    """
+    grp = genl_family_grp(id_=id, name=name)
+    raise NotImplementedError
 
 
 genl_family_ops = nl_object_ops(  # https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/family.c#L386

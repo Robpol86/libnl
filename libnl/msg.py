@@ -21,7 +21,7 @@ from libnl.linux_private.genetlink import GENL_HDRLEN, genlmsghdr
 from libnl.linux_private.netlink import (nlmsghdr, NLMSG_ERROR, NLMSG_HDRLEN, NETLINK_GENERIC, NLMSG_NOOP, NLMSG_DONE,
                                          NLMSG_OVERRUN, NLM_F_REQUEST, NLM_F_MULTI, NLM_F_ACK, NLM_F_ECHO, NLM_F_ROOT,
                                          NLM_F_MATCH, NLM_F_ATOMIC, NLM_F_REPLACE, NLM_F_EXCL, NLM_F_CREATE,
-                                         NLM_F_APPEND, nlmsgerr, NLMSG_ALIGN)
+                                         NLM_F_APPEND, nlmsgerr, NLMSG_ALIGN, nlattr)
 from libnl.netlink_private.netlink import BUG
 from libnl.netlink_private.types import nl_msg, NL_MSG_CRED_PRESENT
 from libnl.utils import __type2str
@@ -96,16 +96,20 @@ def nlmsg_datalen(nlh):
 nlmsg_len = nlmsg_datalen  # Alias. https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L126
 
 
-def nlmsg_attrdata(nlh):
+def nlmsg_attrdata(nlh, hdrlen):
     """Returns list of attributes/payload from netlink message header.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L143
 
     Positional arguments:
     nlh -- netlink message header (nlmsghdr class instance).
+    hdrlen -- length of family specific header (to offset by) (integer).
 
     Returns:
     List of attributes.
     """
+    if len(nlh.payload) == 1 and isinstance(nlh.payload[0], bytearray):
+        payload = nlh.payload[0][NLMSG_ALIGN(hdrlen):]
+        return nlattr.from_buffer_multi(payload)
     return nlh.payload
 
 
@@ -134,7 +138,7 @@ def nlmsg_valid_hdr(nlh, hdrlen):
     return not nlh.nlmsg_len < nlmsg_msg_size(hdrlen)
 
 
-def nlmsg_find_attr(nlh, attrtype):
+def nlmsg_find_attr(nlh, hdrlen, attrtype):
     """Find a specific attribute in a netlink message.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L231
 
@@ -145,7 +149,7 @@ def nlmsg_find_attr(nlh, attrtype):
     Returns:
     The first attribute which matches the specified type (nlattr class instance).
     """
-    return nla_find(nlmsg_attrdata(nlh), attrtype)
+    return nla_find(nlmsg_attrdata(nlh, hdrlen), attrtype)
 
 
 def nlmsg_alloc():
@@ -521,7 +525,7 @@ def print_msg(msg, hdr):
         _LOGGER.debug('  [PAYLOAD] %d octets', payloadlen.value)
         dump_hex(data.ljust(payloadlen.value, b'\0'))
     if attrlen:
-        attrs = nlmsg_attrdata(hdr)
+        attrs = nlmsg_attrdata(hdr, ops.co_hdrsize)
         dump_attrs(attrs, attrlen, 0)
 
 

@@ -7,11 +7,12 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-from libnl.attr import nla_get_u16, nla_put_string, NLA_U16, NLA_STRING, NLA_U32, NLA_NESTED, nla_policy
+from libnl.attr import (nla_get_u16, nla_put_string, NLA_U16, NLA_STRING, NLA_U32, NLA_NESTED, nla_policy,
+                        nla_for_each_nested, nla_get_u32, nla_get_string, nla_parse_nested)
 from libnl.cache import NL_ACT_UNSPEC
-from libnl.errno_ import NLE_OBJ_NOTFOUND
+from libnl.errno_ import NLE_OBJ_NOTFOUND, NLE_MISSING_ATTR
 from libnl.genl.family import (genl_family_get_id, genl_family_alloc, genl_family_set_id, genl_family_set_name,
-                               genl_family_ops)
+                               genl_family_ops, genl_family_add_grp)
 from libnl.genl.genl import genlmsg_parse, genlmsg_put, genl_send_simple
 from libnl.genl.mngt import genl_cmd, genl_ops, genl_register
 from libnl.handlers import NL_CB_VALID, nl_cb_set, NL_CB_CUSTOM, NL_SKIP, NL_STOP, nl_cb_clone
@@ -19,17 +20,22 @@ from libnl.linux_private.genetlink import (CTRL_CMD_GETFAMILY, GENL_ID_CTRL, CTR
                                            CTRL_ATTR_FAMILY_ID, CTRL_ATTR_MCAST_GROUPS, GENL_HDRSIZE,
                                            CTRL_CMD_NEWFAMILY, CTRL_CMD_DELFAMILY, CTRL_CMD_NEWOPS, CTRL_CMD_DELOPS,
                                            GENL_NAMSIZ, CTRL_ATTR_VERSION, CTRL_ATTR_HDRSIZE, CTRL_ATTR_MAXATTR,
-                                           CTRL_ATTR_OPS)
+                                           CTRL_ATTR_OPS, CTRL_ATTR_MCAST_GRP_MAX, CTRL_ATTR_MCAST_GRP_ID,
+                                           CTRL_ATTR_MCAST_GRP_NAME, CTRL_ATTR_OP_MAX, CTRL_ATTR_OP_ID,
+                                           CTRL_ATTR_OP_FLAGS)
 from libnl.linux_private.netlink import NETLINK_GENERIC, NLM_F_DUMP
 from libnl.misc import __init
 from libnl.msg import NL_AUTO_SEQ, NL_AUTO_PORT, nlmsg_alloc, nlmsg_hdr
 from libnl.netlink_private.cache_api import nl_cache_ops, nl_msgtype
+from libnl.netlink_private.netlink import BUG
 from libnl.nl import nl_recvmsgs, nl_send_auto, wait_for_ack
 from libnl.socket_ import nl_socket_get_cb
 
 CTRL_VERSION = 0x0001
 
-ctrl_policy = {  # https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L43
+
+ctrl_policy = {i: 0 for i in range(CTRL_ATTR_MAX + 1)}
+ctrl_policy.update({  # https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L43
     CTRL_ATTR_FAMILY_ID: nla_policy(type_=NLA_U16),
     CTRL_ATTR_FAMILY_NAME: nla_policy(type_=NLA_STRING, maxlen=GENL_NAMSIZ),
     CTRL_ATTR_VERSION: nla_policy(type_=NLA_U32),
@@ -37,7 +43,21 @@ ctrl_policy = {  # https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ct
     CTRL_ATTR_MAXATTR: nla_policy(type_=NLA_U32),
     CTRL_ATTR_OPS: nla_policy(type_=NLA_NESTED),
     CTRL_ATTR_MCAST_GROUPS: nla_policy(type_=NLA_NESTED),
-}
+})
+
+
+family_op_policy = {i: 0 for i in range(CTRL_ATTR_OP_MAX + 1)}
+family_op_policy.update({  # https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L54
+    CTRL_ATTR_OP_ID: nla_policy(type_=NLA_U32),
+    CTRL_ATTR_OP_FLAGS: nla_policy(type_=NLA_U32),
+})
+
+
+family_grp_policy = {i: 0 for i in range(CTRL_ATTR_MCAST_GRP_MAX + 1)}
+family_grp_policy.update({  # https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L59
+    CTRL_ATTR_MCAST_GRP_NAME: nla_policy(type_=NLA_STRING),
+    CTRL_ATTR_MCAST_GRP_ID: nla_policy(type_=NLA_U32),
+})
 
 
 def ctrl_request_update(_, nl_sock_h):
@@ -62,7 +82,25 @@ def parse_mcast_grps(family, grp_attr):
     Returns:
     0 on success or a negative error code.
     """
-    raise NotImplementedError
+    if not grp_attr:
+        raise BUG
+
+    for nla in nla_for_each_nested(grp_attr):
+        tb = dict()
+        err = nla_parse_nested(tb, CTRL_ATTR_MCAST_GRP_MAX, nla, family_grp_policy)
+        if err < 0:
+            return err
+        if not tb[CTRL_ATTR_MCAST_GRP_ID] or not tb[CTRL_ATTR_MCAST_GRP_NAME]:
+            return -NLE_MISSING_ATTR
+
+        id_ = nla_get_u32(tb[CTRL_ATTR_MCAST_GRP_ID])
+        name = nla_get_string(tb[CTRL_ATTR_MCAST_GRP_NAME])
+
+        err = genl_family_add_grp(family, id_, name)
+        if err < 0:
+            return err
+
+    return 0
 
 
 def ctrl_msg_parser(ops, cmd, info, arg):

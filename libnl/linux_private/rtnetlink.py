@@ -118,6 +118,21 @@ class rtattr(object):
         return rta
 
     @classmethod
+    def from_buffer_multi(cls, buf):
+        """Creates multiple instances from a bytearray() and returns them in a list.
+
+        Positional arguments:
+        buf -- source bytearray() to read.
+        """
+        attributes = list()
+        while buf:
+            next_rta = bytearray()
+            rta = cls.from_buffer(buf, next_rta)
+            buf = next_rta
+            attributes.append(rta)
+        return attributes
+
+    @classmethod
     def rta_next(cls, buf):
         """Generator that yields aligned rtattr instances from a bytearray()."""
         while buf:

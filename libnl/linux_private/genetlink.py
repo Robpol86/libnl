@@ -29,12 +29,12 @@ class genlmsghdr(object):
     """
     SIZEOF = (ctypes.sizeof(ctypes.c_uint8) * 2) + ctypes.sizeof(ctypes.c_uint16)
 
-    def __init__(self, cmd=None, version=None, reserved=None):
+    def __init__(self, cmd=None, version=None, reserved=None, payload=None):
         self._cmd = None
         self._version = None
         self._reserved = None
 
-        self.payload = list()
+        self.payload = payload or list()
         self.cmd = cmd
         self.version = version
         self.reserved = reserved
@@ -63,12 +63,8 @@ class genlmsghdr(object):
     def from_buffer(cls, buf):
         """Creates and returns a class instance based on data from a bytearray()."""
         cmd, version, reserved, buf_remaining = split_bytearray(buf, ctypes.c_uint8, ctypes.c_uint8, ctypes.c_uint16)
-        ghdr = cls(cmd=cmd, version=version, reserved=reserved)
-        while buf_remaining:
-            next_nla = bytearray()
-            nla = nlattr.from_buffer(buf_remaining, next_nla)
-            buf_remaining = next_nla
-            ghdr.payload.append(nla)
+        payload = nlattr.from_buffer_multi(buf_remaining)
+        ghdr = cls(cmd=cmd, version=version, reserved=reserved, payload=payload)
         return ghdr
 
     @property

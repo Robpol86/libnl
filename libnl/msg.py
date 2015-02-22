@@ -15,7 +15,7 @@ import logging
 import os
 import string
 
-from libnl.attr import nla_for_each_attr, nla_find, nla_is_nested
+from libnl.attr import nla_for_each_attr, nla_find, nla_is_nested, nla_len
 from libnl.cache_mngt import nl_msgtype_lookup, nl_cache_ops_associate_safe
 from libnl.linux_private.genetlink import GENL_HDRLEN, genlmsghdr
 from libnl.linux_private.netlink import (nlmsghdr, NLMSG_ERROR, NLMSG_HDRLEN, NETLINK_GENERIC, NLMSG_NOOP, NLMSG_DONE,
@@ -119,7 +119,7 @@ def nlmsg_attrlen(nlh, hdrlen):
     Returns:
     Integer.
     """
-    return max(nlh.nlmsg_len - NLMSG_ALIGN(hdrlen), 0)
+    return max(nlmsg_len(nlh) - NLMSG_ALIGN(hdrlen), 0)
 
 
 def nlmsg_valid_hdr(nlh, hdrlen):
@@ -422,7 +422,7 @@ def print_genl_msg(_, hdr, ops, payloadlen):
 
     Positional arguments:
     hdr -- netlink message header (nlmsghdr class instance).
-    ops -- TODO issues/8
+    ops -- cache operations (nl_cache_ops class instance).
     payloadlen -- length of payload in message (ctypes.c_int instance).
 
     Returns:
@@ -470,7 +470,7 @@ def dump_attrs(attrs, _, prefix=0):
     """
     prefix_whitespaces = '  ' * prefix
     for nla in nla_for_each_attr(attrs):
-        alen = nla.nla_len
+        alen = nla_len(nla)
         if nla.nla_type == 0:
             _LOGGER.debug('%s  [ATTR PADDING] %d octets', prefix_whitespaces, alen)
         else:

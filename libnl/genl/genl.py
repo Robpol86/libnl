@@ -122,7 +122,7 @@ def genlmsg_attrdata(gnlh, _):
     return gnlh.payload
 
 
-def genlmsg_put(msg, port, seq, family, flags, cmd, version):
+def genlmsg_put(msg, port, seq, family, _, flags, cmd, version):
     """Add Generic Netlink headers to Netlink message.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/genl.c#L348
 

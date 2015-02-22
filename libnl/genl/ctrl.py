@@ -127,7 +127,7 @@ def genl_ctrl_probe_by_name(sk, name):
     msg = nlmsg_alloc()
     orig = nl_socket_get_cb(sk)
     cb = nl_cb_clone(orig)
-    genlmsg_put(msg, NL_AUTO_PORT, NL_AUTO_SEQ, GENL_ID_CTRL, 0, CTRL_CMD_GETFAMILY, 1)
+    genlmsg_put(msg, NL_AUTO_PORT, NL_AUTO_SEQ, GENL_ID_CTRL, 0, 0, CTRL_CMD_GETFAMILY, 1)
     nla_put_string(msg, CTRL_ATTR_FAMILY_NAME, name)
     nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, probe_response, ret)
 

@@ -7,7 +7,7 @@ import pytest
 
 from libnl.attr import (nla_put_u32, nla_get_u32, nla_type, nla_put_u8, nla_put_u16, nla_put_u64, nla_get_u8,
                         nla_get_u16, nla_get_u64, nla_get_flag, nla_put_flag, nla_put_string, nla_get_string,
-                        nla_put_msecs, nla_get_msecs)
+                        nla_put_msecs, nla_get_msecs, nla_put_nested, nla_for_each_nested)
 from libnl.linux_private.netlink import NETLINK_ROUTE
 from libnl.misc import msghdr
 from libnl.msg import nlmsg_alloc, nlmsg_hdr, nlmsg_find_attr, nlmsg_for_each_attr
@@ -233,14 +233,57 @@ def test_data():
     assert b'' == base64.b64encode(bytes(attr)[:attr.nla_len])
 
 
-@pytest.mark.skipif('True')
 def test_nested():
+    """// gcc $(pkg-config --cflags --libs libnl-genl-3.0) a.c && ./a.out
+    #include <netlink/msg.h>
+    int main() {
+        struct nl_msg *msg = nlmsg_alloc();
+        struct nl_msg *sub = nlmsg_alloc();
+        nla_put_string(sub, 2, "sub level A");
+        nla_put_string(sub, 3, "sub level B");
+        nla_put_string(sub, 6, "sub level C");
+        nla_put_nested(msg, 9, sub);
+        nlmsg_free(sub);
+
+        struct nlattr *nla, *nla_outer;
+        struct nlmsghdr *nlh = nlmsg_hdr(msg);
+        int rem;
+        nlmsg_for_each_attr(nla_outer, nlh, 0, rem) {
+            printf("Outer type: %d\n", nla_type(nla_outer));
+            nla_for_each_nested(nla, nla_outer, rem) {
+                printf("type: %d; nla_get_string: %s\n", nla_type(nla), nla_get_string(nla));
+            }
+        }
+
+        nlmsg_free(msg);
+        return 0;
+    }
+    // Expected output:
+    // Outer type: 9
+    // type: 2; nla_get_string: sub level A
+    // type: 3; nla_get_string: sub level B
+    // type: 6; nla_get_string: sub level C
+    """
     msg = nlmsg_alloc()
-    assert 0 == nla_put_u8(msg, 2, 10)
-    msg2 = nlmsg_alloc()
-    assert 0 == nla_put_u32(msg2, 0, 18)
-    assert 0 == nla_put_u32(msg2, 1, 19)
-    assert 0 == nla_put_nested(msg, 9, msg2)
+    sub = nlmsg_alloc()
+    nla_put_string(sub, 2, b'sub level A')
+    nla_put_string(sub, 3, b'sub level B')
+    nla_put_string(sub, 6, b'sub level C')
+    nla_put_nested(msg, 9, sub)
+
+    actual = dict()
+    nlh = nlmsg_hdr(msg)
+    for nla_outer in nlmsg_for_each_attr(nlh):
+        actual[nla_type(nla_outer)] = b'Outer'
+        for nla in nla_for_each_nested(nla_outer):
+            actual[nla_type(nla)] = nla_get_string(nla)
+    expected = {
+        9: b'Outer',
+        2: b'sub level A',
+        3: b'sub level B',
+        6: b'sub level C',
+    }
+    assert expected == actual
 
 
 @pytest.mark.skipif('True')

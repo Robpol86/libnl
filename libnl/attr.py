@@ -222,9 +222,22 @@ def nla_for_each_attr(head):
     head -- list of attributes.
 
     Returns:
-    Generator yielding nl_attr instances.
+    Generator yielding nlattr instances.
     """
     return (a for a in head if isinstance(a, nlattr))
+
+
+def nla_for_each_nested(nla):
+    """Iterate over a stream of nested attributes.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/attr.h#L274
+
+    Positional arguments:
+    nla -- attribute containing the nested attributes (nlattr class instance).
+
+    Returns:
+    Generator yielding nlattr instances.
+    """
+    return (a for a in nla_data(nla) if isinstance(a, nlattr))
 
 
 def nla_find(attrs, attrtype):
@@ -473,6 +486,25 @@ def nla_get_msecs(nla):
     Payload as an int().
     """
     return nla_get_u64(nla)
+
+
+def nla_put_nested(msg, attrtype, nested):
+    """Add nested attributes to netlink message.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L772
+
+    Takes the attributes found in the `nested` message and appends them to the message `msg` nested in a container of
+    the type `attrtype`. The `nested` message may not have a family specific header.
+
+    Positional arguments:
+    msg -- Netlink message (nl_msg class instance).
+    attrtype -- attribute type (integer).
+    nested -- message containing attributes to be nested (nl_msg class instance).
+
+    Returns:
+    0 on success or a negative error code.
+    """
+    _LOGGER.debug('msg 0x%x: attr <> %d: adding msg 0x%x as nested attribute', id(msg), attrtype, id(nested))
+    return int(nla_put(msg, attrtype, nested.nm_nlh.payload))
 
 
 def nla_is_nested(attr):

@@ -23,6 +23,14 @@ class nl_msgtype(object):
         self.mt_act = mt_act
         self.mt_name = mt_name
 
+    def __repr__(self):
+        answer = "<{0}.{1} mt_id={2} mt_act={3} mt_name='{4}'>".format(
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.mt_id, self.mt_act, self.mt_name,
+        )
+        return answer
+
 
 class nl_cache_ops(object):
     """Cache Operations
@@ -90,3 +98,18 @@ class nl_cache_ops(object):
         self.co_major_cache = None
         self.co_genl = co_genl
         self.co_msgtypes = co_msgtypes or list()
+
+    def __repr__(self):
+        answer_base = ("<{0}.{1} co_name='{2}' co_hdrsize={3} co_protocol={4} co_hash_size={5} co_flags={6} "
+                       "co_groups='{7}' co_request_update='{8}' co_msg_parser='{9}' co_event_filter='{10}' "
+                       "co_include_event='{11}' reserved_#={12} co_obj_ops='{13}' co_next='{14}' "
+                       "co_major_cache='{15}' co_genl='{16}' co_msgtypes='{17}'>")
+        answer = answer_base.format(
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.co_name, self.co_hdrsize, self.co_protocol, self.co_hash_size, self.co_flags, self.co_groups,
+            self.co_request_update, self.co_msg_parser, self.co_event_filter, self.co_include_event,
+            'yes' if any(getattr(self, 'reserved_{0}'.format(i)) for i in range(1, 9)) else 'no',
+            self.co_obj_ops, self.co_next, self.co_major_cache, self.co_genl, self.co_msgtypes,
+        )
+        return answer

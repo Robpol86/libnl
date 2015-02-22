@@ -8,10 +8,13 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-from libnl.errno_ import NLE_PROTO_MISMATCH, NLE_INVAL
+from libnl.cache_mngt import nl_cache_mngt_register
+from libnl.errno_ import NLE_PROTO_MISMATCH, NLE_INVAL, NLE_EXIST
 from libnl.linux_private.genetlink import GENL_HDRSIZE, GENL_HDRLEN
 from libnl.linux_private.netlink import NETLINK_GENERIC
 from libnl.netlink_private.netlink import BUG
+
+genl_ops_list = list()
 
 
 def cmd_msg_parser(who, nlh, ops, cache_ops, arg):
@@ -69,6 +72,36 @@ class genl_cmd(object):
         self.c_attr_policy = c_attr_policy
 
 
+def lookup_family(family):
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/mngt.c#L94
+
+    Positional arguments:
+    family -- integer.
+
+    Returns:
+    genl_ops class instance or None.
+    """
+    for ops in genl_ops_list:
+        if ops.o_id == family:
+            return ops
+    return None
+
+
+def lookup_family_by_name(name):
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/mngt.c#L106
+
+    Positional arguments:
+    name -- string.
+
+    Returns:
+    genl_ops class instance or None.
+    """
+    for ops in genl_ops_list:
+        if ops.o_name == name:
+            return ops
+    return None
+
+
 class genl_ops(object):
     """Definition of a Generic Netlink family.
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/genl/mngt.h#L132
@@ -80,16 +113,42 @@ class genl_ops(object):
     o_cache_ops -- if registered via genl_register(), will point to the related cache operations (nl_cache_ops class
         instance).
     o_cmds -- optional array defining the available Generic Netlink commands (genl_cmd class instance).
-    o_list -- used internally to link together all registered operations (nl_list_head class instance).
     """
 
-    def __init__(self, o_hdrsize=0, o_id=0, o_name='', o_cache_ops=None, o_cmds=None, o_list=None):
+    def __init__(self, o_hdrsize=0, o_id=0, o_name='', o_cache_ops=None, o_cmds=None):
         self.o_hdrsize = o_hdrsize
         self.o_id = o_id
         self.o_name = o_name
         self.o_cache_ops = o_cache_ops
         self.o_cmds = o_cmds
-        self.o_list = o_list
+
+
+def genl_register_family(ops):
+    """Register Generic Netlink family and associated commands.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/mngt.c#L164
+
+    Registers the specified Generic Netlink family definition together with all associated commands. After registration,
+    received Generic Netlink messages can be passed to genl_handle_msg() which will validate the messages, look for a
+    matching command and call the respective callback function automatically.
+
+    Positional arguments:
+    ops -- Generic Netlink family definition (genl_ops class instance).
+
+    Returns:
+    0 on success or a negative error code.
+    """
+    if not ops.o_name:
+        return -NLE_INVAL
+
+    if ops.o_id and lookup_family(ops.o_id):
+        return -NLE_EXIST
+
+    if lookup_family_by_name(ops.o_name):
+        return -NLE_EXIST
+
+    genl_ops_list.append(ops)
+
+    return 0
 
 
 def genl_register(ops):

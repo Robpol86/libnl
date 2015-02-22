@@ -106,7 +106,7 @@ def test_error(log):
     assert match('print_hdr:     .type = 0 <0x0>', log)
     assert match('print_hdr:     .flags = 5 <REQUEST,ACK>', log)
     assert match('print_hdr:     .seq = \d{10}', log, True)
-    assert match('print_hdr:     .port = \d{4,}', log, True)
+    assert match('print_hdr:     .port = \d{3,}', log, True)
     assert match('nl_msg_dump: ---------------------------  END NETLINK MESSAGE   ---------------------------', log)
     assert match('nl_sendmsg: sent 16 bytes', log)
     assert not log
@@ -123,7 +123,7 @@ def test_error(log):
     assert match('print_hdr:     .type = 2 <ERROR>', log)
     assert match('print_hdr:     .flags = 0 <>', log)
     assert match('print_hdr:     .seq = \d{10}', log, True)
-    assert match('print_hdr:     .port = \d{4,}', log, True)
+    assert match('print_hdr:     .port = \d{3,}', log, True)
     assert match('dump_error_msg:   [ERRORMSG] 20 octets', log)
     assert match('dump_error_msg:     .error = 0 "Success"', log)
     assert match('dump_error_msg:   [ORIGINAL MESSAGE] 16 octets', log)
@@ -132,10 +132,10 @@ def test_error(log):
     assert match('print_hdr:     .type = 0 <0x0>', log)
     assert match('print_hdr:     .flags = 5 <REQUEST,ACK>', log)
     assert match('print_hdr:     .seq = \d{10}', log, True)
-    assert match('print_hdr:     .port = \d{4,}', log, True)
+    assert match('print_hdr:     .port = \d{3,}', log, True)
     assert match('nl_msg_dump: ---------------------------  END NETLINK MESSAGE   ---------------------------', log)
     assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Increased expected sequence number to \d{4,}', log, True)
-    assert match('nl_ack_handler_debug: -- Debug: ACK: type=ERROR length=36 flags=<> sequence-nr=\d{10,} pid=\d{4,}',
+    assert match('nl_ack_handler_debug: -- Debug: ACK: type=ERROR length=36 flags=<> sequence-nr=\d{10,} pid=\d{3,}',
                  log, True)
     nl_socket_free(sk)
     assert not log
@@ -151,7 +151,7 @@ def multipart_eth0(log):
     assert match('print_hdr:     .type = 16 <0x10>', log)
     assert match('print_hdr:     .flags = 2 <MULTI>', log)
     assert match('print_hdr:     .seq = \d{10}', log, True)
-    assert match('print_hdr:     .port = \d{4,}', log, True)
+    assert match('print_hdr:     .port = \d{3,}', log, True)
     assert match('print_msg:   \[PAYLOAD\] \d{3,} octets', log, True)
     assert match('dump_hex:     00 00 01 00 02 00 00 00 .. 10 .. 00 00 00 00 00 ................', log, True)
     assert match('dump_hex:     09 00 03 00 65 74 68 30 00 00 00 00 08 00 0d 00 ....eth0........', log)
@@ -166,7 +166,7 @@ def multipart_eth0(log):
 
     assert match('nl_msg_dump: ---------------------------  END NETLINK MESSAGE   ---------------------------', log)
     assert match('nl_valid_handler_debug: -- Debug: Unhandled Valid message: type=0x10 length=\d{3,} flags=<MULTI> '
-                 'sequence-nr=\d{10,} pid=\d{4,}', log, True)
+                 'sequence-nr=\d{10,} pid=\d{3,}', log, True)
     return True
 
 
@@ -180,7 +180,7 @@ def multipart_wlan0(log):
     assert match('print_hdr:     .type = 16 <0x10>', log)
     assert match('print_hdr:     .flags = 2 <MULTI>', log)
     assert match('print_hdr:     .seq = \d{10}', log, True)
-    assert match('print_hdr:     .port = \d{4,}', log, True)
+    assert match('print_hdr:     .port = \d{3,}', log, True)
     assert match('print_msg:   \[PAYLOAD\] \d{3,} octets', log, True)
     assert match('dump_hex:     00 00 01 00 .. 00 00 00 .. 10 .. 00 00 00 00 00 ................', log, True)
     assert match('dump_hex:     0a 00 03 00 77 6c 61 6e 30 00 00 00 08 00 0d 00 ....wlan0.......', log)
@@ -195,7 +195,7 @@ def multipart_wlan0(log):
 
     assert match('nl_msg_dump: ---------------------------  END NETLINK MESSAGE   ---------------------------', log)
     assert match('nl_valid_handler_debug: -- Debug: Unhandled Valid message: type=0x10 length=\d{3,} flags=<MULTI> '
-                 'sequence-nr=\d{10,} pid=\d{4,}', log, True)
+                 'sequence-nr=\d{10,} pid=\d{3,}', log, True)
     return True
 
 
@@ -341,7 +341,7 @@ def test_multipart(log, ifaces):
     assert match('print_hdr:     .type = 18 <0x12>', log)
     assert match('print_hdr:     .flags = 773 <REQUEST,ACK,ROOT,MATCH>', log)
     assert match('print_hdr:     .seq = \d{10}', log, True)
-    assert match('print_hdr:     .port = \d{4,}', log, True)
+    assert match('print_hdr:     .port = \d{3,}', log, True)
     assert match('print_msg:   [PAYLOAD] 4 octets', log)
     assert match('dump_hex:     11 00 00 00                                     ....', log)
     assert match('nl_msg_dump: ---------------------------  END NETLINK MESSAGE   ---------------------------', log)
@@ -360,7 +360,7 @@ def test_multipart(log, ifaces):
     assert match('print_hdr:     .type = 16 <0x10>', log)
     assert match('print_hdr:     .flags = 2 <MULTI>', log)
     assert match('print_hdr:     .seq = \d{10}', log, True)
-    assert match('print_hdr:     .port = \d{4,}', log, True)
+    assert match('print_hdr:     .port = \d{3,}', log, True)
     assert match('print_msg:   \[PAYLOAD\] \d{3,} octets', log, True)
     assert match('dump_hex:     00 00 04 03 01 00 00 00 49 00 01 00 00 00 00 00 ........I.......', log)
     assert match('dump_hex:     07 00 03 00 6c 6f 00 00 08 00 0d 00 00 00 00 00 ....lo..........', log)
@@ -373,7 +373,7 @@ def test_multipart(log, ifaces):
 
     assert match('nl_msg_dump: ---------------------------  END NETLINK MESSAGE   ---------------------------', log)
     assert match('nl_valid_handler_debug: -- Debug: Unhandled Valid message: type=0x10 length=\d{3,} flags=<MULTI> '
-                 'sequence-nr=\d{10,} pid=\d{4,}', log, True)
+                 'sequence-nr=\d{10,} pid=\d{3,}', log, True)
 
     if 'eth0' in ifaces:
         assert multipart_eth0(log)
@@ -397,13 +397,13 @@ def test_multipart(log, ifaces):
     assert match('print_hdr:     .type = 3 <DONE>', log)
     assert match('print_hdr:     .flags = 2 <MULTI>', log)
     assert match('print_hdr:     .seq = \d{10}', log, True)
-    assert match('print_hdr:     .port = \d{4,}', log, True)
+    assert match('print_hdr:     .port = \d{3,}', log, True)
     assert match('print_msg:   [PAYLOAD] 4 octets', log)
     assert match('dump_hex:     00 00 00 00                                     ....', log)
     assert match('nl_msg_dump: ---------------------------  END NETLINK MESSAGE   ---------------------------', log)
     assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Increased expected sequence number to \d{4,}', log, True)
     assert match('nl_finish_handler_debug: -- Debug: End of multipart message block: type=DONE length=20 flags=<MULTI> '
-                 'sequence-nr=\d{10,} pid=\d{4,}', log, True)
+                 'sequence-nr=\d{10,} pid=\d{3,}', log, True)
 
     nl_socket_free(sk)
     assert not log
@@ -471,7 +471,7 @@ def test_multipart_verbose(log, ifaces):
         assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Processing valid message...', log, True)
         assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message', log, True)
         assert match('nl_valid_handler_verbose: -- Warning: unhandled valid message: type=0x10 length=\d{3,} '
-                     'flags=<MULTI> sequence-nr=\d{10,} pid=\d{4,}', log, True)
+                     'flags=<MULTI> sequence-nr=\d{10,} pid=\d{3,}', log, True)
 
     assert match('recvmsgs: Attempting to read from 0x[a-f0-9]+', log, True)
     assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Read 20 bytes', log, True)

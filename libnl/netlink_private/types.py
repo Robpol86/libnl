@@ -7,8 +7,6 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-import ctypes
-
 from libnl.linux_private.netlink import sockaddr_nl
 
 NL_SOCK_BUFSIZE_SET = 1 << 0

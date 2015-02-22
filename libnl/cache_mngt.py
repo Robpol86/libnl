@@ -48,8 +48,8 @@ def _cache_ops_associate(protocol, msgtype):
     ops = cache_ops
     while ops:  # Loop until `ops` is None.
         if ops.co_protocol == protocol:
-            for mt_id in ops.co_msgtypes:
-                if mt_id == msgtype:
+            for co_msgtype in ops.co_msgtypes:
+                if co_msgtype.mt_id == msgtype:
                     return ops
         ops = ops.co_next
     return None

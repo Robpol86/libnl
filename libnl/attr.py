@@ -11,7 +11,9 @@ of the License.
 import ctypes
 import logging
 
-from libnl.linux_private.netlink import nlattr, NLA_ALIGN, NLA_TYPE_MASK, NLA_HDRLEN
+from libnl.errno_ import NLE_RANGE, NLE_INVAL
+from libnl.linux_private.netlink import nlattr, NLA_ALIGN, NLA_TYPE_MASK, NLA_HDRLEN, NLA_F_NESTED
+from libnl.netlink_private.netlink import BUG
 
 _LOGGER = logging.getLogger(__name__)
 NLA_UNSPEC = 0  # Unspecified type, binary data chunk.
@@ -116,6 +118,91 @@ def nla_next(nla, remaining):
     totlen = int(NLA_ALIGN(nla.nla_len))
     remaining.value -= totlen
     return ctypes.cast(ctypes.byref(nla, totlen), ctypes.POINTER(nlattr))
+
+
+nla_attr_minlen = {  # https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L179
+    NLA_U8: ctypes.sizeof(ctypes.c_uint8),
+    NLA_U16: ctypes.sizeof(ctypes.c_uint16),
+    NLA_U32: ctypes.sizeof(ctypes.c_uint32),
+    NLA_U64: ctypes.sizeof(ctypes.c_uint64),
+    NLA_STRING: 1,
+    NLA_FLAG: 0,
+}
+
+
+def validate_nla(nla, maxtype, policy):
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L188
+
+    Positional arguments:
+    nla -- nlattr class instance.
+    maxtype -- integer.
+    policy -- nla_policy class instance.
+
+    Returns:
+    0 on success or a negative error code.
+    """
+    minlen = 0
+    type_ = nla_type(nla)
+    if type_ < 0 or type_ > maxtype:
+        return 0
+
+    pt = policy[type_]
+    if pt.type_ > NLA_TYPE_MAX:
+        raise BUG
+
+    if pt.minlen:
+        minlen = pt.minlen
+    elif pt.type != NLA_UNSPEC:
+        minlen = nla_attr_minlen[pt.type]
+
+    if nla_len(nla) < minlen:
+        return -NLE_RANGE
+
+    if pt.maxlen and nla_len(nla) > pt.maxlen:
+        return -NLE_RANGE
+
+    if pt.type == NLA_STRING:
+        data = nla_data(nla)
+        if data[nla_len(nla) - 1] != '\0':
+            return -NLE_INVAL
+
+    return 0
+
+
+def nla_parse(tb, maxtype, head, policy):
+    """Create attribute index based on a stream of attributes.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L242
+
+    Iterates over the stream of attributes and stores an instance to each attribute in the `tb` dictionary using the
+    attribute type as the key. Attribute with a type greater than the maximum type specified will be silently ignored in
+    order to maintain backwards compatibility. If `policy` is not None, the attribute will be validated using the
+    specified policy.
+
+    Positional arguments:
+    tb -- dictionary to be filled (maxtype+1 elements).
+    maxtype -- maximum attribute type expected and accepted.
+    head -- list of attributes.
+    policy -- attribute validation policy.
+
+    Returns:
+    0 on success or a negative error code.
+    """
+    for nla in nla_for_each_attr(head):
+        type_ = nla_type(nla)
+        if type_ > maxtype:
+            continue
+
+        if policy:
+            err = validate_nla(nla, maxtype, policy)
+            if err < 0:
+                return err
+
+        if type_ in tb:
+            _LOGGER.debug('Attribute of type %d found multiple times in message, previous attribute is being ignored.',
+                          type_)
+        tb[type_] = nla
+
+    return 0
 
 
 def nla_for_each_attr(head):
@@ -365,3 +452,16 @@ def nla_get_msecs(nla):
     Payload as an int().
     """
     return nla_get_u64(nla)
+
+
+def nla_is_nested(attr):
+    """Return True if attribute has NLA_F_NESTED flag set.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L897
+
+    Positional arguments:
+    attr -- netlink attribute (nlattr class instance).
+
+    Returns:
+    True if attribute has NLA_F_NESTED flag set, otherwise False.
+    """
+    return not not attr.nla_type & NLA_F_NESTED

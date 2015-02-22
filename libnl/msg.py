@@ -15,13 +15,14 @@ import logging
 import os
 import string
 
-from libnl.attr import nla_for_each_attr, nla_find
+from libnl.attr import nla_for_each_attr, nla_find, nla_is_nested
 from libnl.cache_mngt import nl_msgtype_lookup, nl_cache_ops_associate_safe
 from libnl.linux_private.genetlink import GENL_HDRLEN, genlmsghdr
 from libnl.linux_private.netlink import (nlmsghdr, NLMSG_ERROR, NLMSG_HDRLEN, NETLINK_GENERIC, NLMSG_NOOP, NLMSG_DONE,
                                          NLMSG_OVERRUN, NLM_F_REQUEST, NLM_F_MULTI, NLM_F_ACK, NLM_F_ECHO, NLM_F_ROOT,
                                          NLM_F_MATCH, NLM_F_ATOMIC, NLM_F_REPLACE, NLM_F_EXCL, NLM_F_CREATE,
-                                         NLM_F_APPEND, nlmsgerr)
+                                         NLM_F_APPEND, nlmsgerr, NLMSG_ALIGN)
+from libnl.netlink_private.netlink import BUG
 from libnl.netlink_private.types import nl_msg, NL_MSG_CRED_PRESENT
 from libnl.utils import __type2str
 
@@ -106,6 +107,31 @@ def nlmsg_attrdata(nlh):
     List of attributes.
     """
     return nlh.payload
+
+
+def nlmsg_attrlen(nlh, hdrlen):
+    """Length of attributes data.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L154
+
+    nlh -- netlink message header (nlmsghdr class instance).
+    hdrlen -- length of family specific header (integer).
+
+    Returns:
+    Integer.
+    """
+    return max(nlh.nlmsg_len - NLMSG_ALIGN(hdrlen), 0)
+
+
+def nlmsg_valid_hdr(nlh, hdrlen):
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L166
+
+    Positional arguments:
+    nlh -- netlink message header (nlmsghdr class instance).
+    hdrlen -- integer.
+
+    Returns True if valid, False otherwise.
+    """
+    return not nlh.nlmsg_len < nlmsg_msg_size(hdrlen)
 
 
 def nlmsg_find_attr(nlh, attrtype):
@@ -367,8 +393,7 @@ def print_hdr(msg):
     if ops:
         mt = nl_msgtype_lookup(ops, nlh.nlmsg_type)
         if not mt:
-            #raise BUG  TODO  https://github.com/Robpol86/libnl/issues/9
-            raise RuntimeError('TODO raise BUG')
+            raise BUG
         buf = '{0}::{1}'.format(ops.co_name, mt.mt_name)
     else:
         buf = nl_nlmsgtype2str(nlh.nlmsg_type)
@@ -422,6 +447,42 @@ def print_genl_msg(_, hdr, ops, payloadlen):
     return data
 
 
+def dump_attr(attr, prefix=0):
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L862
+
+    Positional arguments:
+    attr -- nlattr class instance.
+
+    Keyword arguments:
+    prefix -- additional number of whitespace pairs to prefix each log statement with.
+    """
+    dump_hex(attr.payload, prefix)
+
+
+def dump_attrs(attrs, _, prefix=0):
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L869
+
+    Positional arguments:
+    attrs -- nlattr class instance.
+
+    Keyword arguments:
+    prefix -- additional number of whitespace pairs to prefix each log statement with.
+    """
+    prefix_whitespaces = '  ' * prefix
+    for nla in nla_for_each_attr(attrs):
+        alen = nla.nla_len
+        if nla.nla_type == 0:
+            _LOGGER.debug('%s  [ATTR PADDING] %d octets', prefix_whitespaces, alen)
+        else:
+            is_nested = ' NESTED' if nla_is_nested(nla) else ''
+            _LOGGER.debug('%s  [ATTR %02d%s] %d octets', prefix_whitespaces, nla.nla_type, is_nested, alen)
+
+        if nla_is_nested(nla):
+            dump_attrs(nla.payload, alen, prefix+1)
+        else:
+            dump_attr(nla, prefix)
+
+
 def dump_error_msg(msg):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L908
 
@@ -450,18 +511,18 @@ def print_msg(msg, hdr):
     payloadlen = ctypes.c_int(nlmsg_len(hdr))
     attrlen = 0
     data = nlmsg_data(hdr)
-    ops = None  # = nl_cache_ops_associate_safe(nlmsg_get_proto(msg), hdr.nlmsg_type) # TODO issues/8
+    ops = nl_cache_ops_associate_safe(msg.nm_protocol, hdr.nlmsg_type)
     if ops:
-        raise NotImplementedError
+        attrlen = nlmsg_attrlen(hdr, ops.co_hdrsize)
+        payloadlen.value -= attrlen
     if msg.nm_protocol == NETLINK_GENERIC:
         data = print_genl_msg(msg, hdr, ops, payloadlen)
     if payloadlen.value:
         _LOGGER.debug('  [PAYLOAD] %d octets', payloadlen.value)
         dump_hex(data.ljust(payloadlen.value, b'\0'))
     if attrlen:
-        raise NotImplementedError
-    if ops:
-        raise NotImplementedError
+        attrs = nlmsg_attrdata(hdr)
+        dump_attrs(attrs, attrlen, 0)
 
 
 def nl_msg_dump(msg):

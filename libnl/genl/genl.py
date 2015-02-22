@@ -9,11 +9,12 @@ of the License.
 
 import logging
 
+from libnl.attr import nla_parse
 from libnl.errno_ import NLE_MSG_TOOSHORT
 from libnl.linux_private.genetlink import GENL_HDRLEN, genlmsghdr
 from libnl.linux_private.netlink import NETLINK_GENERIC, NLMSG_ALIGN, NLMSG_HDRLEN
-from libnl.msg import nlmsg_data, nlmsg_put
-from libnl.nl import nl_connect
+from libnl.msg import nlmsg_data, nlmsg_put, nlmsg_valid_hdr
+from libnl.nl import nl_connect, nl_send_simple
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,6 +36,28 @@ def genl_connect(sk):
     0 on success or a negative error code.
     """
     return int(nl_connect(sk, NETLINK_GENERIC))
+
+
+def genl_send_simple(sk, family, cmd, version, flags):
+    """Send a Generic Netlink message consisting only of a header.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/genl.c#L84
+
+    This function is a shortcut for sending a Generic Netlink message without any message payload. The message will only
+    consist of the Netlink and Generic Netlink headers. The header is constructed based on the specified parameters and
+    passed on to nl_send_simple() to send it on the specified socket.
+
+    Positional arguments:
+    sk -- Generic Netlink socket (nl_sock class instance).
+    family -- numeric family identifier (integer).
+    cmd -- numeric command identifier (integer).
+    version -- interface version (integer).
+    flags -- additional Netlink message flags (integer).
+
+    Returns:
+    0 on success or a negative error code.
+    """
+    hdr = genlmsghdr(cmd=cmd, version=version)
+    return int(nl_send_simple(sk, family, flags, hdr))
 
 
 def genlmsg_valid_hdr(nlh, hdrlen):
@@ -83,7 +106,20 @@ def genlmsg_parse(nlh, hdrlen, tb, maxtype, policy):
         return -NLE_MSG_TOOSHORT
 
     ghdr = nlmsg_data(nlh)
-    return nla_parse(tb, maxtype, genlmsg_attrdata(ghdr, hdrlen), genlmsg_attrlen(ghdr, hdrlen), policy)
+    return nla_parse(tb, maxtype, genlmsg_attrdata(ghdr, hdrlen), policy)
+
+
+def genlmsg_attrdata(gnlh, _):
+    """Return list of message attributes.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/genl.c#L287
+
+    Positional arguments:
+    gnlh -- Generic Netlink message header (genlmsghdr class instance).
+
+    Returns:
+    List of message attributes.
+    """
+    return gnlh.payload
 
 
 def genlmsg_put(msg, port, seq, family, flags, cmd, version):

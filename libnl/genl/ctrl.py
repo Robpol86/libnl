@@ -6,14 +6,13 @@ modify it under the terms of the GNU Lesser General Public
 License as published by the Free Software Foundation version 2.1
 of the License.
 """
-import atexit
 
 from libnl.attr import nla_get_u16, nla_put_string, NLA_U16, NLA_STRING, NLA_U32, NLA_NESTED, nla_policy
 from libnl.cache import NL_ACT_UNSPEC
 from libnl.errno_ import NLE_OBJ_NOTFOUND
 from libnl.genl.family import (genl_family_get_id, genl_family_alloc, genl_family_set_id, genl_family_set_name,
                                genl_family_ops)
-from libnl.genl.genl import genlmsg_parse, genlmsg_put
+from libnl.genl.genl import genlmsg_parse, genlmsg_put, genl_send_simple
 from libnl.genl.mngt import genl_cmd, genl_ops, genl_register
 from libnl.handlers import NL_CB_VALID, nl_cb_set, NL_CB_CUSTOM, NL_SKIP, NL_STOP, nl_cb_clone
 from libnl.linux_private.genetlink import (CTRL_CMD_GETFAMILY, GENL_ID_CTRL, CTRL_ATTR_FAMILY_NAME, CTRL_ATTR_MAX,
@@ -28,6 +27,7 @@ from libnl.netlink_private.cache_api import nl_cache_ops, nl_msgtype
 from libnl.nl import nl_recvmsgs, nl_send_auto, wait_for_ack
 from libnl.socket_ import nl_socket_get_cb
 
+CTRL_VERSION = 0x0001
 
 ctrl_policy = {  # https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L43
     CTRL_ATTR_FAMILY_ID: nla_policy(type_=NLA_U16),
@@ -40,17 +40,16 @@ ctrl_policy = {  # https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ct
 }
 
 
-def ctrl_request_update(nl_cache_c, nl_sock_h):
+def ctrl_request_update(_, nl_sock_h):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L37
 
     Positional arguments:
-    nl_cache_c -- nl_cache class instance.
     nl_sock_h -- nl_sock class instance.
 
     Returns:
     Integer, genl_send_simple() output.
     """
-    return int(genl_send_simple(h, GENL_ID_CTRL, CTRL_CMD_GETFAMILY, CTRL_VERSION, NLM_F_DUMP))
+    return int(genl_send_simple(nl_sock_h, GENL_ID_CTRL, CTRL_CMD_GETFAMILY, CTRL_VERSION, NLM_F_DUMP))
 
 
 def parse_mcast_grps(family, grp_attr):
@@ -185,12 +184,7 @@ genl_ctrl_ops = nl_cache_ops(
 )
 
 
-#@__init
-#def ctrl_init():
-#    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L536"""
-#    genl_register(genl_ctrl_ops)
-
-#@atexit.register
-#def ctrl_exit():
-#    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L541"""
-#    genl_unregister(genl_ctrl_ops)
+@__init
+def ctrl_init():
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L536"""
+    genl_register(genl_ctrl_ops)

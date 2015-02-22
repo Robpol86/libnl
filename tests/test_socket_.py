@@ -248,7 +248,7 @@ def test_nl_socket_modify_cb(log, ifaces):
         assert match('print_hdr:     .type = 16 <0x10>', log)
         assert match('print_hdr:     .flags = 2 <MULTI>', log)
         assert match('print_hdr:     .seq = \d{10}', log, True)
-        assert match('print_hdr:     .port = \d{4,}', log, True)
+        assert match('print_hdr:     .port = \d{3,}', log, True)
         assert match('print_msg:   \[PAYLOAD\] \d{3,} octets', log, True)
 
         rem = log.index('nl_msg_dump: ---------------------------  END NETLINK MESSAGE   ---------------------------')

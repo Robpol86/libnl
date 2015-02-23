@@ -195,9 +195,9 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
         assert 16 == msg.nm_nlh.nlmsg_type
         assert 5 == msg.nm_nlh.nlmsg_flags
         assert 10000 < msg.nm_nlh.nlmsg_pid
-        # assert 4096 == msg.nm_size TODO implement
+        # assert 4096 == msg.nm_size TODO implement https://github.com/Robpol86/libnl/issues/12
         assert 1 == msg.nm_refcnt
-        # dump_hex(bytes(msg), 0)  TODO test
+        # dump_hex(bytes(msg), 0)  TODO test https://github.com/Robpol86/libnl/issues/12
         iov = bytes(nlmsg_hdr(msg))
         return nl_send_iovec(sk, msg, iov)
 
@@ -238,7 +238,7 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
     assert match('nlmsg_put: msg 0x[a-f0-9]+: Added netlink header type=16, flags=0, pid=0, seq=0', log, True)
     assert match('genlmsg_put: msg 0x[a-f0-9]+: Added generic netlink header cmd=3 version=1', log, True)
     assert match('nla_put: msg 0x[a-f0-9]+: attr <0x[a-f0-9]+> 2: Wrote 8 bytes', log, True)
-    """ TODO test
+    """ TODO test https://github.com/Robpol86/libnl/issues/12
     assert match('dump_hex:     10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................', log)
     assert match('dump_hex:     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................', log)
     assert match('dump_hex:     00 00 00 00 00 00 00 00 00 00 00 00 50 .. .. 00 ............P...', log, True)

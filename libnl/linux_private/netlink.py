@@ -48,6 +48,16 @@ class sockaddr_nl(object):
         self.nl_pid = 0
         self.nl_groups = 0
 
+    def __bytes__(self):
+        """Returns a bytes object."""
+        segments = (
+            ctypes.c_uint(self.nl_family),
+            ctypes.c_ushort(),
+            ctypes.c_uint32(self.nl_pid),
+            ctypes.c_uint32(self.nl_groups),
+        )
+        return b''.join(segments)
+
     def __iter__(self):
         yield self.nl_pid
         yield self.nl_groups

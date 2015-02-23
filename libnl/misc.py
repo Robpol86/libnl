@@ -23,6 +23,10 @@ class ucred(object):
     def __bool__(self):
         return any(not not getattr(v, 'value', v) for v in self.__dict__.values())
 
+    def __bytes__(self):
+        """Returns a bytes object."""
+        return b''.join((bytes(self._pid), bytes(self._uid), bytes(self._gid)))
+
     def __nonzero__(self):
         """Python 2.x compatibility."""
         return self.__bool__()

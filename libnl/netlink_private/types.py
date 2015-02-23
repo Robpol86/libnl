@@ -7,7 +7,10 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-from libnl.linux_private.netlink import sockaddr_nl
+import ctypes
+
+from libnl.linux_private.netlink import sockaddr_nl, nlmsghdr
+from libnl.misc import ucred
 
 NL_SOCK_BUFSIZE_SET = 1 << 0
 NL_SOCK_PASSCRED = 1 << 1
@@ -97,6 +100,20 @@ class nl_msg(object):
         self.nm_dst = sockaddr_nl()
         self.nm_creds = None
         self.nm_nlh = None
+
+    def __bytes__(self):
+        """Returns a bytes object."""
+        segments = (
+            bytes(ctypes.c_int(self.nm_protocol)),
+            bytes(ctypes.c_int(self.nm_flags)),
+            bytes(self.nm_src),
+            bytes(self.nm_dst),
+            bytes(self.nm_creds or ucred()),
+            bytes(self.nm_nlh or nlmsghdr()),
+            bytes(ctypes.c_uint32()),
+            bytes(ctypes.c_int()),
+        )
+        return b''.join(segments)
 
     def __repr__(self):
         answer_base = "<{0}.{1} nm_protocol={2} nm_flags={3} nm_src='{4}' nm_dst='{5}' nm_creds='{6}' nm_nlh='{7}'>"

@@ -6,10 +6,10 @@ from libnl.attr import nla_put_string
 from libnl.genl.ctrl import genl_ctrl_resolve
 from libnl.genl.family import genl_family_set_name, genl_family_alloc
 from libnl.genl.genl import genl_connect, genlmsg_put
-from libnl.handlers import NL_CB_VALID, NL_CB_CUSTOM, NL_OK
+from libnl.handlers import NL_CB_VALID, NL_CB_CUSTOM, NL_OK, nl_cb_overwrite_send
 from libnl.linux_private.genetlink import GENL_ID_CTRL, CTRL_CMD_GETFAMILY, CTRL_ATTR_FAMILY_NAME
-from libnl.msg import nlmsg_alloc, NL_AUTO_PORT, NL_AUTO_SEQ, dump_hex
-from libnl.nl import nl_send_auto, nl_recvmsgs_default
+from libnl.msg import nlmsg_alloc, NL_AUTO_PORT, NL_AUTO_SEQ, dump_hex, nlmsg_hdr
+from libnl.nl import nl_send_auto, nl_recvmsgs_default, nl_send_iovec
 from libnl.socket_ import nl_socket_alloc, nl_socket_modify_cb, nl_socket_free
 
 
@@ -26,6 +26,10 @@ def match(expected, log, is_regex=False):
 def test_ctrl_cmd_getfamily_hex_dump(log):
     """// gcc $(pkg-config --cflags --libs libnl-genl-3.0) a.c && NLDBG=4 ./a.out
     #include <netlink/msg.h>
+    struct nl_sock {
+        struct sockaddr_nl s_local; struct sockaddr_nl s_peer; int s_fd; int s_proto; unsigned int s_seq_next;
+        unsigned int s_seq_expect; int s_flags; struct nl_cb *s_cb; size_t s_bufsize;
+    };
     static void prefix_line(FILE *ofd, int prefix) { int i; for (i = 0; i < prefix; i++) fprintf(ofd, "  "); }
     static inline void dump_hex(FILE *ofd, char *start, int len, int prefix) {
         int i, a, c, limit; char ascii[21] = {0}; limit = 16 - (prefix * 2); prefix_line(ofd, prefix);
@@ -46,7 +50,28 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
         int nm_protocol; int nm_flags; struct sockaddr_nl nm_src; struct sockaddr_nl nm_dst; struct ucred nm_creds;
         struct nlmsghdr *nm_nlh; size_t nm_size; int nm_refcnt;
     };
-    static int callback(struct nl_msg *msg, void *arg) {
+    static int callback_send(struct nl_sock *sk, struct nl_msg *msg) {
+        printf("%d == msg.nm_protocol\n", msg->nm_protocol);
+        printf("%d == msg.nm_flags\n", msg->nm_flags);
+        printf("%d == msg.nm_src.nl_family\n", msg->nm_src.nl_family);
+        printf("%d == msg.nm_src.nl_pid\n", msg->nm_src.nl_pid);
+        printf("%d == msg.nm_src.nl_groups\n", msg->nm_src.nl_groups);
+        printf("%d == msg.nm_dst.nl_family\n", msg->nm_dst.nl_family);
+        printf("%d == msg.nm_dst.nl_pid\n", msg->nm_dst.nl_pid);
+        printf("%d == msg.nm_dst.nl_groups\n", msg->nm_dst.nl_groups);
+        printf("%d == msg.nm_creds.pid\n", msg->nm_creds.pid);
+        printf("%d == msg.nm_creds.uid\n", msg->nm_creds.uid);
+        printf("%d == msg.nm_creds.gid\n", msg->nm_creds.gid);
+        printf("%d == msg.nm_nlh.nlmsg_type\n", msg->nm_nlh->nlmsg_type);
+        printf("%d == msg.nm_nlh.nlmsg_flags\n", msg->nm_nlh->nlmsg_flags);
+        printf("%d == msg.nm_nlh.nlmsg_pid\n", msg->nm_nlh->nlmsg_pid);
+        printf("%d == msg.nm_size\n", msg->nm_size);
+        printf("%d == msg.nm_refcnt\n", msg->nm_refcnt);
+        dump_hex(stdout, (char *) msg, msg->nm_size, 0);
+        struct iovec iov = { .iov_base = (void *) nlmsg_hdr(msg), .iov_len = nlmsg_hdr(msg)->nlmsg_len, };
+        return nl_send_iovec(sk, msg, &iov, 1);
+    }
+    static int callback_recv(struct nl_msg *msg, void *arg) {
         printf("%d == msg.nm_protocol\n", msg->nm_protocol);
         printf("%d == msg.nm_flags\n", msg->nm_flags);
         printf("%d == msg.nm_src.nl_family\n", msg->nm_src.nl_family);
@@ -68,13 +93,14 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
     }
     int main() {
         struct nl_sock *sk = nl_socket_alloc();
+        nl_cb_overwrite_send(sk->s_cb, callback_send);
         printf("%d == genl_connect(sk)\n", genl_connect(sk));
         struct genl_family *ret = (struct genl_family *) genl_family_alloc();
         genl_family_set_name(ret, "nl80211");
         struct nl_msg *msg = nlmsg_alloc();
         genlmsg_put(msg, NL_AUTO_PORT, NL_AUTO_SEQ, GENL_ID_CTRL, 0, 0, CTRL_CMD_GETFAMILY, 1);
         nla_put_string(msg, CTRL_ATTR_FAMILY_NAME, "nl80211");
-        nl_socket_modify_cb(sk, NL_CB_VALID, NL_CB_CUSTOM, callback, NULL);
+        nl_socket_modify_cb(sk, NL_CB_VALID, NL_CB_CUSTOM, callback_recv, NULL);
         printf("%d == nl_send_auto(sk, msg)\n", nl_send_auto(sk, msg));
         printf("%d == nl_recvmsgs_default(sk)\n", nl_recvmsgs_default(sk));
         nl_socket_free(sk);
@@ -90,6 +116,31 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
     // genlmsg_put: msg 0x2b5110: Added generic netlink header cmd=3 version=1
     // nla_reserve: msg 0x2b5110: attr <0x2b5164> 2: Reserved 12 (8) bytes at offset +4 nlmsg_len=32
     // nla_put: msg 0x2b5110: attr <0x2b5164> 2: Wrote 8 bytes at offset +4
+    // 16 == msg.nm_protocol
+    // 0 == msg.nm_flags
+    // 0 == msg.nm_src.nl_family
+    // 0 == msg.nm_src.nl_pid
+    // 0 == msg.nm_src.nl_groups
+    // 0 == msg.nm_dst.nl_family
+    // 0 == msg.nm_dst.nl_pid
+    // 0 == msg.nm_dst.nl_groups
+    // 0 == msg.nm_creds.pid
+    // 0 == msg.nm_creds.uid
+    // 0 == msg.nm_creds.gid
+    // 16 == msg.nm_nlh.nlmsg_type
+    // 5 == msg.nm_nlh.nlmsg_flags
+    // 26270 == msg.nm_nlh.nlmsg_pid
+    // 4096 == msg.nm_size
+    // 1 == msg.nm_refcnt
+    //     10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
+    //     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
+    //     00 00 00 00 00 00 00 00 00 00 00 00 50 91 46 00 ............P.F.
+    //     00 10 00 00 01 00 00 00 00 00 00 00 09 10 00 00 ................
+    //     20 00 00 00 10 00 05 00 ff 7a ea 54 9e 66 00 00  ........z.T.f..
+    //     03 01 00 00 0c 00 02 00 6e 6c 38 30 32 31 31 00 ........nl80211.
+    //     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
+    //     <trimmed>
+    //     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
     // nl_sendmsg: sent 32 bytes
     // 32 == nl_send_auto(sk, msg)
     // recvmsgs: Attempting to read from 0x2b5080
@@ -131,7 +182,26 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
     // 0 == nl_recvmsgs_default(sk)
     // nl_cache_mngt_unregister: Unregistered cache operations genl/family
     """
-    def callback(msg_, _):
+    def callback_send(sk, msg):
+        assert 16 == msg.nm_protocol
+        assert 0 == msg.nm_flags
+        assert 0 == msg.nm_src.nl_family
+        assert 0 == msg.nm_src.nl_pid
+        assert 0 == msg.nm_src.nl_groups
+        assert 0 == msg.nm_dst.nl_family
+        assert 0 == msg.nm_dst.nl_pid
+        assert 0 == msg.nm_dst.nl_groups
+        assert msg.nm_creds is None
+        assert 16 == msg.nm_nlh.nlmsg_type
+        assert 5 == msg.nm_nlh.nlmsg_flags
+        assert 10000 < msg.nm_nlh.nlmsg_pid
+        # assert 4096 == msg.nm_size TODO implement
+        assert 1 == msg.nm_refcnt
+        # dump_hex(bytes(msg), 0)  TODO test
+        iov = bytes(nlmsg_hdr(msg))
+        return nl_send_iovec(sk, msg, iov)
+
+    def callback_recv(msg, _):
         assert 16 == msg.nm_protocol
         assert 0 == msg.nm_flags
         assert 16 == msg.nm_src.nl_family
@@ -140,34 +210,44 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
         assert 0 == msg.nm_dst.nl_family
         assert 0 == msg.nm_dst.nl_pid
         assert 0 == msg.nm_dst.nl_groups
-        assert 0 == msg.nm_creds.pid
-        assert 0 == msg.nm_creds.uid
-        assert 0 == msg.nm_creds.gid
+        assert msg.nm_creds is None
         assert 16 == msg.nm_nlh.nlmsg_type
         assert 0 == msg.nm_nlh.nlmsg_flags
         assert 10000 < msg.nm_nlh.nlmsg_pid
         assert 1836 == msg.nm_size
-        assert 0 <= msg.nm_refcnt
-        dump_hex(bytes(msg_), 0)
+        assert 1 == msg.nm_refcnt
+        dump_hex(bytes(msg), 0)
         return NL_OK
+
     log.clear()
-    sk = nl_socket_alloc()
-    genl_connect(sk)
+    sk_main = nl_socket_alloc()
+    nl_cb_overwrite_send(sk_main.s_cb, callback_send)
+    genl_connect(sk_main)
     ret = genl_family_alloc()
     genl_family_set_name(ret, b'nl80211')
-    msg = nlmsg_alloc()
-    genlmsg_put(msg, NL_AUTO_PORT, NL_AUTO_SEQ, GENL_ID_CTRL, 0, 0, CTRL_CMD_GETFAMILY, 1)
-    nla_put_string(msg, CTRL_ATTR_FAMILY_NAME, b'nl80211')
-    nl_socket_modify_cb(sk, NL_CB_VALID, NL_CB_CUSTOM, callback, None)
-    assert 32 == nl_send_auto(sk, msg)
-    assert 0 == nl_recvmsgs_default(sk)
-    nl_socket_free(sk)
+    msg_main = nlmsg_alloc()
+    genlmsg_put(msg_main, NL_AUTO_PORT, NL_AUTO_SEQ, GENL_ID_CTRL, 0, 0, CTRL_CMD_GETFAMILY, 1)
+    nla_put_string(msg_main, CTRL_ATTR_FAMILY_NAME, b'nl80211')
+    nl_socket_modify_cb(sk_main, NL_CB_VALID, NL_CB_CUSTOM, callback_recv, None)
+    assert 32 == nl_send_auto(sk_main, msg_main)
+    assert 0 == nl_recvmsgs_default(sk_main)
+    nl_socket_free(sk_main)
 
     assert match('nl_object_alloc: Allocated new object 0x[a-f0-9]+', log, True)
     assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message', log, True)
     assert match('nlmsg_put: msg 0x[a-f0-9]+: Added netlink header type=16, flags=0, pid=0, seq=0', log, True)
     assert match('genlmsg_put: msg 0x[a-f0-9]+: Added generic netlink header cmd=3 version=1', log, True)
     assert match('nla_put: msg 0x[a-f0-9]+: attr <0x[a-f0-9]+> 2: Wrote 8 bytes', log, True)
+    """ TODO test
+    assert match('dump_hex:     10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................', log)
+    assert match('dump_hex:     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................', log)
+    assert match('dump_hex:     00 00 00 00 00 00 00 00 00 00 00 00 50 .. .. 00 ............P...', log, True)
+    assert match('dump_hex:     00 10 00 00 01 00 00 00 00 00 00 00 09 10 00 00 ................', log)
+    assert match('dump_hex:     20 00 00 00 10 00 05 00 .. .. ea 54 .. .. 00 00  ..........T....', log, True)
+    assert match('dump_hex:     03 01 00 00 0c 00 02 00 6e 6c 38 30 32 31 31 00 ........nl80211.', log)
+    for _ in range(250):
+        assert match('dump_hex:     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................', log)
+    """
     assert match('nl_sendmsg: sent 32 bytes', log)
     assert match('recvmsgs: Attempting to read from 0x[a-f0-9]+', log, True)
     assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Read 1836 bytes', log, True)

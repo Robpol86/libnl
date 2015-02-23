@@ -100,6 +100,7 @@ class nl_msg(object):
         self.nm_dst = sockaddr_nl()
         self.nm_creds = None
         self.nm_nlh = None
+        self.nm_refcnt = 1
 
     def __bytes__(self):
         """Returns a bytes object."""
@@ -110,8 +111,8 @@ class nl_msg(object):
             bytes(self.nm_dst),
             bytes(self.nm_creds or ucred()),
             bytes(self.nm_nlh or nlmsghdr()),
-            bytes(ctypes.c_uint32()),
-            bytes(ctypes.c_int()),
+            bytes(ctypes.c_uint32(self.nm_size)),
+            bytes(ctypes.c_int(self.nm_refcnt)),
         )
         return b''.join(segments)
 
@@ -123,6 +124,10 @@ class nl_msg(object):
             self.nm_protocol, self.nm_flags, self.nm_src, self.nm_dst, self.nm_creds, self.nm_nlh,
         )
         return answer
+
+    @property
+    def nm_size(self):
+        return self.nm_nlh.nlmsg_len
 
 
 class genl_family_grp(object):

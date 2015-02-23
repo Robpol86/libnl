@@ -6,10 +6,10 @@ from libnl.attr import nla_put_string
 from libnl.genl.ctrl import genl_ctrl_resolve
 from libnl.genl.family import genl_family_set_name, genl_family_alloc
 from libnl.genl.genl import genl_connect, genlmsg_put
-from libnl.handlers import NL_CB_VALID, NL_CB_CUSTOM, NL_OK, nl_cb_overwrite_send
+from libnl.handlers import NL_CB_VALID, NL_CB_CUSTOM, NL_OK, nl_cb_overwrite_send, nl_cb_overwrite_recv
 from libnl.linux_private.genetlink import GENL_ID_CTRL, CTRL_CMD_GETFAMILY, CTRL_ATTR_FAMILY_NAME
 from libnl.msg import nlmsg_alloc, NL_AUTO_PORT, NL_AUTO_SEQ, dump_hex, nlmsg_hdr
-from libnl.nl import nl_send_auto, nl_recvmsgs_default, nl_send_iovec
+from libnl.nl import nl_send_auto, nl_recvmsgs_default, nl_send_iovec, nl_recv
 from libnl.socket_ import nl_socket_alloc, nl_socket_modify_cb, nl_socket_free
 
 
@@ -67,11 +67,16 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
         printf("%d == msg.nm_nlh.nlmsg_pid\n", msg->nm_nlh->nlmsg_pid);
         printf("%d == msg.nm_size\n", msg->nm_size);
         printf("%d == msg.nm_refcnt\n", msg->nm_refcnt);
-        dump_hex(stdout, (char *) msg, msg->nm_size, 0);
         struct iovec iov = { .iov_base = (void *) nlmsg_hdr(msg), .iov_len = nlmsg_hdr(msg)->nlmsg_len, };
+        dump_hex(stdout, iov.iov_base, iov.iov_len, 0);
         return nl_send_iovec(sk, msg, &iov, 1);
     }
-    static int callback_recv(struct nl_msg *msg, void *arg) {
+    static int callback_recv(struct nl_sock *sk, struct sockaddr_nl *nla, unsigned char **buf, struct ucred **creds) {
+        int n = nl_recv(sk, nla, buf, creds);
+        dump_hex(stdout, (void *) *buf, n, 0);
+        return n;
+    }
+    static int callback_recv_msg(struct nl_msg *msg, void *arg) {
         printf("%d == msg.nm_protocol\n", msg->nm_protocol);
         printf("%d == msg.nm_flags\n", msg->nm_flags);
         printf("%d == msg.nm_src.nl_family\n", msg->nm_src.nl_family);
@@ -94,13 +99,14 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
     int main() {
         struct nl_sock *sk = nl_socket_alloc();
         nl_cb_overwrite_send(sk->s_cb, callback_send);
+        nl_cb_overwrite_recv(sk->s_cb, callback_recv);
         printf("%d == genl_connect(sk)\n", genl_connect(sk));
         struct genl_family *ret = (struct genl_family *) genl_family_alloc();
         genl_family_set_name(ret, "nl80211");
         struct nl_msg *msg = nlmsg_alloc();
         genlmsg_put(msg, NL_AUTO_PORT, NL_AUTO_SEQ, GENL_ID_CTRL, 0, 0, CTRL_CMD_GETFAMILY, 1);
         nla_put_string(msg, CTRL_ATTR_FAMILY_NAME, "nl80211");
-        nl_socket_modify_cb(sk, NL_CB_VALID, NL_CB_CUSTOM, callback_recv, NULL);
+        nl_socket_modify_cb(sk, NL_CB_VALID, NL_CB_CUSTOM, callback_recv_msg, NULL);
         printf("%d == nl_send_auto(sk, msg)\n", nl_send_auto(sk, msg));
         printf("%d == nl_recvmsgs_default(sk)\n", nl_recvmsgs_default(sk));
         nl_socket_free(sk);
@@ -129,21 +135,28 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
     // 0 == msg.nm_creds.gid
     // 16 == msg.nm_nlh.nlmsg_type
     // 5 == msg.nm_nlh.nlmsg_flags
-    // 26270 == msg.nm_nlh.nlmsg_pid
+    // 1861 == msg.nm_nlh.nlmsg_pid
     // 4096 == msg.nm_size
     // 1 == msg.nm_refcnt
-    //     10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
-    //     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
-    //     00 00 00 00 00 00 00 00 00 00 00 00 50 91 46 00 ............P.F.
-    //     00 10 00 00 01 00 00 00 00 00 00 00 09 10 00 00 ................
-    //     20 00 00 00 10 00 05 00 ff 7a ea 54 9e 66 00 00  ........z.T.f..
+    //     20 00 00 00 10 00 05 00 46 eb ea 54 45 07 00 00  .......F..TE...
     //     03 01 00 00 0c 00 02 00 6e 6c 38 30 32 31 31 00 ........nl80211.
-    //     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
-    //     <trimmed>
-    //     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
     // nl_sendmsg: sent 32 bytes
     // 32 == nl_send_auto(sk, msg)
     // recvmsgs: Attempting to read from 0x2b5080
+    //     2c 07 00 00 10 00 00 00 46 eb ea 54 45 07 00 00 ,.......F..TE...
+    //     01 02 00 00 0c 00 02 00 6e 6c 38 30 32 31 31 00 ........nl80211.
+    //     06 00 01 00 16 00 00 00 08 00 03 00 01 00 00 00 ................
+    //     08 00 04 00 00 00 00 00 08 00 05 00 d5 00 00 00 ................
+    //     6c 06 06 00 14 00 01 00 08 00 01 00 01 00 00 00 l...............
+    //     08 00 02 00 0e 00 00 00 14 00 02 00 08 00 01 00 ................
+    //     <trimmed>
+    //     63 6f 6e 66 69 67 00 00 18 00 02 00 08 00 02 00 config..........
+    //     04 00 00 00 09 00 01 00 73 63 61 6e 00 00 00 00 ........scan....
+    //     1c 00 03 00 08 00 02 00 05 00 00 00 0f 00 01 00 ................
+    //     72 65 67 75 6c 61 74 6f 72 79 00 00 18 00 04 00 regulatory......
+    //     08 00 02 00 06 00 00 00 09 00 01 00 6d 6c 6d 65 ............mlme
+    //     00 00 00 00 18 00 05 00 08 00 02 00 07 00 00 00 ................
+    //     0b 00 01 00 76 65 6e 64 6f 72 00 00             ....vendor..
     // recvmsgs: recvmsgs(0x2b5080): Read 1836 bytes
     // recvmsgs: recvmsgs(0x2b5080): Processing valid message...
     // __nlmsg_alloc: msg 0x2ba160: Allocated new message, maxlen=1836
@@ -160,14 +173,14 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
     // 0 == msg.nm_creds.gid
     // 16 == msg.nm_nlh.nlmsg_type
     // 0 == msg.nm_nlh.nlmsg_flags
-    // 25390 == msg.nm_nlh.nlmsg_pid
+    // 1861 == msg.nm_nlh.nlmsg_pid
     // 1836 == msg.nm_size
     // 1 == msg.nm_refcnt
     //     10 00 00 00 00 00 00 00 10 00 00 00 00 00 00 00 ................
     //     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
-    //     00 00 00 00 00 00 00 00 00 00 00 00 a0 d1 23 01 ..............#.
+    //     00 00 00 00 00 00 00 00 00 00 00 00 a0 e1 36 00 ..............6.
     //     2c 07 00 00 01 00 00 00 00 00 00 00 31 07 00 00 ,...........1...
-    //     2c 07 00 00 10 00 00 00 02 57 ea 54 89 5b 00 00 ,........W.T.[..
+    //     2c 07 00 00 10 00 00 00 46 eb ea 54 45 07 00 00 ,.......F..TE...
     //     01 02 00 00 0c 00 02 00 6e 6c 38 30 32 31 31 00 ........nl80211.
     //     06 00 01 00 16 00 00 00 08 00 03 00 01 00 00 00 ................
     //     08 00 04 00 00 00 00 00 08 00 05 00 d5 00 00 00 ................
@@ -194,14 +207,18 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
         assert msg.nm_creds is None
         assert 16 == msg.nm_nlh.nlmsg_type
         assert 5 == msg.nm_nlh.nlmsg_flags
-        assert 10000 < msg.nm_nlh.nlmsg_pid
-        # assert 4096 == msg.nm_size TODO implement https://github.com/Robpol86/libnl/issues/12
+        assert 100 < msg.nm_nlh.nlmsg_pid
         assert 1 == msg.nm_refcnt
-        # dump_hex(bytes(msg), 0)  TODO test https://github.com/Robpol86/libnl/issues/12
         iov = bytes(nlmsg_hdr(msg))
+        dump_hex(iov, 0)
         return nl_send_iovec(sk, msg, iov)
 
-    def callback_recv(msg, _):
+    def callback_recv(sk, nla, buf, creds):
+        n = nl_recv(sk, nla, buf, creds)
+        dump_hex(buf, 0)
+        return n
+
+    def callback_recv_msg(msg, _):
         assert 16 == msg.nm_protocol
         assert 0 == msg.nm_flags
         assert 16 == msg.nm_src.nl_family
@@ -213,7 +230,7 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
         assert msg.nm_creds is None
         assert 16 == msg.nm_nlh.nlmsg_type
         assert 0 == msg.nm_nlh.nlmsg_flags
-        assert 10000 < msg.nm_nlh.nlmsg_pid
+        assert 100 < msg.nm_nlh.nlmsg_pid
         assert 1836 == msg.nm_size
         assert 1 == msg.nm_refcnt
         dump_hex(bytes(msg), 0)
@@ -222,13 +239,14 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
     log.clear()
     sk_main = nl_socket_alloc()
     nl_cb_overwrite_send(sk_main.s_cb, callback_send)
+    nl_cb_overwrite_recv(sk_main.s_cb, callback_recv)
     genl_connect(sk_main)
     ret = genl_family_alloc()
     genl_family_set_name(ret, b'nl80211')
     msg_main = nlmsg_alloc()
     genlmsg_put(msg_main, NL_AUTO_PORT, NL_AUTO_SEQ, GENL_ID_CTRL, 0, 0, CTRL_CMD_GETFAMILY, 1)
     nla_put_string(msg_main, CTRL_ATTR_FAMILY_NAME, b'nl80211')
-    nl_socket_modify_cb(sk_main, NL_CB_VALID, NL_CB_CUSTOM, callback_recv, None)
+    nl_socket_modify_cb(sk_main, NL_CB_VALID, NL_CB_CUSTOM, callback_recv_msg, None)
     assert 32 == nl_send_auto(sk_main, msg_main)
     assert 0 == nl_recvmsgs_default(sk_main)
     nl_socket_free(sk_main)
@@ -238,18 +256,129 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
     assert match('nlmsg_put: msg 0x[a-f0-9]+: Added netlink header type=16, flags=0, pid=0, seq=0', log, True)
     assert match('genlmsg_put: msg 0x[a-f0-9]+: Added generic netlink header cmd=3 version=1', log, True)
     assert match('nla_put: msg 0x[a-f0-9]+: attr <0x[a-f0-9]+> 2: Wrote 8 bytes', log, True)
-    """ TODO test https://github.com/Robpol86/libnl/issues/12
-    assert match('dump_hex:     10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................', log)
-    assert match('dump_hex:     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................', log)
-    assert match('dump_hex:     00 00 00 00 00 00 00 00 00 00 00 00 50 .. .. 00 ............P...', log, True)
-    assert match('dump_hex:     00 10 00 00 01 00 00 00 00 00 00 00 09 10 00 00 ................', log)
+
     assert match('dump_hex:     20 00 00 00 10 00 05 00 .. .. ea 54 .. .. 00 00  ..........T....', log, True)
     assert match('dump_hex:     03 01 00 00 0c 00 02 00 6e 6c 38 30 32 31 31 00 ........nl80211.', log)
-    for _ in range(250):
-        assert match('dump_hex:     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................', log)
-    """
+
     assert match('nl_sendmsg: sent 32 bytes', log)
     assert match('recvmsgs: Attempting to read from 0x[a-f0-9]+', log, True)
+
+    assert match('dump_hex:     2c 07 00 00 10 00 00 00 .. .. ea 54 .. .. 00 00 ,..........T....', log, True)
+    assert match('dump_hex:     01 02 00 00 0c 00 02 00 6e 6c 38 30 32 31 31 00 ........nl80211.', log)
+    assert match('dump_hex:     06 00 01 00 16 00 00 00 08 00 03 00 01 00 00 00 ................', log)
+    assert match('dump_hex:     08 00 04 00 00 00 00 00 08 00 05 00 d5 00 00 00 ................', log)
+    assert match('dump_hex:     6c 06 06 00 14 00 01 00 08 00 01 00 01 00 00 00 l...............', log)
+    assert match('dump_hex:     08 00 02 00 0e 00 00 00 14 00 02 00 08 00 01 00 ................', log)
+    assert match('dump_hex:     02 00 00 00 08 00 02 00 0b 00 00 00 14 00 03 00 ................', log)
+    assert match('dump_hex:     08 00 01 00 05 00 00 00 08 00 02 00 0e 00 00 00 ................', log)
+    assert match('dump_hex:     14 00 04 00 08 00 01 00 06 00 00 00 08 00 02 00 ................', log)
+    assert match('dump_hex:     0b 00 00 00 14 00 05 00 08 00 01 00 07 00 00 00 ................', log)
+    assert match('dump_hex:     08 00 02 00 0b 00 00 00 14 00 06 00 08 00 01 00 ................', log)
+    assert match('dump_hex:     08 00 00 00 08 00 02 00 0b 00 00 00 14 00 07 00 ................', log)
+    assert match('dump_hex:     08 00 01 00 09 00 00 00 08 00 02 00 0b 00 00 00 ................', log)
+    assert match('dump_hex:     14 00 08 00 08 00 01 00 0a 00 00 00 08 00 02 00 ................', log)
+    assert match('dump_hex:     0b 00 00 00 14 00 09 00 08 00 01 00 0b 00 00 00 ................', log)
+    assert match('dump_hex:     08 00 02 00 0b 00 00 00 14 00 0a 00 08 00 01 00 ................', log)
+    assert match('dump_hex:     0c 00 00 00 08 00 02 00 0b 00 00 00 14 00 0b 00 ................', log)
+    assert match('dump_hex:     08 00 01 00 0e 00 00 00 08 00 02 00 0b 00 00 00 ................', log)
+    assert match('dump_hex:     14 00 0c 00 08 00 01 00 0f 00 00 00 08 00 02 00 ................', log)
+    assert match('dump_hex:     0b 00 00 00 14 00 0d 00 08 00 01 00 10 00 00 00 ................', log)
+    assert match('dump_hex:     08 00 02 00 0b 00 00 00 14 00 0e 00 08 00 01 00 ................', log)
+    assert match('dump_hex:     11 00 00 00 08 00 02 00 0e 00 00 00 14 00 0f 00 ................', log)
+    assert match('dump_hex:     08 00 01 00 12 00 00 00 08 00 02 00 0b 00 00 00 ................', log)
+    assert match('dump_hex:     14 00 10 00 08 00 01 00 13 00 00 00 08 00 02 00 ................', log)
+    assert match('dump_hex:     0b 00 00 00 14 00 11 00 08 00 01 00 14 00 00 00 ................', log)
+    assert match('dump_hex:     08 00 02 00 0b 00 00 00 14 00 12 00 08 00 01 00 ................', log)
+    assert match('dump_hex:     15 00 00 00 08 00 02 00 0f 00 00 00 14 00 13 00 ................', log)
+    assert match('dump_hex:     08 00 01 00 16 00 00 00 08 00 02 00 0b 00 00 00 ................', log)
+    assert match('dump_hex:     14 00 14 00 08 00 01 00 17 00 00 00 08 00 02 00 ................', log)
+    assert match('dump_hex:     0b 00 00 00 14 00 15 00 08 00 01 00 18 00 00 00 ................', log)
+    assert match('dump_hex:     08 00 02 00 0b 00 00 00 14 00 16 00 08 00 01 00 ................', log)
+    assert match('dump_hex:     19 00 00 00 08 00 02 00 0b 00 00 00 14 00 17 00 ................', log)
+    assert match('dump_hex:     08 00 01 00 1f 00 00 00 08 00 02 00 0a 00 00 00 ................', log)
+    assert match('dump_hex:     14 00 18 00 08 00 01 00 1a 00 00 00 08 00 02 00 ................', log)
+    assert match('dump_hex:     0b 00 00 00 14 00 19 00 08 00 01 00 1b 00 00 00 ................', log)
+    assert match('dump_hex:     08 00 02 00 0b 00 00 00 14 00 1a 00 08 00 01 00 ................', log)
+    assert match('dump_hex:     1c 00 00 00 08 00 02 00 0a 00 00 00 14 00 1b 00 ................', log)
+    assert match('dump_hex:     08 00 01 00 1d 00 00 00 08 00 02 00 0b 00 00 00 ................', log)
+    assert match('dump_hex:     14 00 1c 00 08 00 01 00 21 00 00 00 08 00 02 00 ........!.......', log)
+    assert match('dump_hex:     0b 00 00 00 14 00 1d 00 08 00 01 00 20 00 00 00 ............ ...', log)
+    assert match('dump_hex:     08 00 02 00 0c 00 00 00 14 00 1e 00 08 00 01 00 ................', log)
+    assert match('dump_hex:     4b 00 00 00 08 00 02 00 0b 00 00 00 14 00 1f 00 K...............', log)
+    assert match('dump_hex:     08 00 01 00 4c 00 00 00 08 00 02 00 0b 00 00 00 ....L...........', log)
+    assert match('dump_hex:     14 00 20 00 08 00 01 00 25 00 00 00 08 00 02 00 .. .....%.......', log)
+    assert match('dump_hex:     0b 00 00 00 14 00 21 00 08 00 01 00 26 00 00 00 ......!.....&...', log)
+    assert match('dump_hex:     08 00 02 00 0b 00 00 00 14 00 22 00 08 00 01 00 ..........".....', log)
+    assert match("dump_hex:     27 00 00 00 08 00 02 00 0b 00 00 00 14 00 23 00 '.............#.", log)
+    assert match('dump_hex:     08 00 01 00 28 00 00 00 08 00 02 00 0b 00 00 00 ....(...........', log)
+    assert match('dump_hex:     14 00 24 00 08 00 01 00 2b 00 00 00 08 00 02 00 ..$.....+.......', log)
+    assert match('dump_hex:     0b 00 00 00 14 00 25 00 08 00 01 00 2c 00 00 00 ......%.....,...', log)
+    assert match('dump_hex:     08 00 02 00 0b 00 00 00 14 00 26 00 08 00 01 00 ..........&.....', log)
+    assert match("dump_hex:     2e 00 00 00 08 00 02 00 0b 00 00 00 14 00 27 00 ..............'.", log)
+    assert match('dump_hex:     08 00 01 00 30 00 00 00 08 00 02 00 0b 00 00 00 ....0...........', log)
+    assert match('dump_hex:     14 00 28 00 08 00 01 00 31 00 00 00 08 00 02 00 ..(.....1.......', log)
+    assert match('dump_hex:     0b 00 00 00 14 00 29 00 08 00 01 00 32 00 00 00 ......).....2...', log)
+    assert match('dump_hex:     08 00 02 00 0c 00 00 00 14 00 2a 00 08 00 01 00 ..........*.....', log)
+    assert match('dump_hex:     34 00 00 00 08 00 02 00 0b 00 00 00 14 00 2b 00 4.............+.', log)
+    assert match('dump_hex:     08 00 01 00 35 00 00 00 08 00 02 00 0b 00 00 00 ....5...........', log)
+    assert match('dump_hex:     14 00 2c 00 08 00 01 00 36 00 00 00 08 00 02 00 ..,.....6.......', log)
+    assert match('dump_hex:     0b 00 00 00 14 00 2d 00 08 00 01 00 37 00 00 00 ......-.....7...', log)
+    assert match('dump_hex:     08 00 02 00 0b 00 00 00 14 00 2e 00 08 00 01 00 ................', log)
+    assert match('dump_hex:     38 00 00 00 08 00 02 00 0b 00 00 00 14 00 2f 00 8............./.', log)
+    assert match('dump_hex:     08 00 01 00 39 00 00 00 08 00 02 00 0b 00 00 00 ....9...........', log)
+    assert match('dump_hex:     14 00 30 00 08 00 01 00 3a 00 00 00 08 00 02 00 ..0.....:.......', log)
+    assert match('dump_hex:     0b 00 00 00 14 00 31 00 08 00 01 00 3b 00 00 00 ......1.....;...', log)
+    assert match('dump_hex:     08 00 02 00 0b 00 00 00 14 00 32 00 08 00 01 00 ..........2.....', log)
+    assert match('dump_hex:     43 00 00 00 08 00 02 00 0b 00 00 00 14 00 33 00 C.............3.', log)
+    assert match('dump_hex:     08 00 01 00 3d 00 00 00 08 00 02 00 0b 00 00 00 ....=...........', log)
+    assert match('dump_hex:     14 00 34 00 08 00 01 00 3e 00 00 00 08 00 02 00 ..4.....>.......', log)
+    assert match('dump_hex:     0a 00 00 00 14 00 35 00 08 00 01 00 3f 00 00 00 ......5.....?...', log)
+    assert match('dump_hex:     08 00 02 00 0b 00 00 00 14 00 36 00 08 00 01 00 ..........6.....', log)
+    assert match('dump_hex:     41 00 00 00 08 00 02 00 0b 00 00 00 14 00 37 00 A.............7.', log)
+    assert match('dump_hex:     08 00 01 00 42 00 00 00 08 00 02 00 0b 00 00 00 ....B...........', log)
+    assert match('dump_hex:     14 00 38 00 08 00 01 00 44 00 00 00 08 00 02 00 ..8.....D.......', log)
+    assert match('dump_hex:     0b 00 00 00 14 00 39 00 08 00 01 00 45 00 00 00 ......9.....E...', log)
+    assert match('dump_hex:     08 00 02 00 0b 00 00 00 14 00 3a 00 08 00 01 00 ..........:.....', log)
+    assert match('dump_hex:     49 00 00 00 08 00 02 00 0a 00 00 00 14 00 3b 00 I.............;.', log)
+    assert match('dump_hex:     08 00 01 00 4a 00 00 00 08 00 02 00 0b 00 00 00 ....J...........', log)
+    assert match('dump_hex:     14 00 3c 00 08 00 01 00 4f 00 00 00 08 00 02 00 ..<.....O.......', log)
+    assert match('dump_hex:     0b 00 00 00 14 00 3d 00 08 00 01 00 52 00 00 00 ......=.....R...', log)
+    assert match('dump_hex:     08 00 02 00 0b 00 00 00 14 00 3e 00 08 00 01 00 ..........>.....', log)
+    assert match('dump_hex:     51 00 00 00 08 00 02 00 0b 00 00 00 14 00 3f 00 Q.............?.', log)
+    assert match('dump_hex:     08 00 01 00 53 00 00 00 08 00 02 00 0b 00 00 00 ....S...........', log)
+    assert match('dump_hex:     14 00 40 00 08 00 01 00 54 00 00 00 08 00 02 00 ..@.....T.......', log)
+    assert match('dump_hex:     0b 00 00 00 14 00 41 00 08 00 01 00 55 00 00 00 ......A.....U...', log)
+    assert match('dump_hex:     08 00 02 00 0b 00 00 00 14 00 42 00 08 00 01 00 ..........B.....', log)
+    assert match('dump_hex:     57 00 00 00 08 00 02 00 0b 00 00 00 14 00 43 00 W.............C.', log)
+    assert match('dump_hex:     08 00 01 00 59 00 00 00 08 00 02 00 0b 00 00 00 ....Y...........', log)
+    assert match('dump_hex:     14 00 44 00 08 00 01 00 5a 00 00 00 08 00 02 00 ..D.....Z.......', log)
+    assert match('dump_hex:     0b 00 00 00 14 00 45 00 08 00 01 00 5c 00 00 00 ......E.....\...', log)
+    assert match('dump_hex:     08 00 02 00 0b 00 00 00 14 00 46 00 08 00 01 00 ..........F.....', log)
+    assert match('dump_hex:     5d 00 00 00 08 00 02 00 0b 00 00 00 14 00 47 00 ].............G.', log)
+    assert match('dump_hex:     08 00 01 00 5e 00 00 00 08 00 02 00 0b 00 00 00 ....^...........', log)
+    assert match('dump_hex:     14 00 48 00 08 00 01 00 5f 00 00 00 08 00 02 00 ..H....._.......', log)
+    assert match('dump_hex:     0a 00 00 00 14 00 49 00 08 00 01 00 60 00 00 00 ......I.....`...', log)
+    assert match('dump_hex:     08 00 02 00 0b 00 00 00 14 00 4a 00 08 00 01 00 ..........J.....', log)
+    assert match('dump_hex:     62 00 00 00 08 00 02 00 0b 00 00 00 14 00 4b 00 b.............K.', log)
+    assert match('dump_hex:     08 00 01 00 63 00 00 00 08 00 02 00 0b 00 00 00 ....c...........', log)
+    assert match('dump_hex:     14 00 4c 00 08 00 01 00 64 00 00 00 08 00 02 00 ..L.....d.......', log)
+    assert match('dump_hex:     0a 00 00 00 14 00 4d 00 08 00 01 00 65 00 00 00 ......M.....e...', log)
+    assert match('dump_hex:     08 00 02 00 0b 00 00 00 14 00 4e 00 08 00 01 00 ..........N.....', log)
+    assert match('dump_hex:     66 00 00 00 08 00 02 00 0b 00 00 00 14 00 4f 00 f.............O.', log)
+    assert match('dump_hex:     08 00 01 00 67 00 00 00 08 00 02 00 0b 00 00 00 ....g...........', log)
+    assert match('dump_hex:     14 00 50 00 08 00 01 00 68 00 00 00 08 00 02 00 ..P.....h.......', log)
+    assert match('dump_hex:     0b 00 00 00 14 00 51 00 08 00 01 00 69 00 00 00 ......Q.....i...', log)
+    assert match('dump_hex:     08 00 02 00 0b 00 00 00 14 00 52 00 08 00 01 00 ..........R.....', log)
+    assert match('dump_hex:     6a 00 00 00 08 00 02 00 0b 00 00 00 80 00 07 00 j...............', log)
+    assert match('dump_hex:     18 00 01 00 08 00 02 00 03 00 00 00 0b 00 01 00 ................', log)
+    assert match('dump_hex:     63 6f 6e 66 69 67 00 00 18 00 02 00 08 00 02 00 config..........', log)
+    assert match('dump_hex:     04 00 00 00 09 00 01 00 73 63 61 6e 00 00 00 00 ........scan....', log)
+    assert match('dump_hex:     1c 00 03 00 08 00 02 00 05 00 00 00 0f 00 01 00 ................', log)
+    assert match('dump_hex:     72 65 67 75 6c 61 74 6f 72 79 00 00 18 00 04 00 regulatory......', log)
+    assert match('dump_hex:     08 00 02 00 06 00 00 00 09 00 01 00 6d 6c 6d 65 ............mlme', log)
+    assert match('dump_hex:     00 00 00 00 18 00 05 00 08 00 02 00 07 00 00 00 ................', log)
+    assert match('dump_hex:     0b 00 01 00 76 65 6e 64 6f 72 00 00             ....vendor..', log)
+
     assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Read 1836 bytes', log, True)
     assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Processing valid message...', log, True)
     assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message', log, True)

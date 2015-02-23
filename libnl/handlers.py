@@ -227,6 +227,17 @@ def nl_cb_err(cb, kind, func, arg):
     return 0
 
 
+def nl_cb_overwrite_recv(cb, func):
+    """Overwrite internal calls to nl_recv().
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L383
+
+    Positional arguments:
+    cb -- callback class instance.
+    func -- replacement callback for nl_recv() (a function with args (sk, nla, buf, creds)).
+    """
+    cb.cb_recv_ow = func
+
+
 def nl_cb_overwrite_send(cb, func):
     """Overwrite internal calls to nl_send().
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L293

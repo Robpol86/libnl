@@ -13,7 +13,7 @@ from setuptools.command.test import test
 
 DESCRIPTION = 'Pure python port of the netlink protocol library suite.'
 HERE = os.path.abspath(os.path.dirname(__file__))
-KEYWORDS = 'netlink libnl libnl-genl'
+KEYWORDS = 'netlink libnl libnl-genl nl80211'
 NAME = 'libnl'
 NAME_FILE = NAME
 PACKAGE = True
@@ -50,11 +50,14 @@ def get_metadata(main_file):
 
 class PyTest(test):
     description = 'Run all tests.'
+    user_options = []
+    CMD = 'test'
     TEST_ARGS = ['--cov-report', 'term-missing', '--cov', NAME_FILE, 'tests']
 
     def finalize_options(self):
+        overflow_args = sys.argv[sys.argv.index(self.CMD) + 1:]
         test.finalize_options(self)
-        setattr(self, 'test_args', self.TEST_ARGS)
+        setattr(self, 'test_args', self.TEST_ARGS + overflow_args)
         setattr(self, 'test_suite', True)
 
     def run_tests(self):
@@ -66,36 +69,19 @@ class PyTest(test):
 
 class PyTestPdb(PyTest):
     description = 'Run all tests, drops to ipdb upon unhandled exception.'
+    CMD = 'testpdb'
     TEST_ARGS = ['--ipdb', 'tests']
 
 
 class PyTestCovWeb(PyTest):
     description = 'Generates HTML report on test coverage.'
+    CMD = 'testcovweb'
     TEST_ARGS = ['--cov-report', 'html', '--cov', NAME_FILE, 'tests']
 
     def run_tests(self):
         if find_executable('open'):
             atexit.register(lambda: subprocess.call(['open', os.path.join(HERE, 'htmlcov', 'index.html')]))
         PyTest.run_tests(self)
-
-
-class CmdStyle(setuptools.Command):
-    user_options = []
-    CMD_ARGS = ['flake8', '--max-line-length', '120', '--statistics', NAME_FILE + ('' if PACKAGE else '.py')]
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        subprocess.call(self.CMD_ARGS)
-
-
-class CmdLint(CmdStyle):
-    description = 'Run pylint on entire project.'
-    CMD_ARGS = ['pylint', '--max-line-length', '120', NAME_FILE + ('' if PACKAGE else '.py')]
 
 
 ALL_DATA = dict(
@@ -120,7 +106,7 @@ ALL_DATA = dict(
 
     install_requires=REQUIRES_INSTALL,
     tests_require=REQUIRES_TEST,
-    cmdclass=dict(test=PyTest, testpdb=PyTestPdb, testcovweb=PyTestCovWeb, style=CmdStyle, lint=CmdLint),
+    cmdclass={PyTest.CMD: PyTest, PyTestPdb.CMD: PyTestPdb, PyTestCovWeb.CMD: PyTestCovWeb},
 
     # Pass the rest from get_metadata().
     **get_metadata(os.path.join(NAME_FILE + ('/__init__.py' if PACKAGE else '.py')))

@@ -9,7 +9,7 @@ of the License.
 
 import ctypes
 
-from libnl.misc import split_bytearray
+from libnl.misc import split_bytearray, StructNoPointers, SIZEOF_UINT, SIZEOF_USHORT, SIZEOF_U32
 
 NETLINK_ROUTE = 0  # Routing/device hook.
 NETLINK_GENERIC = 16
@@ -33,42 +33,74 @@ NLM_F_CREATE = 0x400  # Create, if it does not exist.
 NLM_F_APPEND = 0x800  # Add to end of list.
 
 
-class sockaddr_nl(object):
+class sockaddr_nl(StructNoPointers):
     """Netlink sockaddr class (C struct equivalent).
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/netlink.h#L31
 
     Instance variables:
-    nl_family -- AF_NETLINK.
-    nl_pid -- port ID integer.
-    nl_groups -- multicast groups mask integer.
+    nl_family -- AF_NETLINK (c_uint).
+    nl_pad -- zero (c_ushort).
+    nl_pid -- port ID (c_uint32).
+    nl_groups -- multicast groups mask (c_uint32).
     """
+    _REPR = '<{0}.{1} nl_family={2[nl_family]} nl_pad={2[nl_pad]} nl_pid={2[nl_pid]} nl_groups={2[nl_groups]}>'
+    SIGNATURE = (SIZEOF_UINT, SIZEOF_USHORT, SIZEOF_U32, SIZEOF_U32)
+    SIZEOF = sum(SIGNATURE)
 
-    def __init__(self):
-        self.nl_family = 0
-        self.nl_pid = 0
-        self.nl_groups = 0
-
-    def __bytes__(self):
-        """Returns a bytes object."""
-        segments = (
-            ctypes.c_uint(self.nl_family),
-            ctypes.c_ushort(),
-            ctypes.c_uint32(self.nl_pid),
-            ctypes.c_uint32(self.nl_groups),
-        )
-        return b''.join(segments)
+    def __init__(self, nl_family=0, nl_pad=0, nl_pid=0, nl_groups=0):
+        super().__init__(self.SIZEOF)
+        self.nl_family = nl_family
+        self.nl_pad = nl_pad
+        self.nl_pid = nl_pid
+        self.nl_groups = nl_groups
 
     def __iter__(self):
         yield self.nl_pid
         yield self.nl_groups
 
-    def __repr__(self):
-        answer = '<{0}.{1} nl_family={2} nl_pid={3} nl_groups={4}>'.format(
-            self.__class__.__module__,
-            self.__class__.__name__,
-            self.nl_family, self.nl_pid, self.nl_groups,
-        )
-        return answer
+    @property
+    def nl_family(self):
+        """AF_NETLINK."""
+        head, tail = self._get_slicers(0)
+        return ctypes.c_uint.from_buffer(self.bytearray[head:tail]).value
+
+    @nl_family.setter
+    def nl_family(self, value):
+        head, tail = self._get_slicers(0)
+        self.bytearray[head:tail] = bytearray(ctypes.c_uint(value or 0))
+
+    @property
+    def nl_pad(self):
+        """Zero."""
+        head, tail = self._get_slicers(1)
+        return ctypes.c_ushort.from_buffer(self.bytearray[head:tail]).value
+
+    @nl_pad.setter
+    def nl_pad(self, value):
+        head, tail = self._get_slicers(1)
+        self.bytearray[head:tail] = bytearray(ctypes.c_ushort(value or 0))
+
+    @property
+    def nl_pid(self):
+        """Port ID."""
+        head, tail = self._get_slicers(2)
+        return ctypes.c_uint32.from_buffer(self.bytearray[head:tail]).value
+
+    @nl_pid.setter
+    def nl_pid(self, value):
+        head, tail = self._get_slicers(2)
+        self.bytearray[head:tail] = bytearray(ctypes.c_uint32(value or 0))
+
+    @property
+    def nl_groups(self):
+        """Port ID."""
+        head, tail = self._get_slicers(3)
+        return ctypes.c_uint32.from_buffer(self.bytearray[head:tail]).value
+
+    @nl_groups.setter
+    def nl_groups(self, value):
+        head, tail = self._get_slicers(3)
+        self.bytearray[head:tail] = bytearray(ctypes.c_uint32(value or 0))
 
 
 class nlmsghdr(object):

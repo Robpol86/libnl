@@ -314,8 +314,6 @@ def nl_recv(sk, nla, buf, creds=None):
     """
     flags = 0
     page_size = resource.getpagesize() * 4
-    if not nla:
-        return -NLE_INVAL
     if sk.s_flags & NL_MSG_PEEK:
         flags |= socket.MSG_PEEK | socket.MSG_TRUNC
     iov_len = sk.s_bufsize or page_size

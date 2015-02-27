@@ -13,6 +13,7 @@ import logging
 
 from libnl.errno_ import NLE_RANGE, NLE_INVAL
 from libnl.linux_private.netlink import nlattr, NLA_ALIGN, NLA_TYPE_MASK, NLA_HDRLEN, NLA_F_NESTED
+from libnl.misc import SIZEOF_U8, SIZEOF_U16, SIZEOF_U32, SIZEOF_U64
 from libnl.netlink_private.netlink import BUG
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,25 +58,25 @@ def nla_type(nla):
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L109
 
     Positional arguments:
-    nla -- attribute.
+    nla -- attribute (nlattr class instance).
 
     Returns:
     Type of attribute.
     """
-    return nla.nla_type & NLA_TYPE_MASK
+    return int(nla.nla_type & NLA_TYPE_MASK)
 
 
 def nla_data(nla):
-    """Return payload section.
+    """Return bytearray of the payload data.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L120
 
     Positional arguments:
-    nla -- attribute.
+    nla -- attribute (nlattr class instance).
 
     Returns:
-    Pointer to start of payload section.
+    Bytearray payload data.
     """
-    return nla.payload
+    return bytearray(nla.payload)
 
 
 def nla_len(nla):
@@ -83,7 +84,7 @@ def nla_len(nla):
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L131
 
     Positional arguments:
-    nla -- attribute.
+    nla -- attribute (nlattr class instance).
 
     Returns:
     Length of payload in bytes.
@@ -100,13 +101,13 @@ def nla_ok(nla, remaining):
     nla_next().
 
     Positional arguments:
-    nla -- attribute of any kind.
+    nla -- attribute of any kind (nlattr class instance).
     remaining -- number of bytes remaining in attribute stream.
 
     Returns:
     True if the attribute can be accessed safely, False otherwise.
     """
-    return remaining >= ctypes.sizeof(*nla) and ctypes.sizeof(*nla) <= nla.nla_len <= remaining
+    return remaining >= len(nla.bytearray) and len(nla.bytearray) <= nla.nla_len <= remaining
 
 
 def nla_next(nla, remaining):
@@ -120,20 +121,24 @@ def nla_next(nla, remaining):
 
     nla_next() can be called as long as remaining is >0.
 
+    Positional arguments:
+    nla -- attribute of any kind (nlattr class instance).
+    remaining -- number of bytes remaining in attribute stream (c_int).
+
     Returns:
-    Pointer to next attribute.
+    Next nlattr class instance.
     """
     totlen = int(NLA_ALIGN(nla.nla_len))
     remaining.value -= totlen
-    return ctypes.cast(ctypes.byref(nla, totlen), ctypes.POINTER(nlattr))
+    return nlattr.from_buffer(nla.bytearray[totlen:])
 
 
 nla_attr_minlen = {i: 0 for i in range(NLA_TYPE_MAX + 1)}
 nla_attr_minlen.update({  # https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L179
-    NLA_U8: ctypes.sizeof(ctypes.c_uint8),
-    NLA_U16: ctypes.sizeof(ctypes.c_uint16),
-    NLA_U32: ctypes.sizeof(ctypes.c_uint32),
-    NLA_U64: ctypes.sizeof(ctypes.c_uint64),
+    NLA_U8: SIZEOF_U8,
+    NLA_U16: SIZEOF_U16,
+    NLA_U32: SIZEOF_U32,
+    NLA_U64: SIZEOF_U64,
     NLA_STRING: 1,
     NLA_FLAG: 0,
 })
@@ -145,7 +150,7 @@ def validate_nla(nla, maxtype, policy):
     Positional arguments:
     nla -- nlattr class instance.
     maxtype -- integer.
-    policy -- nla_policy class instance.
+    policy -- dictionary of nla_policy class instances as values, with nla types as keys.
 
     Returns:
     0 on success or a negative error code.
@@ -178,25 +183,27 @@ def validate_nla(nla, maxtype, policy):
     return 0
 
 
-def nla_parse(tb, maxtype, head, policy):
+def nla_parse(tb, maxtype, head, len_, policy):
     """Create attribute index based on a stream of attributes.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L242
 
-    Iterates over the stream of attributes and stores an instance to each attribute in the `tb` dictionary using the
-    attribute type as the key. Attribute with a type greater than the maximum type specified will be silently ignored in
-    order to maintain backwards compatibility. If `policy` is not None, the attribute will be validated using the
+    Iterates over the stream of attributes and stores a pointer to each attribute in the index array using the attribute
+    type as index to the array. Attribute with a type greater than the maximum type specified will be silently ignored
+    in order to maintain backwards compatibility. If `policy` is not None, the attribute will be validated using the
     specified policy.
 
     Positional arguments:
     tb -- dictionary to be filled (maxtype+1 elements).
-    maxtype -- maximum attribute type expected and accepted.
-    head -- list of attributes.
-    policy -- attribute validation policy.
+    maxtype -- maximum attribute type expected and accepted (integer).
+    head -- first nlattr with more in its bytearray payload (nlattr class instance).
+    len_ -- length of attribute stream (integer).
+    policy -- dictionary of nla_policy class instances as values, with nla types as keys.
 
     Returns:
     0 on success or a negative error code.
     """
-    for nla in nla_for_each_attr(head):
+    rem = ctypes.c_int()
+    for nla in nla_for_each_attr(head, len_, rem):
         type_ = nla_type(nla)
         if type_ > maxtype:
             continue
@@ -211,50 +218,66 @@ def nla_parse(tb, maxtype, head, policy):
                           type_)
         tb[type_] = nla
 
+    if rem.value > 0:
+        _LOGGER.debug('netlink: %d bytes leftover after parsing attributes.', rem.value)
+
     return 0
 
 
-def nla_for_each_attr(head):
-    """Iterate over a list of attributes.
+def nla_for_each_attr(head, len_, rem):
+    """Iterate over a stream of attributes.
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/attr.h#L262
 
     Positional arguments:
-    head -- list of attributes.
+    head -- first nlattr with more in its bytearray payload (nlattr class instance).
+    len_ -- length of attribute stream (integer).
+    rem -- initialized to len, holds bytes currently remaining in stream (c_int).
 
     Returns:
     Generator yielding nlattr instances.
     """
-    return (a for a in head if isinstance(a, nlattr))
+    pos = head
+    rem.value = len_
+    while nla_ok(pos, rem):
+        yield pos
+        pos = nla_next(pos, rem)
 
 
-def nla_for_each_nested(nla):
+def nla_for_each_nested(nla, rem):
     """Iterate over a stream of nested attributes.
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/attr.h#L274
 
     Positional arguments:
     nla -- attribute containing the nested attributes (nlattr class instance).
+    rem -- initialized to len, holds bytes currently remaining in stream (c_int).
 
     Returns:
     Generator yielding nlattr instances.
     """
-    return (a for a in nla_data(nla) if isinstance(a, nlattr))
+    pos = nla_data(nla)
+    rem.value = nla_len(nla)
+    while nla_ok(pos, rem):
+        yield pos
+        pos = nla_next(pos, rem)
 
 
-def nla_find(attrs, attrtype):
-    """Find a single attribute in a list of attributes.
+def nla_find(head, len_, attrtype):
+    """Find a single attribute in a stream of attributes.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L323
 
     Iterates over the stream of attributes and compares each type with the type specified. Returns the first attribute
     which matches the type.
 
     Positional arguments:
-    attrs -- list of attributes or payload containing attributes.
-    attrtype -- attribute type to look for.
+    head -- first nlattr with more in its bytearray payload (nlattr class instance).
+    len_ -- length of attributes stream (integer).
+    attrtype -- attribute type to look for (integer).
 
     Returns:
-    Attribute found or None.
+    Attribute found (nlattr class instance) or None.
     """
-    for nla in nla_for_each_attr(attrs):
+    rem = ctypes.c_int()
+    for nla in nla_for_each_attr(head, len_, rem):
         if nla_type(nla) == attrtype:
             return nla
     return None

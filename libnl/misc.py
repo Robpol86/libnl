@@ -21,7 +21,11 @@ class _DynamicDict(dict):
         self._instance = instance
 
     def __missing__(self, key):
-        return getattr(self._instance, key)
+        value = getattr(self._instance, key)
+        if key == 'payload':
+            value = len(value)
+            return '{0}byte{1}'.format(value, '' if value == 1 else 's')
+        return value
 
 
 class _StructBase(object):
@@ -72,6 +76,13 @@ class StructNoPointers(_StructBase):
         pad_head = sum(self.SIGNATURE[:index])
         pad_tail = pad_head + self.SIGNATURE[index]
         return pad_head, pad_tail
+
+    @classmethod
+    def from_buffer(cls, buf):
+        """Creates and returns a class instance based on data from a bytearray()."""
+        nlh = cls()
+        nlh.bytearray = buf
+        return nlh
 
 
 class StructWithPointers(_StructBase):
@@ -207,27 +218,3 @@ def __init(func):
     """
     func()
     return func
-
-
-def split_bytearray(buf, *expected_c_types):
-    """Splits and parses bytearray() buffer into expected c_types.
-
-    Positional arguments:
-    buf -- bytearray() object to parse.
-
-    Keyword arguments:
-    expected_c_types -- one or more c_types object (not instance).
-
-    Returns:
-    Tuple of c_types.<type>.from_buffer() values. Last item is remainder of buf if too long or empty bytearray().
-    """
-    buf_remaining = buf.copy()
-    parsed = []
-    for type_ in expected_c_types:
-        size = ctypes.sizeof(type_)
-        chunk = buf_remaining[:size]
-        restored = type_.from_buffer(chunk)
-        parsed.append(restored)
-        buf_remaining = buf_remaining[size:]
-    parsed.append(buf_remaining)
-    return tuple(parsed)

@@ -9,7 +9,7 @@ of the License.
 
 import ctypes
 
-from libnl.misc import split_bytearray, StructNoPointers, SIZEOF_UINT, SIZEOF_USHORT, SIZEOF_U32
+from libnl.misc import StructNoPointers, SIZEOF_UINT, SIZEOF_USHORT, SIZEOF_U32, SIZEOF_U16, SIZEOF_INT
 
 NETLINK_ROUTE = 0  # Routing/device hook.
 NETLINK_GENERIC = 16
@@ -103,137 +103,98 @@ class sockaddr_nl(StructNoPointers):
         self.bytearray[head:tail] = bytearray(ctypes.c_uint32(value or 0))
 
 
-class nlmsghdr(object):
+class nlmsghdr(StructNoPointers):
     """Netlink message header (holds actual payload of netlink message).
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/netlink.h#L38
 
+     <------- NLMSG_ALIGN(hlen) ------> <---- NLMSG_ALIGN(len) --->
+    +----------------------------+- - -+- - - - - - - - - - -+- - -+
+    |           Header           | Pad |       Payload       | Pad |
+    |      struct nlmsghdr       |     |                     |     |
+    +----------------------------+- - -+- - - - - - - - - - -+- - -+
+     <-------------- nlmsghdr->nlmsg_len ------------------->
+
     Instance variables:
-    nlmsg_type -- message content.
-    nlmsg_flags -- additional flags.
-    nlmsg_seq -- sequence number.
-    nlmsg_pid -- sending process port ID.
-    payload -- list of data of any type.
+    nlmsg_len -- length of message including header (c_uint32).
+    nlmsg_type -- message content (c_uint16).
+    nlmsg_flags -- additional flags (c_uint16).
+    nlmsg_seq -- sequence number (c_uint32).
+    nlmsg_pid -- sending process port ID (c_uint32).
+    payload -- payload and padding at the end (bytearay).
     """
-    SIZEOF = sum([ctypes.sizeof(ctypes.c_uint16) * 2, ctypes.sizeof(ctypes.c_uint32) * 3])
+    _REPR = ('<{0}.{1} nlmsg_len={2[nlmsg_len]} nlmsg_type={2[nlmsg_type]} nlmsg_flags={2[nlmsg_flags]} '
+             'nlmsg_seq={2[nlmsg_seq]} nlmsg_pid={2[nlmsg_pid]} payload={2[payload]}>')
+    SIGNATURE = (SIZEOF_U32, SIZEOF_U16, SIZEOF_U16, SIZEOF_U32, SIZEOF_U32)
+    SIZEOF = sum(SIGNATURE)
 
-    def __init__(self, nlmsg_type=None, nlmsg_flags=None, nlmsg_seq=None, nlmsg_pid=None):
-        self._nlmsg_type = None
-        self._nlmsg_flags = None
-        self._nlmsg_seq = None
-        self._nlmsg_pid = None
-
-        self.payload = list()
+    def __init__(self, nlmsg_len=0, nlmsg_type=0, nlmsg_flags=0, nlmsg_seq=0, nlmsg_pid=0):
+        super().__init__(self.SIZEOF)
+        self.nlmsg_len = nlmsg_len
         self.nlmsg_type = nlmsg_type
         self.nlmsg_flags = nlmsg_flags
         self.nlmsg_seq = nlmsg_seq
         self.nlmsg_pid = nlmsg_pid
 
-    def __bytes__(self):
-        """Returns a bytes object formatted for the kernel.
-
-         <------- NLMSG_ALIGN(hlen) ------> <---- NLMSG_ALIGN(len) --->
-        +----------------------------+- - -+- - - - - - - - - - -+- - -+
-        |           Header           | Pad |       Payload       | Pad |
-        |      struct nlmsghdr       |     |                     |     |
-        +----------------------------+- - -+- - - - - - - - - - -+- - -+
-         <-------------- nlmsghdr->nlmsg_len ------------------->
-        """
-        nlmsg_len = self.nlmsg_len
-        payload = b''
-        for pl in self.payload:
-            pl_bytes = bytes(pl)
-            payload += pl_bytes.ljust(self._tlen(pl_bytes), b'\0')
-        padding = (b'\0' * (NLMSG_ALIGN(self.SIZEOF) - self.SIZEOF), b'\0' * (NLMSG_ALIGN(nlmsg_len) - nlmsg_len))
-        segments = (
-            bytes(ctypes.c_uint32(nlmsg_len)),
-            bytes(self._nlmsg_type),
-            bytes(self._nlmsg_flags),
-            bytes(self._nlmsg_seq),
-            bytes(self._nlmsg_pid),
-            padding[0],
-            payload,
-            padding[1]
-        )
-        return b''.join(segments)
-
-    def __repr__(self):
-        answer_base = '<{0}.{1} nlmsg_len={2} nlmsg_type={3} nlmsg_flags={4} nlmsg_seq={5} nlmsg_pid={6} payload={7}>'
-        answer = answer_base.format(
-            self.__class__.__module__,
-            self.__class__.__name__,
-            self.nlmsg_len, self.nlmsg_type, self.nlmsg_flags, self.nlmsg_seq, self.nlmsg_pid,
-            'yes' if self.payload else 'no',
-        )
-        return answer
-
-    @staticmethod
-    def _tlen(pl_bytes):
-        """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L413"""
-        return (len(pl_bytes) + (NLMSG_ALIGNTO - 1)) & ~(NLMSG_ALIGNTO - 1)
-
-    @classmethod
-    def from_buffer(cls, buf):
-        """Creates and returns a class instance based on data from a bytearray()."""
-        types = (ctypes.c_uint32, ctypes.c_uint16, ctypes.c_uint16, ctypes.c_uint32, ctypes.c_uint32)
-        nlmsg_len, nlmsg_type, nlmsg_flags, nlmsg_seq, nlmsg_pid, buf_remaining = split_bytearray(buf, *types)
-        nlh = cls(nlmsg_type=nlmsg_type, nlmsg_flags=nlmsg_flags, nlmsg_seq=nlmsg_seq, nlmsg_pid=nlmsg_pid)
-        buf_remaining = buf_remaining[:NLMSG_ALIGN(nlmsg_len.value) - cls.SIZEOF]
-        if buf_remaining:
-            nlh.payload.append(buf_remaining)
-        return nlh
-
     @property
     def nlmsg_len(self):
-        """c_uint32 length of message including header, returns integer."""
-        return NLMSG_ALIGN(self.SIZEOF) + sum(self._tlen(bytes(pl)) for pl in self.payload)
+        """Length of message including header."""
+        head, tail = self._get_slicers(0)
+        return ctypes.c_uint32.from_buffer(self.bytearray[head:tail]).value
+
+    @nlmsg_len.setter
+    def nlmsg_len(self, value):
+        head, tail = self._get_slicers(0)
+        self.bytearray[head:tail] = bytearray(ctypes.c_uint32(value or 0))
 
     @property
     def nlmsg_type(self):
-        """message content."""
-        return self._nlmsg_type.value
+        """Message content."""
+        head, tail = self._get_slicers(1)
+        return ctypes.c_uint16.from_buffer(self.bytearray[head:tail]).value
 
     @nlmsg_type.setter
     def nlmsg_type(self, value):
-        if value is None:
-            self._nlmsg_type = ctypes.c_uint16()
-            return
-        self._nlmsg_type = value if isinstance(value, ctypes.c_uint16) else ctypes.c_uint16(value)
+        head, tail = self._get_slicers(1)
+        self.bytearray[head:tail] = bytearray(ctypes.c_uint16(value or 0))
 
     @property
     def nlmsg_flags(self):
-        """additional flags."""
-        return self._nlmsg_flags.value
+        """Additional flags."""
+        head, tail = self._get_slicers(2)
+        return ctypes.c_uint16.from_buffer(self.bytearray[head:tail]).value
 
     @nlmsg_flags.setter
     def nlmsg_flags(self, value):
-        if value is None:
-            self._nlmsg_flags = ctypes.c_uint16()
-            return
-        self._nlmsg_flags = value if isinstance(value, ctypes.c_uint16) else ctypes.c_uint16(value)
+        head, tail = self._get_slicers(2)
+        self.bytearray[head:tail] = bytearray(ctypes.c_uint16(value or 0))
 
     @property
     def nlmsg_seq(self):
-        """sequence number."""
-        return self._nlmsg_seq.value
+        """Sequence number."""
+        head, tail = self._get_slicers(3)
+        return ctypes.c_uint32.from_buffer(self.bytearray[head:tail]).value
 
     @nlmsg_seq.setter
     def nlmsg_seq(self, value):
-        if value is None:
-            self._nlmsg_seq = ctypes.c_uint32()
-            return
-        self._nlmsg_seq = value if isinstance(value, ctypes.c_uint32) else ctypes.c_uint32(value)
+        head, tail = self._get_slicers(3)
+        self.bytearray[head:tail] = bytearray(ctypes.c_uint32(value or 0))
 
     @property
     def nlmsg_pid(self):
-        """sending process port ID."""
-        return self._nlmsg_pid.value
+        """Sending process port ID."""
+        head, tail = self._get_slicers(4)
+        return ctypes.c_uint32.from_buffer(self.bytearray[head:tail]).value
 
     @nlmsg_pid.setter
     def nlmsg_pid(self, value):
-        if value is None:
-            self._nlmsg_pid = ctypes.c_uint32()
-            return
-        self._nlmsg_pid = value if isinstance(value, ctypes.c_uint32) else ctypes.c_uint32(value)
+        head, tail = self._get_slicers(4)
+        self.bytearray[head:tail] = bytearray(ctypes.c_uint32(value or 0))
+
+    @property
+    def payload(self):
+        """Payload and padding at the end."""
+        head, tail = self._get_slicers(4)
+        return self.bytearray[tail:]
 
 
 NLMSG_ALIGNTO = ctypes.c_uint(4).value
@@ -248,45 +209,41 @@ NLMSG_OVERRUN = 0x4  # Data lost.
 NLMSG_MIN_TYPE = 0x10  # < 0x10: reserved control messages.
 
 
-class nlmsgerr(object):
+class nlmsgerr(StructNoPointers):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/netlink.h#L95
 
     Instance variables:
     error -- c_int.
     msg -- nlmsghdr class instance.
     """
-    SIZEOF = ctypes.sizeof(ctypes.c_int) + nlmsghdr.SIZEOF
+    _REPR = '<{0}.{1} error={2[error]} msg={2[msg]}>'
+    SIGNATURE = (SIZEOF_INT, nlmsghdr.SIZEOF)
+    SIZEOF = sum(SIGNATURE)
 
-    def __init__(self, error=None, msg=None):
-        self._error = None
+    def __init__(self, error=0, msg=None):
+        super().__init__(self.SIZEOF)
         self.error = error
         self.msg = msg
 
-    def __repr__(self):
-        answer = "<{0}.{1} error={2} msg='{3}'>".format(
-            self.__class__.__module__,
-            self.__class__.__name__,
-            self.error, self.msg,
-        )
-        return answer
-
-    @classmethod
-    def from_buffer(cls, buf):
-        """Creates and returns a class instance based on data from a bytearray()."""
-        error, buf_remaining = split_bytearray(buf, ctypes.c_int)
-        nlh = nlmsghdr.from_buffer(buf_remaining)
-        return cls(error=error, msg=nlh)
-
     @property
     def error(self):
-        return self._error.value
+        head, tail = self._get_slicers(0)
+        return ctypes.c_int.from_buffer(self.bytearray[head:tail]).value
 
     @error.setter
     def error(self, value):
-        if value is None:
-            self._error = ctypes.c_int()
-            return
-        self._error = value if isinstance(value, ctypes.c_int) else ctypes.c_int(value)
+        head, tail = self._get_slicers(0)
+        self.bytearray[head:tail] = bytearray(ctypes.c_int(value or 0))
+
+    @property
+    def msg(self):
+        head, tail = self._get_slicers(1)
+        return nlmsghdr.from_buffer(self.bytearray[head:])
+
+    @msg.setter
+    def msg(self, value):
+        head, tail = self._get_slicers(1)
+        self.bytearray[head:] = value.bytearray
 
 
 NETLINK_ADD_MEMBERSHIP = 1
@@ -296,109 +253,63 @@ NETLINK_BROADCAST_ERROR = 4
 NETLINK_NO_ENOBUFS = 5
 
 
-class nlattr(object):
+class nlattr(StructNoPointers):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/netlink.h#L126
 
     Holds a netlink attribute along with a payload/data (such as a c_uint32 instance).
 
+     <------- NLA_HDRLEN ------> <-- NLA_ALIGN(payload)-->
+    +---------------------+- - -+- - - - - - - - - -+- - -+
+    |        Header       | Pad |     Payload       | Pad |
+    |   (struct nlattr)   | ing |                   | ing |
+    +---------------------+- - -+- - - - - - - - - -+- - -+
+     <-------------- nlattr->nla_len -------------->
+
+     <-------- nla_attr_size(payload) --------->
+    +------------------+- - -+- - - - - - - - - +- - -+
+    | Attribute Header | Pad |     Payload      | Pad |
+    +------------------+- - -+- - - - - - - - - +- - -+
+     <----------- nla_total_size(payload) ----------->
+
     Instance variables:
+    nla_len -- c_uint16.
     nla_type -- c_uint16 attribute type (e.g. NL80211_ATTR_SCAN_SSIDS).
-    payload -- data of any type for this attribute. None means 0 byte payload.
+    payload -- payload and padding at the end (bytearay).
     """
-    SIZEOF = ctypes.sizeof(ctypes.c_uint16) * 2
+    _REPR = '<{0}.{1} nla_len={2[nla_len]} nla_type={2[nla_type]} payload={2[payload]}>'
+    SIGNATURE = (SIZEOF_U16, SIZEOF_U16)
+    SIZEOF = sum(SIGNATURE)
 
-    def __init__(self, nla_type=None, payload=None):
-        self._nla_type = None
+    def __init__(self, nla_len=0, nla_type=0):
+        super().__init__(self.SIZEOF)
+        self.nla_len = nla_len
         self.nla_type = nla_type
-        self.payload = payload
-
-    def __bytes__(self):
-        """Returns a bytes object formatted for the kernel.
-
-         <------- NLA_HDRLEN ------> <-- NLA_ALIGN(payload)-->
-        +---------------------+- - -+- - - - - - - - - -+- - -+
-        |        Header       | Pad |     Payload       | Pad |
-        |   (struct nlattr)   | ing |                   | ing |
-        +---------------------+- - -+- - - - - - - - - -+- - -+
-         <-------------- nlattr->nla_len -------------->
-
-         <-------- nla_attr_size(payload) --------->
-        +------------------+- - -+- - - - - - - - - +- - -+
-        | Attribute Header | Pad |     Payload      | Pad |
-        +------------------+- - -+- - - - - - - - - +- - -+
-         <----------- nla_total_size(payload) ----------->
-        """
-        nla_len = self.nla_len
-        payload = b'' if self.payload is None else bytes(self.payload)
-        padding = (b'\0' * (NLA_HDRLEN - self.SIZEOF), b'\0' * (NLA_ALIGN(nla_len) - nla_len))
-        segments = (bytes(ctypes.c_uint16(nla_len)), bytes(self._nla_type), padding[0], payload, padding[1])
-        return b''.join(segments)
-
-    def __repr__(self):
-        answer = '<{0}.{1} nla_len={2} nla_type={3} payload={4}>'.format(
-            self.__class__.__module__,
-            self.__class__.__name__,
-            self.nla_len, self.nla_type,
-            'yes' if self.payload else 'no',
-        )
-        return answer
-
-    @classmethod
-    def from_buffer(cls, buf, next_nla=None):
-        """Creates and returns a class instance based on data from a bytearray().
-
-        Positional arguments:
-        buf -- source bytearray() to read.
-
-        Keyword arguments:
-        next_nla -- optional overflow bytearray() buffer for the next nlattr in the stream. Otherwise overflow ignored.
-        """
-        nla_len, nla_type, buf_remaining = split_bytearray(buf, ctypes.c_uint16, ctypes.c_uint16)
-        nla = cls(nla_type=nla_type)
-        limit = NLA_ALIGN(nla_len.value) - cls.SIZEOF
-        payload = buf_remaining[:limit]
-        if payload:
-            nla.payload = payload
-        if len(buf_remaining) > limit and next_nla is not None:
-            next_nla.extend(buf_remaining[limit:])
-        return nla
-
-    @classmethod
-    def from_buffer_multi(cls, buf):
-        """Creates multiple instances from a bytearray() and returns them in a list.
-
-        Positional arguments:
-        buf -- source bytearray() to read.
-        """
-        attributes = list()
-        while buf:
-            next_nla = bytearray()
-            nla = cls.from_buffer(buf, next_nla)
-            buf = next_nla
-            attributes.append(nla)
-        return attributes
 
     @property
     def nla_len(self):
-        """c_uint16 attribute length including payload, returns integer."""
-        if self.payload is None:
-            return NLA_HDRLEN
-        try:
-            return NLA_HDRLEN + ctypes.sizeof(self.payload)
-        except TypeError:
-            return NLA_HDRLEN + len(self.payload)
+        head, tail = self._get_slicers(0)
+        return ctypes.c_uint16.from_buffer(self.bytearray[head:tail]).value
+
+    @nla_len.setter
+    def nla_len(self, value):
+        head, tail = self._get_slicers(0)
+        self.bytearray[head:tail] = bytearray(ctypes.c_uint16(value or 0))
 
     @property
     def nla_type(self):
-        """c_uint16 attribute type (e.g. NL80211_ATTR_SCAN_SSIDS)."""
-        return self._nla_type.value
+        head, tail = self._get_slicers(1)
+        return ctypes.c_uint16.from_buffer(self.bytearray[head:tail]).value
 
     @nla_type.setter
     def nla_type(self, value):
-        if value is None:
-            self._nla_type = ctypes.c_uint16()
-            return
-        self._nla_type = value if isinstance(value, ctypes.c_uint16) else ctypes.c_uint16(value)
+        head, tail = self._get_slicers(1)
+        self.bytearray[head:tail] = bytearray(ctypes.c_uint16(value or 0))
+
+    @property
+    def payload(self):
+        """Payload and padding at the end."""
+        head, tail = self._get_slicers(1)
+        return self.bytearray[tail:]
 
 
 NLA_F_NESTED = 1 << 15

@@ -12,7 +12,7 @@ from errno import *
 from libnl.errno_ import *
 
 errmsg = {i: '' for i in range(NLE_MAX + 1)}
-errmsg.update({
+errmsg.update({  # https://github.com/thom311/libnl/blob/libnl3_2_25/lib/error.c#L15
     NLE_SUCCESS: 'Success',
     NLE_FAILURE: 'Unspecific failure',
     NLE_INTR: 'Interrupted system call',

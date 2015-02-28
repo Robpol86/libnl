@@ -61,46 +61,38 @@ class sockaddr_nl(StructNoPointers):
     @property
     def nl_family(self):
         """AF_NETLINK."""
-        head, tail = self._get_slicers(0)
-        return ctypes.c_uint.from_buffer(self.bytearray[head:tail]).value
+        return ctypes.c_uint.from_buffer(self.bytearray[self._get_slicers(0)]).value
 
     @nl_family.setter
     def nl_family(self, value):
-        head, tail = self._get_slicers(0)
-        self.bytearray[head:tail] = bytearray(ctypes.c_uint(value or 0))
+        self.bytearray[self._get_slicers(0)] = bytearray(ctypes.c_uint(value or 0))
 
     @property
     def nl_pad(self):
         """Zero."""
-        head, tail = self._get_slicers(1)
-        return ctypes.c_ushort.from_buffer(self.bytearray[head:tail]).value
+        return ctypes.c_ushort.from_buffer(self.bytearray[self._get_slicers(1)]).value
 
     @nl_pad.setter
     def nl_pad(self, value):
-        head, tail = self._get_slicers(1)
-        self.bytearray[head:tail] = bytearray(ctypes.c_ushort(value or 0))
+        self.bytearray[self._get_slicers(1)] = bytearray(ctypes.c_ushort(value or 0))
 
     @property
     def nl_pid(self):
         """Port ID."""
-        head, tail = self._get_slicers(2)
-        return ctypes.c_uint32.from_buffer(self.bytearray[head:tail]).value
+        return ctypes.c_uint32.from_buffer(self.bytearray[self._get_slicers(2)]).value
 
     @nl_pid.setter
     def nl_pid(self, value):
-        head, tail = self._get_slicers(2)
-        self.bytearray[head:tail] = bytearray(ctypes.c_uint32(value or 0))
+        self.bytearray[self._get_slicers(2)] = bytearray(ctypes.c_uint32(value or 0))
 
     @property
     def nl_groups(self):
         """Port ID."""
-        head, tail = self._get_slicers(3)
-        return ctypes.c_uint32.from_buffer(self.bytearray[head:tail]).value
+        return ctypes.c_uint32.from_buffer(self.bytearray[self._get_slicers(3)]).value
 
     @nl_groups.setter
     def nl_groups(self, value):
-        head, tail = self._get_slicers(3)
-        self.bytearray[head:tail] = bytearray(ctypes.c_uint32(value or 0))
+        self.bytearray[self._get_slicers(3)] = bytearray(ctypes.c_uint32(value or 0))
 
 
 class nlmsghdr(StructNoPointers):
@@ -138,63 +130,52 @@ class nlmsghdr(StructNoPointers):
     @property
     def nlmsg_len(self):
         """Length of message including header."""
-        head, tail = self._get_slicers(0)
-        return ctypes.c_uint32.from_buffer(self.bytearray[head:tail]).value
+        return ctypes.c_uint32.from_buffer(self.bytearray[self._get_slicers(0)]).value
 
     @nlmsg_len.setter
     def nlmsg_len(self, value):
-        head, tail = self._get_slicers(0)
-        self.bytearray[head:tail] = bytearray(ctypes.c_uint32(value or 0))
+        self.bytearray[self._get_slicers(0)] = bytearray(ctypes.c_uint32(value or 0))
 
     @property
     def nlmsg_type(self):
         """Message content."""
-        head, tail = self._get_slicers(1)
-        return ctypes.c_uint16.from_buffer(self.bytearray[head:tail]).value
+        return ctypes.c_uint16.from_buffer(self.bytearray[self._get_slicers(1)]).value
 
     @nlmsg_type.setter
     def nlmsg_type(self, value):
-        head, tail = self._get_slicers(1)
-        self.bytearray[head:tail] = bytearray(ctypes.c_uint16(value or 0))
+        self.bytearray[self._get_slicers(1)] = bytearray(ctypes.c_uint16(value or 0))
 
     @property
     def nlmsg_flags(self):
         """Additional flags."""
-        head, tail = self._get_slicers(2)
-        return ctypes.c_uint16.from_buffer(self.bytearray[head:tail]).value
+        return ctypes.c_uint16.from_buffer(self.bytearray[self._get_slicers(2)]).value
 
     @nlmsg_flags.setter
     def nlmsg_flags(self, value):
-        head, tail = self._get_slicers(2)
-        self.bytearray[head:tail] = bytearray(ctypes.c_uint16(value or 0))
+        self.bytearray[self._get_slicers(2)] = bytearray(ctypes.c_uint16(value or 0))
 
     @property
     def nlmsg_seq(self):
         """Sequence number."""
-        head, tail = self._get_slicers(3)
-        return ctypes.c_uint32.from_buffer(self.bytearray[head:tail]).value
+        return ctypes.c_uint32.from_buffer(self.bytearray[self._get_slicers(3)]).value
 
     @nlmsg_seq.setter
     def nlmsg_seq(self, value):
-        head, tail = self._get_slicers(3)
-        self.bytearray[head:tail] = bytearray(ctypes.c_uint32(value or 0))
+        self.bytearray[self._get_slicers(3)] = bytearray(ctypes.c_uint32(value or 0))
 
     @property
     def nlmsg_pid(self):
         """Sending process port ID."""
-        head, tail = self._get_slicers(4)
-        return ctypes.c_uint32.from_buffer(self.bytearray[head:tail]).value
+        return ctypes.c_uint32.from_buffer(self.bytearray[self._get_slicers(4)]).value
 
     @nlmsg_pid.setter
     def nlmsg_pid(self, value):
-        head, tail = self._get_slicers(4)
-        self.bytearray[head:tail] = bytearray(ctypes.c_uint32(value or 0))
+        self.bytearray[self._get_slicers(4)] = bytearray(ctypes.c_uint32(value or 0))
 
     @property
     def payload(self):
         """Payload and padding at the end."""
-        head, tail = self._get_slicers(4)
-        return self.bytearray[tail:]
+        return self.bytearray[self._get_slicers(4).stop:]
 
 
 NLMSG_ALIGNTO = ctypes.c_uint(4).value
@@ -227,23 +208,19 @@ class nlmsgerr(StructNoPointers):
 
     @property
     def error(self):
-        head, tail = self._get_slicers(0)
-        return ctypes.c_int.from_buffer(self.bytearray[head:tail]).value
+        return ctypes.c_int.from_buffer(self.bytearray[self._get_slicers(0)]).value
 
     @error.setter
     def error(self, value):
-        head, tail = self._get_slicers(0)
-        self.bytearray[head:tail] = bytearray(ctypes.c_int(value or 0))
+        self.bytearray[self._get_slicers(0)] = bytearray(ctypes.c_int(value or 0))
 
     @property
     def msg(self):
-        head, tail = self._get_slicers(1)
-        return nlmsghdr.from_buffer(self.bytearray[head:])
+        return nlmsghdr.from_buffer(self.bytearray[self._get_slicers(1).start:])
 
     @msg.setter
     def msg(self, value):
-        head, tail = self._get_slicers(1)
-        self.bytearray[head:] = value.bytearray
+        self.bytearray[self._get_slicers(1).start:] = value.bytearray
 
 
 NETLINK_ADD_MEMBERSHIP = 1
@@ -287,29 +264,24 @@ class nlattr(StructNoPointers):
 
     @property
     def nla_len(self):
-        head, tail = self._get_slicers(0)
-        return ctypes.c_uint16.from_buffer(self.bytearray[head:tail]).value
+        return ctypes.c_uint16.from_buffer(self.bytearray[self._get_slicers(0)]).value
 
     @nla_len.setter
     def nla_len(self, value):
-        head, tail = self._get_slicers(0)
-        self.bytearray[head:tail] = bytearray(ctypes.c_uint16(value or 0))
+        self.bytearray[self._get_slicers(0)] = bytearray(ctypes.c_uint16(value or 0))
 
     @property
     def nla_type(self):
-        head, tail = self._get_slicers(1)
-        return ctypes.c_uint16.from_buffer(self.bytearray[head:tail]).value
+        return ctypes.c_uint16.from_buffer(self.bytearray[self._get_slicers(1)]).value
 
     @nla_type.setter
     def nla_type(self, value):
-        head, tail = self._get_slicers(1)
-        self.bytearray[head:tail] = bytearray(ctypes.c_uint16(value or 0))
+        self.bytearray[self._get_slicers(1)] = bytearray(ctypes.c_uint16(value or 0))
 
     @property
     def payload(self):
         """Payload and padding at the end."""
-        head, tail = self._get_slicers(1)
-        return self.bytearray[tail:]
+        return self.bytearray[self._get_slicers(1).stop:]
 
 
 NLA_F_NESTED = 1 << 15

@@ -61,21 +61,21 @@ class StructNoPointers(_StructBase):
         return ' '.join(format(c, '02x') for c in self.bytearray)
 
     def _get_slicers(self, index):
-        """Returns a 2-item tuple to slice a list/bytearray by.
+        """Returns a slice object to slice a list/bytearray by.
 
         Positional arguments:
         index -- index of self.SIGNATURE to target self.bytearray by.
 
         Returns:
-        2-item tuple of integers.
+        slice() object. E.g. `x = _get_slicers(0); ba_instance[x]`
         """
         if not index:  # first item.
             return 0, self.SIGNATURE[0]
         if index >= len(self.SIGNATURE):
             raise IndexError('index out of self.SIGNATURE range')
-        pad_head = sum(self.SIGNATURE[:index])
-        pad_tail = pad_head + self.SIGNATURE[index]
-        return pad_head, pad_tail
+        pad_start = sum(self.SIGNATURE[:index])
+        pad_stop = pad_start + self.SIGNATURE[index]
+        return slice(pad_start, pad_stop)
 
     @classmethod
     def from_buffer(cls, buf):
@@ -154,35 +154,29 @@ class ucred(StructNoPointers):
     @property
     def pid(self):
         """Process ID of the sending process."""
-        head, tail = self._get_slicers(0)
-        return ctypes.c_uint32.from_buffer(self.bytearray[head:tail]).value
+        return ctypes.c_uint32.from_buffer(self.bytearray[self._get_slicers(0)]).value
 
     @pid.setter
     def pid(self, value):
-        head, tail = self._get_slicers(0)
-        self.bytearray[head:tail] = bytearray(ctypes.c_int32(value or 0))
+        self.bytearray[self._get_slicers(0)] = bytearray(ctypes.c_int32(value or 0))
 
     @property
     def uid(self):
         """User ID of the sending process."""
-        head, tail = self._get_slicers(1)
-        return ctypes.c_uint32.from_buffer(self.bytearray[head:tail]).value
+        return ctypes.c_uint32.from_buffer(self.bytearray[self._get_slicers(1)]).value
 
     @uid.setter
     def uid(self, value):
-        head, tail = self._get_slicers(1)
-        self.bytearray[head:tail] = bytearray(ctypes.c_int32(value or 0))
+        self.bytearray[self._get_slicers(1)] = bytearray(ctypes.c_int32(value or 0))
 
     @property
     def gid(self):
         """Group ID of the sending process."""
-        head, tail = self._get_slicers(2)
-        return ctypes.c_uint32.from_buffer(self.bytearray[head:tail]).value
+        return ctypes.c_uint32.from_buffer(self.bytearray[self._get_slicers(2)]).value
 
     @gid.setter
     def gid(self, value):
-        head, tail = self._get_slicers(2)
-        self.bytearray[head:tail] = bytearray(ctypes.c_int32(value or 0))
+        self.bytearray[self._get_slicers(2)] = bytearray(ctypes.c_int32(value or 0))
 
 
 class msghdr(object):

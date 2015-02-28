@@ -11,8 +11,8 @@ of the License.
 import ctypes
 import logging
 
-from libnl.errno_ import NLE_RANGE, NLE_INVAL
-from libnl.linux_private.netlink import nlattr, NLA_ALIGN, NLA_TYPE_MASK, NLA_HDRLEN, NLA_F_NESTED
+from libnl.errno_ import NLE_RANGE, NLE_INVAL, NLE_NOMEM
+from libnl.linux_private.netlink import nlattr, NLA_ALIGN, NLA_TYPE_MASK, NLA_HDRLEN, NLA_F_NESTED, NLMSG_ALIGN
 from libnl.misc import SIZEOF_U8, SIZEOF_U16, SIZEOF_U32, SIZEOF_U64
 from libnl.netlink_private.netlink import BUG
 

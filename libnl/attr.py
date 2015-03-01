@@ -342,13 +342,13 @@ def nla_reserve(msg, attrtype, attrlen):
     """Reserve space for an attribute.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L456
 
-    Reserves room for an attribute in the specified netlink message and fills in the attribute header (type, length).
+    Reserves room for an attribute in the specified Netlink message and fills in the attribute header (type, length).
     Returns None if there is insufficient space for the attribute.
 
     Any padding between payload and the start of the next attribute is zeroed out.
 
     Positional arguments:
-    msg -- netlink message (nl_msg class instance).
+    msg -- Netlink message (nl_msg class instance).
     attrtype -- attribute type (integer).
     attrlen -- length of payload (integer).
 
@@ -376,7 +376,7 @@ def nla_reserve(msg, attrtype, attrlen):
 
 
 def nla_put(msg, attrtype, datalen, data):
-    """Add a unspecific attribute to netlink message.
+    """Add a unspecific attribute to Netlink message.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L497
 
     Reserves room for an unspecific attribute and copies the provided data into the message as payload of the attribute.
@@ -404,7 +404,7 @@ def nla_put(msg, attrtype, datalen, data):
 
 
 def nla_put_data(msg, attrtype, data):
-    """Add abstract data as unspecific attribute to netlink message.
+    """Add abstract data as unspecific attribute to Netlink message.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L527
 
     Equivalent to nla_put() except that the length of the payload is derived from the bytearray data object.

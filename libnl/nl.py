@@ -44,8 +44,8 @@ def nl_connect(sk, protocol):
     in the `sk` socket object (if any). Fails if the socket is already connected.
 
     Positional arguments:
-    sk -- netlink socket (nl_sock class instance).
-    protocol -- netlink protocol to use (integer).
+    sk -- Netlink socket (nl_sock class instance).
+    protocol -- Netlink protocol to use (integer).
 
     Returns:
     0 on success or a negative error code.
@@ -145,8 +145,8 @@ def nl_send_iovec(sk, msg, iov):
     This function triggers the `NL_CB_MSG_OUT` callback.
 
     Positional arguments:
-    sk -- netlink socket (nl_sock class instance).
-    msg -- netlink message (nl_msg class instance).
+    sk -- Netlink socket (nl_sock class instance).
+    msg -- Netlink message (nl_msg class instance).
     iov -- bytes() instance to be sent (data payload).
 
     Returns:
@@ -189,8 +189,8 @@ def nl_send(sk, msg):
     needed flags or filling out port numbers.
 
     Positional arguments:
-    sk -- netlink socket (nl_sock class instance).
-    msg -- netlink message (nl_msg class instance).
+    sk -- Netlink socket (nl_sock class instance).
+    msg -- Netlink message (nl_msg class instance).
 
     Returns:
     Number of bytes sent on success or a negative error code.
@@ -242,8 +242,8 @@ def nl_send_auto(sk, msg):
     This function triggers the `NL_CB_MSG_OUT` callback.
 
     Positional arguments:
-    sk -- netlink socket (nl_sock class instance).
-    msg -- netlink message (nl_msg class instance).
+    sk -- Netlink socket (nl_sock class instance).
+    msg -- Netlink message (nl_msg class instance).
 
     Returns:
     Number of bytes sent on success or a negative error code.
@@ -262,9 +262,9 @@ def nl_send_simple(sk, type_, flags, buf=None):
     Sends out the message using `nl_send_auto()`.
 
     Positional arguments:
-    sk -- netlink socket (nl_sock class instance).
-    type_ -- netlink message type (integer).
-    flags -- netlink message flags (integer).
+    sk -- Netlink socket (nl_sock class instance).
+    type_ -- Netlink message type (integer).
+    flags -- Netlink message flags (integer).
 
     Keyword arguments:
     buf -- payload data.
@@ -281,16 +281,16 @@ def nl_send_simple(sk, type_, flags, buf=None):
 
 
 def nl_recv(sk, nla, buf, creds=None):
-    """Receive data from netlink socket.
+    """Receive data from Netlink socket.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/nl.c#L625
 
-    Receives data from a connected netlink socket using recvmsg(). The peer's netlink address will be stored in `nla`
+    Receives data from a connected Netlink socket using recvmsg(). The peer's Netlink address will be stored in `nla`
     (second argument passed to this function).
 
     This function blocks until data is available to be read unless the socket has been put into non-blocking mode using
     `nl_socket_set_nonblocking()` in which case this function will return immediately with a return value of (0, None).
 
-    The buffer size used when reading from the netlink socket and thus limiting the maximum size of a netlink message
+    The buffer size used when reading from the Netlink socket and thus limiting the maximum size of a Netlink message
     that can be read defaults to the size of a memory page (getpagesize()). The buffer size can be modified on a per
     socket level using the function `nl_socket_set_msg_buf_size()`.
 
@@ -304,8 +304,8 @@ def nl_recv(sk, nla, buf, creds=None):
     update the class instance with the received credentials and assign it to `creds`.
 
     Positional arguments:
-    sk -- netlink socket (nl_sock class instance) (input).
-    nla -- netlink socket structure to hold address of peer (sockaddr_nl class instance) (output).
+    sk -- Netlink socket (nl_sock class instance) (input).
+    nla -- Netlink socket structure to hold address of peer (sockaddr_nl class instance) (output).
     buf -- destination bytearray() for message content (output).
     creds -- destination class instance for credentials (ucred class instance) (output).
 
@@ -365,7 +365,7 @@ def recvmsgs(sk, cb):
     This is where callbacks are called.
 
     Positional arguments:
-    sk -- netlink socket (nl_sock class instance).
+    sk -- Netlink socket (nl_sock class instance).
     cb -- callbacks (nl_cb class instance).
 
     Returns:
@@ -441,7 +441,7 @@ def recvmsgs(sk, cb):
                         return -NLE_SEQ_MISMATCH
 
             if hdr.nlmsg_type in (NLMSG_DONE, NLMSG_ERROR, NLMSG_NOOP, NLMSG_OVERRUN):
-                # We can't check for !NLM_F_MULTI since some netlink users in the kernel are broken.
+                # We can't check for !NLM_F_MULTI since some Netlink users in the kernel are broken.
                 sk.s_seq_expect += 1
                 _LOGGER.debug('recvmsgs(0x%x): Increased expected sequence number to %d', id(sk), sk.s_seq_expect)
 
@@ -591,7 +591,7 @@ def recvmsgs(sk, cb):
 
 
 def nl_recvmsgs_report(sk, cb):
-    """Receive a set of messages from a netlink socket and report parsed messages.
+    """Receive a set of messages from a Netlink socket and report parsed messages.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/nl.c#L998
 
     This function is identical to nl_recvmsgs() to the point that it will return the number of parsed messages instead
@@ -600,7 +600,7 @@ def nl_recvmsgs_report(sk, cb):
     See nl_recvmsgs().
 
     Positional arguments:
-    sk -- netlink socket (nl_sock class instance).
+    sk -- Netlink socket (nl_sock class instance).
     cb -- set of callbacks to control behaviour (nl_cb class instance).
 
     Returns:
@@ -612,11 +612,11 @@ def nl_recvmsgs_report(sk, cb):
 
 
 def nl_recvmsgs(sk, cb):
-    """Receive a set of messages from a netlink socket.
+    """Receive a set of messages from a Netlink socket.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/nl.c#L1023
 
     Repeatedly calls nl_recv() or the respective replacement if provided by the application (see nl_cb_overwrite_recv())
-    and parses the received data as netlink messages. Stops reading if one of the callbacks returns NL_STOP or nl_recv
+    and parses the received data as Netlink messages. Stops reading if one of the callbacks returns NL_STOP or nl_recv
     returns either 0 or a negative error code.
 
     A non-blocking sockets causes the function to return immediately if no data is available.
@@ -624,7 +624,7 @@ def nl_recvmsgs(sk, cb):
     See nl_recvmsgs_report().
 
     Positional arguments:
-    sk -- netlink socket (nl_sock class instance).
+    sk -- Netlink socket (nl_sock class instance).
     cb -- set of callbacks to control behaviour (nl_cb class instance).
 
     Returns:
@@ -637,13 +637,13 @@ def nl_recvmsgs(sk, cb):
 
 
 def nl_recvmsgs_default(sk):
-    """Receive a set of message from a netlink socket using handlers in nl_sock.
+    """Receive a set of message from a Netlink socket using handlers in nl_sock.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/nl.c#L1039
 
-    Calls nl_recvmsgs() with the handlers configured in the netlink socket.
+    Calls nl_recvmsgs() with the handlers configured in the Netlink socket.
 
     Positional arguments:
-    sk -- netlink socket (nl_sock class instance).
+    sk -- Netlink socket (nl_sock class instance).
 
     Returns:
     0 on success or a negative error code from nl_recvmsgs().
@@ -671,10 +671,10 @@ def nl_wait_for_ack(sk):
     """Wait for ACK.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/nl.c#L1058
 
-    Waits until an ACK is received for the latest not yet acknowledged netlink message.
+    Waits until an ACK is received for the latest not yet acknowledged Netlink message.
 
     Positional arguments:
-    sk -- netlink socket (nl_sock class instance).
+    sk -- Netlink socket (nl_sock class instance).
 
     Returns:
     Number of received messages or a negative error code from nl_recvmsgs().

@@ -11,7 +11,7 @@ import subprocess
 import setuptools.command.sdist
 from setuptools.command.test import test
 
-DESCRIPTION = 'Pure python port of the netlink protocol library suite.'
+DESCRIPTION = 'Pure python port of the Netlink protocol library suite.'
 HERE = os.path.abspath(os.path.dirname(__file__))
 KEYWORDS = 'netlink libnl libnl-genl nl80211'
 NAME = 'libnl'

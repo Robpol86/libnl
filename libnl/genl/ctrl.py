@@ -142,7 +142,7 @@ def probe_response(msg, arg):
 
 
 def genl_ctrl_probe_by_name(sk, name):
-    """Look up generic netlink family by family name querying the kernel directly.
+    """Look up generic Netlink family by family name querying the kernel directly.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L237
 
     Directly query's the kernel for a given family name.
@@ -155,7 +155,7 @@ def genl_ctrl_probe_by_name(sk, name):
     name -- family name (string).
 
     Returns:
-    Generic netlink family `genl_family` class instance or None if no match was found.
+    Generic Netlink family `genl_family` class instance or None if no match was found.
     """
     ret = genl_family_alloc()
     if not ret:

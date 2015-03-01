@@ -1,7 +1,7 @@
 """Netlink Socket (lib/socket.c).
 https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c
 
-Representation of a netlink socket.
+Representation of a Netlink socket.
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -66,7 +66,7 @@ def nl_socket_alloc(cb=None):
     cb -- custom callback handler.
 
     Returns:
-    Newly allocated netlink socket (nl_sock class instance) or None.
+    Newly allocated Netlink socket (nl_sock class instance) or None.
     """
     # Allocate the callback.
     cb = cb or nl_cb_alloc(default_cb)
@@ -184,7 +184,7 @@ def nl_socket_get_cb(sk):
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L609
 
     Positional arguments:
-    sk -- netlink socket (nl_sock class instance).
+    sk -- Netlink socket (nl_sock class instance).
 
     Returns:
     nl_cb class instance.
@@ -198,7 +198,7 @@ def nl_socket_set_cb(sk, cb):
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L614
 
     Positional arguments:
-    sk -- netlink socket (nl_sock class instance).
+    sk -- Netlink socket (nl_sock class instance).
     cb -- callbacks (nl_cb class instance).
     """
     sk.s_cb = cb
@@ -211,7 +211,7 @@ def nl_socket_modify_cb(sk, type_, kind, func, arg):
     Sets specific callback functions in the existing nl_cb class instance stored in the nl_sock socket.
 
     Positional arguments:
-    sk -- netlink socket (nl_sock class instance).
+    sk -- Netlink socket (nl_sock class instance).
     type_ -- which type callback to set.
     kind -- kind of callback.
     func -- callback function.
@@ -228,7 +228,7 @@ def nl_socket_modify_err_cb(sk, kind, func, arg):
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L649
 
     Positional arguments:
-    sk -- netlink socket (nl_sock class instance).
+    sk -- Netlink socket (nl_sock class instance).
     kind -- kind of callback.
     func -- callback function.
     arg -- argument to be passed to callback function.
@@ -240,14 +240,14 @@ def nl_socket_modify_err_cb(sk, kind, func, arg):
 
 
 def nl_socket_set_buffer_size(sk, rxbuf, txbuf):
-    """Set socket buffer size of netlink socket.
+    """Set socket buffer size of Netlink socket.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L675
 
-    Sets the socket buffer size of a netlink socket to the specified values `rxbuf` and `txbuf`. Providing a value of 0
+    Sets the socket buffer size of a Netlink socket to the specified values `rxbuf` and `txbuf`. Providing a value of 0
     assumes a good default value.
 
     Positional arguments:
-    sk -- netlink socket (nl_sock class instance).
+    sk -- Netlink socket (nl_sock class instance).
     rxbuf -- new receive socket buffer size in bytes (integer).
     txbuf -- new transmit socket buffer size in bytes (integer).
 

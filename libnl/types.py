@@ -7,6 +7,7 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
+
 NL_DUMP_LINE = 0  # Dump object briefly on one line.
 NL_DUMP_DETAILS = 1  # Dump all attributes but no statistics.
 NL_DUMP_STATS = 2  # Dump all attributes including statistics.

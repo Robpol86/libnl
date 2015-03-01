@@ -67,7 +67,7 @@ def genlmsg_valid_hdr(nlh, hdrlen):
     Verifies the integrity of the Netlink and Generic Netlink headers by enforcing the following requirements:
     - Valid Netlink message header (`nlmsg_valid_hdr()`)
     - Presence of a complete Generic Netlink header
-    - At least `hdrlen` bytes of payload included after the generic netlink header.
+    - At least `hdrlen` bytes of payload included after the generic Netlink header.
 
     Positional arguments:
     nlh -- Netlink message header (nlmsghdr class instance).

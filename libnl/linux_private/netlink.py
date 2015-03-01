@@ -96,7 +96,7 @@ class sockaddr_nl(StructNoPointers):
 
 
 class nlmsghdr(StructNoPointers):
-    """Netlink message header (holds actual payload of netlink message).
+    """Netlink message header (holds actual payload of Netlink message).
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/netlink.h#L38
 
      <------- NLMSG_ALIGN(hlen) ------> <---- NLMSG_ALIGN(len) --->
@@ -225,7 +225,7 @@ NETLINK_NO_ENOBUFS = 5
 class nlattr(StructNoPointers):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/netlink.h#L126
 
-    Holds a netlink attribute along with a payload/data (such as a c_uint32 instance).
+    Holds a Netlink attribute along with a payload/data (such as a c_uint32 instance).
 
      <------- NLA_HDRLEN ------> <-- NLA_ALIGN(payload)-->
     +---------------------+- - -+- - - - - - - - - -+- - -+

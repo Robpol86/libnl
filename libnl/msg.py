@@ -37,14 +37,14 @@ NL_AUTO_SEQ = 0
 
 
 def nlmsg_size(payload):
-    """Calculates size of netlink message based on payload length.
+    """Calculates size of Netlink message based on payload length.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L54
 
     Positional arguments:
     payload -- length of payload (integer).
 
     Returns:
-    Size of netlink message without padding (integer).
+    Size of Netlink message without padding (integer).
     """
     return int(NLMSG_HDRLEN + payload)
 
@@ -53,7 +53,7 @@ nlmsg_msg_size = nlmsg_size  # Alias. https://github.com/thom311/libnl/blob/libn
 
 
 def nlmsg_total_size(payload):
-    """Calculates size of netlink message including padding based on payload length.
+    """Calculates size of Netlink message including padding based on payload length.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L72
 
     This function is identical to nlmsg_size() + nlmsg_padlen().
@@ -62,7 +62,7 @@ def nlmsg_total_size(payload):
     payload -- length of payload (integer).
 
     Returns:
-    Size of netlink message including padding (integer).
+    Size of Netlink message including padding (integer).
     """
     return int(NLMSG_ALIGN(nlmsg_msg_size(payload)))
 
@@ -72,7 +72,7 @@ def nlmsg_for_each_attr(nlh, hdrlen, rem):
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/msg.h#L123
 
     Positional arguments:
-    nlh -- netlink message header (nlmsghdr class instance).
+    nlh -- Netlink message header (nlmsghdr class instance).
     hdrlen -- length of family header (integer).
     rem -- initialized to len, holds bytes currently remaining in stream (c_int).
 
@@ -114,7 +114,7 @@ def nlmsg_valid_hdr(nlh, hdrlen):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L166
 
     Positional arguments:
-    nlh -- netlink message header (nlmsghdr class instance).
+    nlh -- Netlink message header (nlmsghdr class instance).
     hdrlen -- integer.
 
     Returns True if valid, False otherwise.
@@ -138,14 +138,14 @@ def nlmsg_find_attr(nlh, hdrlen, attrtype):
 
 
 def nlmsg_alloc(len_=default_msg_size):
-    """Allocate a new netlink message with maximum payload size specified.
+    """Allocate a new Netlink message with maximum payload size specified.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L299
 
-    Allocates a new netlink message without any further payload. The maximum payload size defaults to
+    Allocates a new Netlink message without any further payload. The maximum payload size defaults to
     resource.getpagesize() or as otherwise specified with nlmsg_set_default_size().
 
     Returns:
-    Newly allocated netlink message (nl_msg class instance).
+    Newly allocated Netlink message (nl_msg class instance).
     """
     len_ = max(nlmsghdr.SIZEOF, len_)
     nm = nl_msg()
@@ -162,17 +162,17 @@ nlmsg_alloc_size = nlmsg_alloc  # Alias. https://github.com/thom311/libnl/blob/l
 
 
 def nlmsg_inherit(hdr=None):
-    """Allocate a new netlink message and inherit netlink message header.
+    """Allocate a new Netlink message and inherit Netlink message header.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L322
 
-    Allocates a new netlink message and inherits the original message header. If `hdr` is not None it will be used as a
-    template for the netlink message header, otherwise the header is left blank.
+    Allocates a new Netlink message and inherits the original message header. If `hdr` is not None it will be used as a
+    template for the Netlink message header, otherwise the header is left blank.
 
     Keyword arguments:
-    hdr -- netlink message header template (nlmsghdr class instance).
+    hdr -- Netlink message header template (nlmsghdr class instance).
 
     Returns:
-    Newly allocated netlink message (nl_msg class instance).
+    Newly allocated Netlink message (nl_msg class instance).
     """
     nm = nlmsg_alloc()
     if hdr:
@@ -185,15 +185,15 @@ def nlmsg_inherit(hdr=None):
 
 
 def nlmsg_alloc_simple(nlmsgtype, flags):
-    """Allocate a new netlink message.
+    """Allocate a new Netlink message.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L346
 
     Positional arguments:
-    nlmsgtype -- netlink message type (integer).
+    nlmsgtype -- Netlink message type (integer).
     flags -- message flags (integer).
 
     Returns:
-    Newly allocated netlink message (nl_msg class instance).
+    Newly allocated Netlink message (nl_msg class instance).
     """
     nlh = nlmsghdr(nlmsg_type=nlmsgtype, nlmsg_flags=flags)
     msg = nlmsg_inherit(nlh)
@@ -213,10 +213,10 @@ def nlmsg_set_default_size(max_):
 
 
 def nlmsg_convert(hdr):
-    """Convert a netlink message received from a netlink socket to a nl_msg.
+    """Convert a Netlink message received from a Netlink socket to a nl_msg.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L382
 
-    Allocates a new netlink message and copies all of the data pointed to by `hdr` into the new message object.
+    Allocates a new Netlink message and copies all of the data pointed to by `hdr` into the new message object.
 
     Positional arguments:
     hdr -- nlmsghdr class instance.
@@ -230,11 +230,11 @@ def nlmsg_convert(hdr):
 
 
 def nlmsg_append(msg, data):
-    """Append data to tail of a netlink message.
+    """Append data to tail of a Netlink message.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L442
 
     Positional arguments:
-    msg -- netlink message (nl_msg class instance).
+    msg -- Netlink message (nl_msg class instance).
     data -- data to add.
 
     Returns:
@@ -246,14 +246,14 @@ def nlmsg_append(msg, data):
 
 
 def nlmsg_put(n, pid, seq, type_, flags):
-    """Add a netlink message header to a netlink message.
+    """Add a Netlink message header to a Netlink message.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L503
 
-    Adds or overwrites the netlink message header in an existing message object.
+    Adds or overwrites the Netlink message header in an existing message object.
 
     Positional arguments:
-    n -- netlink message (nl_msg class instance).
-    pid -- netlink process id or NL_AUTO_PID.
+    n -- Netlink message (nl_msg class instance).
+    pid -- Netlink process id or NL_AUTO_PID.
     seq -- sequence number of message or NL_AUTO_SEQ.
     type_ -- message type.
     flags -- message flags.
@@ -428,7 +428,7 @@ def print_genl_msg(_, hdr, ops, payloadlen):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L831
 
     Positional arguments:
-    hdr -- netlink message header (nlmsghdr class instance).
+    hdr -- Netlink message header (nlmsghdr class instance).
     ops -- cache operations (nl_cache_ops class instance).
     payloadlen -- length of payload in message (ctypes.c_int instance).
 
@@ -512,8 +512,8 @@ def print_msg(msg, hdr):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L929
 
     Positional arguments:
-    msg -- netlink message (nl_msg class instance).
-    hdr -- netlink message header (nlmsghdr class instance).
+    msg -- Netlink message (nl_msg class instance).
+    hdr -- Netlink message header (nlmsghdr class instance).
     """
     payloadlen = ctypes.c_int(nlmsg_len(hdr))
     attrlen = 0

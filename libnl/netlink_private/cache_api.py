@@ -13,7 +13,7 @@ class nl_msgtype(object):
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/cache-api.h#L117
 
     Positional arguments:
-    mt_id -- netlink message type (c_int).
+    mt_id -- Netlink message type (c_int).
     mt_act -- cache action to take (c_int).
     mt_name -- name of operation for human-readable printing (string).
     """
@@ -41,7 +41,7 @@ class nl_cache_ops(object):
 
     Instance variables:
     co_name -- name of cache type (must be unique) (c_bytes).
-    co_hdrsize -- size of family specific netlink header (c_int).
+    co_hdrsize -- size of family specific Netlink header (c_int).
     co_protocol -- Netlink protocol (c_int).
     co_hash_size -- cache object hash size (c_int).
     co_flags -- cache flags (c_uint).
@@ -50,7 +50,7 @@ class nl_cache_ops(object):
         the kernel requesting a complete dump.
     co_msg_parser -- function, called whenever a message was received that needs to be parsed. Must parse the message
         and call the parser callback function (nl_parser_param) provided via the argument.
-    co_event_filter -- function, the function registered under this callback is called after a netlink notification
+    co_event_filter -- function, the function registered under this callback is called after a Netlink notification
         associated with this cache type has been parsed into an object and is being considered for inclusion into the
         specified cache. The purpose of this function is to filter out notifications which should be ignored when
         updating caches. The function must return NL_SKIP to prevent the object from being included, or NL_OK to include

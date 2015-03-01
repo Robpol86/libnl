@@ -274,9 +274,10 @@ def test_nested():
 
     actual = dict()
     nlh = nlmsg_hdr(msg)
-    for nla_outer in nlmsg_for_each_attr(nlh):
+    rem = ctypes.c_int()
+    for nla_outer in nlmsg_for_each_attr(nlh, 0, rem):
         actual[nla_type(nla_outer)] = b'Outer'
-        for nla in nla_for_each_nested(nla_outer):
+        for nla in nla_for_each_nested(nla_outer, rem):
             actual[nla_type(nla)] = nla_get_string(nla)
     expected = {
         9: b'Outer',

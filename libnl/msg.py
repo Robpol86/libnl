@@ -16,7 +16,7 @@ import os
 import resource
 import string
 
-from libnl.attr import nla_for_each_attr, nla_find, nla_is_nested, nla_len, nlmsg_data
+from libnl.attr import nla_for_each_attr, nla_find, nla_is_nested, nla_len
 from libnl.cache_mngt import nl_msgtype_lookup, nl_cache_ops_associate_safe
 from libnl.linux_private.genetlink import GENL_HDRLEN, genlmsghdr
 from libnl.linux_private.netlink import (nlmsghdr, NLMSG_ERROR, NLMSG_HDRLEN, NETLINK_GENERIC, NLMSG_NOOP, NLMSG_DONE,
@@ -24,6 +24,7 @@ from libnl.linux_private.netlink import (nlmsghdr, NLMSG_ERROR, NLMSG_HDRLEN, NE
                                          NLM_F_MATCH, NLM_F_ATOMIC, NLM_F_REPLACE, NLM_F_EXCL, NLM_F_CREATE,
                                          NLM_F_APPEND, nlmsgerr, NLMSG_ALIGN, nlattr)
 from libnl.misc import bytearray_ptr
+from libnl.msg_ import nlmsg_data, nlmsg_len
 from libnl.netlink_private.netlink import BUG
 from libnl.netlink_private.types import nl_msg, NL_MSG_CRED_PRESENT
 from libnl.utils import __type2str
@@ -81,22 +82,6 @@ def nlmsg_for_each_attr(nlh, hdrlen, rem):
     return nla_for_each_attr(nlmsg_attrdata(nlh, hdrlen), nlmsg_attrlen(nlh, hdrlen), rem)
 
 
-def nlmsg_datalen(nlh):
-    """Return length of message payload.
-    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L121
-
-    Positional arguments:
-    nlh -- Netlink message header (nlmsghdr class instance).
-
-    Returns:
-    Length of message payload in bytes.
-    """
-    return nlh.nlmsg_len - NLMSG_HDRLEN
-
-
-nlmsg_len = nlmsg_datalen  # Alias. https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L126
-
-
 def nlmsg_attrdata(nlh, hdrlen):
     """Head of attributes data.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L143
@@ -138,17 +123,18 @@ def nlmsg_valid_hdr(nlh, hdrlen):
 
 
 def nlmsg_find_attr(nlh, hdrlen, attrtype):
-    """Find a specific attribute in a netlink message.
+    """Find a specific attribute in a Netlink message.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L231
 
     Positional arguments:
-    nlh -- netlink message header (nlmsghdr class instance).
-    attrtype -- type of attribute to look for.
+    nlh -- Netlink message header (nlmsghdr class instance).
+    hdrlen -- length of family specific header (integer).
+    attrtype -- type of attribute to look for (integer).
 
     Returns:
     The first attribute which matches the specified type (nlattr class instance).
     """
-    return nla_find(nlmsg_attrdata(nlh, hdrlen), attrtype)
+    return nla_find(nlmsg_attrdata(nlh, hdrlen), nlmsg_attrlen(nlh, hdrlen), attrtype)
 
 
 def nlmsg_alloc(len_=default_msg_size):
@@ -172,7 +158,7 @@ def nlmsg_alloc(len_=default_msg_size):
     return nm
 
 
-nlmsg_alloc_size = nlmsg_alloc  # Alias.
+nlmsg_alloc_size = nlmsg_alloc  # Alias. https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L307
 
 
 def nlmsg_inherit(hdr=None):

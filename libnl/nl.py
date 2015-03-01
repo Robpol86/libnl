@@ -99,8 +99,8 @@ def nl_sendmsg(sk, msg, hdr):
     object.
 
     Positional arguments:
-    sk -- netlink socket (nl_sock class instance).
-    msg -- netlink message to be sent (nl_msg class instance).
+    sk -- Netlink socket (nl_sock class instance).
+    msg -- Netlink message to be sent (nl_msg class instance).
     hdr -- sendmsg() message header (msghdr class instance).
 
     Returns:
@@ -211,13 +211,14 @@ def nl_complete_msg(sk, msg):
 
     - If not yet filled out, the source address of the message (`nlmsg_pid`) will be set to the local port number of the
       socket.
+    - If not yet specified, the next available sequence number is assigned to the message (`nlmsg_seq`).
     - If not yet specified, the protocol field of the message will be set to the protocol field of the socket.
     - The `NLM_F_REQUEST` Netlink message flag will be set.
     - The `NLM_F_ACK` flag will be set if Auto-ACK mode is enabled on the socket.
 
     Positional arguments:
-    sk -- netlink socket (nl_sock class instance).
-    msg -- netlink message (nl_msg class instance).
+    sk -- Netlink socket (nl_sock class instance).
+    msg -- Netlink message (nl_msg class instance).
     """
     nlh = msg.nm_nlh
     if nlh.nlmsg_pid == NL_AUTO_PORT:

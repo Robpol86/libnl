@@ -3,11 +3,7 @@ import ctypes
 import socket
 import string
 
-import pytest
-
-from libnl.attr import (nla_put_u32, nla_get_u32, nla_type, nla_put_u8, nla_put_u16, nla_put_u64, nla_get_u8,
-                        nla_get_u16, nla_get_u64, nla_get_flag, nla_put_flag, nla_put_string, nla_get_string,
-                        nla_put_msecs, nla_get_msecs, nla_put_nested, nla_for_each_nested, nla_len)
+import libnl.attr
 from libnl.linux_private.netlink import NETLINK_ROUTE
 from libnl.misc import msghdr
 from libnl.msg import nlmsg_alloc, nlmsg_hdr, nlmsg_find_attr, nlmsg_for_each_attr, nlmsg_total_size
@@ -42,15 +38,14 @@ def test_nla_put_get_u32():
     msg = nlmsg_alloc()
     nlh = nlmsg_hdr(msg)
     for i in range(len(range_)):
-        nla_put_u32(msg, i, range_[i])
+        libnl.attr.nla_put_u32(msg, i, range_[i])
     i = 0
     for nla in nlmsg_for_each_attr(nlh, 0, rem):
-        assert i == nla_type(nla)
-        assert range_[i] == nla_get_u32(nla)
+        assert i == libnl.attr.nla_type(nla)
+        assert range_[i] == libnl.attr.nla_get_u32(nla)
         i += 1
 
 
-@pytest.mark.skipif('True')
 def test_socket(tcp_server):
     """// gcc $(pkg-config --cflags --libs libnl-genl-3.0) a.c && (nc -l 2000 |base64 &) && sleep 0.1 && ./a.out
     #include <netlink/msg.h>
@@ -94,11 +89,11 @@ def test_socket(tcp_server):
     // CAAEAAgAAAA=
     """
     msg = nlmsg_alloc()
-    assert 0 == nla_put_u32(msg, 4, 8)
+    assert 0 == libnl.attr.nla_put_u32(msg, 4, 8)
     nlh = nlmsg_hdr(msg)
     attr = nlmsg_find_attr(nlh, 0, 4)
-    assert 4 == nla_type(attr)
-    assert 8 == nla_get_u32(attr)
+    assert 4 == libnl.attr.nla_type(attr)
+    assert 8 == libnl.attr.nla_get_u32(attr)
     assert 8 == attr.nla_len
 
     sk = nl_socket_alloc()
@@ -121,54 +116,54 @@ def test_socket(tcp_server):
 
 def test_ints():
     msg = nlmsg_alloc()
-    assert 0 == nla_put_u8(msg, 2, 10)
-    assert 0 == nla_put_u16(msg, 3, 11)
-    assert 0 == nla_put_u32(msg, 4, 12)
-    assert 0 == nla_put_u64(msg, 5, 13195)
+    assert 0 == libnl.attr.nla_put_u8(msg, 2, 10)
+    assert 0 == libnl.attr.nla_put_u16(msg, 3, 11)
+    assert 0 == libnl.attr.nla_put_u32(msg, 4, 12)
+    assert 0 == libnl.attr.nla_put_u64(msg, 5, 13195)
 
     attr = nlmsg_find_attr(nlmsg_hdr(msg), 0, 2)
-    assert 2 == nla_type(attr)
-    assert 10 == nla_get_u8(attr)
+    assert 2 == libnl.attr.nla_type(attr)
+    assert 10 == libnl.attr.nla_get_u8(attr)
     assert 5 == attr.nla_len
     assert b'BQACAAo=' == base64.b64encode(bytes(attr)[:attr.nla_len])
 
     attr = nlmsg_find_attr(nlmsg_hdr(msg), 0, 3)
-    assert 3 == nla_type(attr)
-    assert 11 == nla_get_u16(attr)
+    assert 3 == libnl.attr.nla_type(attr)
+    assert 11 == libnl.attr.nla_get_u16(attr)
     assert 6 == attr.nla_len
     assert b'BgADAAsA' == base64.b64encode(bytes(attr)[:attr.nla_len])
 
     attr = nlmsg_find_attr(nlmsg_hdr(msg), 0, 4)
-    assert 4 == nla_type(attr)
-    assert 12 == nla_get_u32(attr)
+    assert 4 == libnl.attr.nla_type(attr)
+    assert 12 == libnl.attr.nla_get_u32(attr)
     assert 8 == attr.nla_len
     assert b'CAAEAAwAAAA=' == base64.b64encode(bytes(attr)[:attr.nla_len])
 
     attr = nlmsg_find_attr(nlmsg_hdr(msg), 0, 5)
-    assert 5 == nla_type(attr)
-    assert 13195 == nla_get_u64(attr)  # printf("%llu\n", nla_get_u64(attr));
+    assert 5 == libnl.attr.nla_type(attr)
+    assert 13195 == libnl.attr.nla_get_u64(attr)  # printf("%llu\n", nla_get_u64(attr));
     assert 12 == attr.nla_len
     assert b'DAAFAIszAAAAAAAA' == base64.b64encode(bytes(attr)[:attr.nla_len])
 
 
 def test_flag():
     msg = nlmsg_alloc()
-    assert 0 == nla_put_flag(msg, 7)
+    assert 0 == libnl.attr.nla_put_flag(msg, 7)
 
     attr = nlmsg_find_attr(nlmsg_hdr(msg), 0, 7)
-    assert 7 == nla_type(attr)
-    assert nla_get_flag(attr) is True  # printf("%s\n", nla_get_flag(attr) ? "True" : "False");
+    assert 7 == libnl.attr.nla_type(attr)
+    assert libnl.attr.nla_get_flag(attr) is True  # printf("%s\n", nla_get_flag(attr) ? "True" : "False");
     assert 4 == attr.nla_len
     assert b'BAAHAA==' == base64.b64encode(bytes(attr)[:attr.nla_len])
 
 
 def test_msecs():
     msg = nlmsg_alloc()
-    assert 0 == nla_put_msecs(msg, 12, 99)
+    assert 0 == libnl.attr.nla_put_msecs(msg, 12, 99)
 
     attr = nlmsg_find_attr(nlmsg_hdr(msg), 0, 12)
-    assert 12 == nla_type(attr)
-    assert 99 == nla_get_msecs(attr)
+    assert 12 == libnl.attr.nla_type(attr)
+    assert 99 == libnl.attr.nla_get_msecs(attr)
     assert 12 == attr.nla_len
     assert b'DAAMAGMAAAAAAAAA' == base64.b64encode(bytes(attr)[:attr.nla_len])
 
@@ -176,11 +171,11 @@ def test_msecs():
 def test_string_short():
     payload = bytes('test'.encode('ascii'))
     msg = nlmsg_alloc()
-    assert 0 == nla_put_string(msg, 6, payload)
+    assert 0 == libnl.attr.nla_put_string(msg, 6, payload)
 
     attr = nlmsg_find_attr(nlmsg_hdr(msg), 0, 6)
-    assert 6 == nla_type(attr)
-    assert payload == nla_get_string(attr)
+    assert 6 == libnl.attr.nla_type(attr)
+    assert payload == libnl.attr.nla_get_string(attr)
     assert 9 == attr.nla_len
     assert b'CQAGAHRlc3QA' == base64.b64encode(bytes(attr)[:attr.nla_len])
 
@@ -188,11 +183,11 @@ def test_string_short():
 def test_string_medium():
     payload = bytes('The quick br()wn f0x jumps over the l@zy dog!'.encode('ascii'))
     msg = nlmsg_alloc()
-    assert 0 == nla_put_string(msg, 6, payload)
+    assert 0 == libnl.attr.nla_put_string(msg, 6, payload)
 
     attr = nlmsg_find_attr(nlmsg_hdr(msg), 0, 6)
-    assert 6 == nla_type(attr)
-    assert payload == nla_get_string(attr)
+    assert 6 == libnl.attr.nla_type(attr)
+    assert payload == libnl.attr.nla_get_string(attr)
     assert 50 == attr.nla_len
     expected = b'MgAGAFRoZSBxdWljayBicigpd24gZjB4IGp1bXBzIG92ZXIgdGhlIGxAenkgZG9nIQA='
     assert expected == base64.b64encode(bytes(attr)[:attr.nla_len])
@@ -201,39 +196,15 @@ def test_string_medium():
 def test_string_long():
     payload = bytes(string.printable[:-2].encode('ascii'))
     msg = nlmsg_alloc()
-    assert 0 == nla_put_string(msg, 6, payload)
+    assert 0 == libnl.attr.nla_put_string(msg, 6, payload)
 
     attr = nlmsg_find_attr(nlmsg_hdr(msg), 0, 6)
-    assert 6 == nla_type(attr)
-    assert payload == nla_get_string(attr)
+    assert 6 == libnl.attr.nla_type(attr)
+    assert payload == libnl.attr.nla_get_string(attr)
     assert 103 == attr.nla_len
     expected = (b'ZwAGADAxMjM0NTY3ODlhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ekFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaISIjJCUmJygp'
                 b'KissLS4vOjs8PT4/QFtcXV5fYHt8fX4gCQoNAA==')
     assert expected == base64.b64encode(bytes(attr)[:attr.nla_len])
-
-
-@pytest.mark.skipif('True')
-def test_addr():
-    msg = nlmsg_alloc()
-    assert 0 == nla_put_addr(msg, 1, '127.0.0.1')
-
-    attr = nlmsg_find_attr(nlmsg_hdr(msg), 0, 1)
-    assert 1 == nla_type(attr)
-    assert '127.0.0.1' == nla_get_addr(attr)
-    assert 4 == attr.nla_len
-    assert b'' == base64.b64encode(bytes(attr)[:attr.nla_len])
-
-
-@pytest.mark.skipif('True')
-def test_data():
-    msg = nlmsg_alloc()
-    assert 0 == nla_put_data(msg, 0, ctypes.c_float(3.14))
-
-    attr = nlmsg_find_attr(nlmsg_hdr(msg), 0, 0)
-    assert 0 == nla_type(attr)
-    assert c_float(3.14).value == nla_get_data(attr)
-    assert 4 == attr.nla_len
-    assert b'' == base64.b64encode(bytes(attr)[:attr.nla_len])
 
 
 def test_nested():
@@ -324,14 +295,14 @@ def test_nested():
     msg = nlmsg_alloc()
     sub = nlmsg_alloc()
     nlh = nlmsg_hdr(sub)
-    nla_put_string(sub, 0, b'')
-    nla_put_string(sub, 1, b'Just tell me why!')
-    nla_put_string(sub, 2, b'Please read this 55-page warrant.')
-    nla_put_string(sub, 3, b'There must be robots worse than I!')
-    nla_put_string(sub, 4, b"We've checked around, there really aren't.")
+    libnl.attr.nla_put_string(sub, 0, b'')
+    libnl.attr.nla_put_string(sub, 1, b'Just tell me why!')
+    libnl.attr.nla_put_string(sub, 2, b'Please read this 55-page warrant.')
+    libnl.attr.nla_put_string(sub, 3, b'There must be robots worse than I!')
+    libnl.attr.nla_put_string(sub, 4, b"We've checked around, there really aren't.")
     actual = list()
     for nla in nlmsg_for_each_attr(nlh, 0, rem1):
-        actual.append((nla_type(nla), nla_len(nla), nla_get_string(nla)))
+        actual.append((libnl.attr.nla_type(nla), libnl.attr.nla_len(nla), libnl.attr.nla_get_string(nla)))
     expected = [
         (0, 1, b''),
         (1, 18, b'Just tell me why!'),
@@ -345,15 +316,15 @@ def test_nested():
                 '20626520726f626f747320776f727365207468616e20492100002f000400576527766520636865636b65642061726f756e642c'
                 '207468657265207265616c6c79206172656e27742e0000')
     assert expected == ''.join(format(c, '02x') for c in nlh.bytearray[:nlmsg_total_size(nlmsg_datalen(nlh))])
-    nla_put_nested(msg, 5, sub)
+    libnl.attr.nla_put_nested(msg, 5, sub)
 
     sub = nlmsg_alloc()
     nlh = nlmsg_hdr(sub)
-    nla_put_string(sub, 6, b"Aw, don't blame me,")
-    nla_put_string(sub, 7, b'Blame my upbringing!')
+    libnl.attr.nla_put_string(sub, 6, b"Aw, don't blame me,")
+    libnl.attr.nla_put_string(sub, 7, b'Blame my upbringing!')
     actual = list()
     for nla in nlmsg_for_each_attr(nlh, 0, rem1):
-        actual.append((nla_type(nla), nla_len(nla), nla_get_string(nla)))
+        actual.append((libnl.attr.nla_type(nla), libnl.attr.nla_len(nla), libnl.attr.nla_get_string(nla)))
     expected = [
         (6, 20, b"Aw, don't blame me,"),
         (7, 21, b'Blame my upbringing!'),
@@ -362,10 +333,10 @@ def test_nested():
     expected = ('440000000000000000000000000000001800060041772c20646f6e277420626c616d65206d652c0019000700426c616d65206d'
                 '792075706272696e67696e672100000000')
     assert expected == ''.join(format(c, '02x') for c in nlh.bytearray[:nlmsg_total_size(nlmsg_datalen(nlh))])
-    nla_put_nested(msg, 8, sub)
+    libnl.attr.nla_put_nested(msg, 8, sub)
 
     nlh = nlmsg_hdr(msg)
-    nla_put_u16(msg, 9, 666)
+    libnl.attr.nla_put_u16(msg, 9, 666)
     expected = ('f4000000000000000000000000000000a40005000500000000000000160001004a7573742074656c6c206d6520776879210000'
                 '0026000200506c65617365207265616420746869732035352d706167652077617272616e742e00000027000300546865726520'
                 '6d75737420626520726f626f747320776f727365207468616e20492100002f000400576527766520636865636b65642061726f'
@@ -375,12 +346,14 @@ def test_nested():
 
     actual = list()
     for nla_outer in nlmsg_for_each_attr(nlh, 0, rem1):
-        if nla_type(nla_outer) != 9:
-            actual.append((nla_type(nla_outer), nla_len(nla_outer), b'Outer'))
-            for nla in nla_for_each_nested(nla_outer, rem2):
-                actual.append((nla_type(nla), nla_len(nla), nla_get_string(nla)))
+        if libnl.attr.nla_type(nla_outer) != 9:
+            actual.append((libnl.attr.nla_type(nla_outer), libnl.attr.nla_len(nla_outer), b'Outer'))
+            for nla in libnl.attr.nla_for_each_nested(nla_outer, rem2):
+                actual.append((libnl.attr.nla_type(nla), libnl.attr.nla_len(nla), libnl.attr.nla_get_string(nla)))
         else:
-            actual.append((nla_type(nla_outer), nla_len(nla_outer), nla_get_u16(nla_outer)))
+            actual.append(
+                (libnl.attr.nla_type(nla_outer), libnl.attr.nla_len(nla_outer), libnl.attr.nla_get_u16(nla_outer))
+            )
     expected = [
         (5, 160, b'Outer'),
         (0, 1, b''),
@@ -394,13 +367,3 @@ def test_nested():
         (9, 2, 666),
     ]
     assert expected == actual
-
-
-@pytest.mark.skipif('True')
-def test_same_attrtype():
-    pass
-
-
-@pytest.mark.skipif('True')
-def test_nla_get_wrong_type():
-    pass

@@ -47,16 +47,12 @@ class sockaddr_nl(StructNoPointers):
     SIGNATURE = (SIZEOF_UINT, SIZEOF_USHORT, SIZEOF_U32, SIZEOF_U32)
     SIZEOF = sum(SIGNATURE)
 
-    def __init__(self, ba, nl_family=None, nl_pad=None, nl_pid=None, nl_groups=None):
-        super().__init__(ba)
-        if nl_family is not None:
-            self.nl_family = nl_family
-        if nl_pad is not None:
-            self.nl_pad = nl_pad
-        if nl_pid is not None:
-            self.nl_pid = nl_pid
-        if nl_groups is not None:
-            self.nl_groups = nl_groups
+    def __init__(self, nl_family=0, nl_pad=0, nl_pid=0, nl_groups=0):
+        super().__init__(bytearray(b'\0') * self.SIZEOF)
+        self.nl_family = nl_family
+        self.nl_pad = nl_pad
+        self.nl_pid = nl_pid
+        self.nl_groups = nl_groups
 
     def __iter__(self):
         yield self.nl_pid

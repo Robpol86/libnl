@@ -15,12 +15,12 @@ class BUG(Exception):
 
 def nl_cb_call(cb, type_, msg):
     """Calls a callback function.
-    https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/netlink.h#L137
+    https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/netlink.h#L136
 
     Positional arguments:
-    cb -- callback class instance
+    cb -- nl_cb class instance.
     type_ -- callback type integer (e.g. NL_CB_MSG_OUT).
-    msg -- netlink message (nl_msg class instance).
+    msg -- Netlink message (nl_msg class instance).
 
     Returns:
     Integer from the callback function (like NL_OK, NL_SKIP, etc).

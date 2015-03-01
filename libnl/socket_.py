@@ -56,7 +56,7 @@ def generate_local_port():
 
 
 def nl_socket_alloc(cb=None):
-    """Allocate new netlink socket. Does not yet actually open a socket.
+    """Allocate new Netlink socket. Does not yet actually open a socket.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L206
 
     Also has code for generating local port once.
@@ -88,11 +88,11 @@ def nl_socket_alloc(cb=None):
 
 
 def nl_socket_free(sk):
-    """Free a netlink socket (closes the socket).
+    """Free a Netlink socket (closes the socket).
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L244
 
     Positional arguments:
-    sk -- netlink socket (nl_sock class instance).
+    sk -- Netlink socket (nl_sock class instance).
     """
     if sk and sk.socket_instance:
         sk.socket_instance.close()

@@ -291,7 +291,7 @@ def nlmsg_set_proto(msg, protocol):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L584
 
     Positional arguments:
-    msg -- netlink message (nl_msg class instance).
+    msg -- Netlink message (nl_msg class instance).
     protocol -- integer.
     """
     msg.nm_protocol = protocol

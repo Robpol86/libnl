@@ -48,7 +48,7 @@ class nl_cb(object):  # TODO https://github.com/Robpol86/libnl/issues/4
 
 class nl_sock(object):
     """Netlink socket class (C struct equivalent).
-    https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L70
+    https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L69
 
     Instance variables:
     s_local -- struct sockaddr_nl.
@@ -93,15 +93,17 @@ class nl_sock(object):
 class nl_msg(object):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L133
 
+    Client-side only. Never transmitted to the kernel.
+
     Instance variables:
-    nm_protocol --
-    nm_flags --
-    nm_src --
-    nm_dst --
-    nm_creds --
-    nm_nlh --
-    nm_size --
-    nm_refcnt --
+    nm_protocol -- integer.
+    nm_flags -- integer.
+    nm_src -- sockaddr_nl class instance.
+    nm_dst -- sockaddr_nl class instance.
+    nm_creds -- ucred class instance.
+    nm_nlh -- nlmsghdr class instance.
+    nm_size -- integer.
+    nm_refcnt -- integer.
     """
 
     def __init__(self):

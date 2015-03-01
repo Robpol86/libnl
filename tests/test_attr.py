@@ -7,10 +7,11 @@ import pytest
 
 from libnl.attr import (nla_put_u32, nla_get_u32, nla_type, nla_put_u8, nla_put_u16, nla_put_u64, nla_get_u8,
                         nla_get_u16, nla_get_u64, nla_get_flag, nla_put_flag, nla_put_string, nla_get_string,
-                        nla_put_msecs, nla_get_msecs, nla_put_nested, nla_for_each_nested)
+                        nla_put_msecs, nla_get_msecs, nla_put_nested, nla_for_each_nested, nla_len)
 from libnl.linux_private.netlink import NETLINK_ROUTE
 from libnl.misc import msghdr
-from libnl.msg import nlmsg_alloc, nlmsg_hdr, nlmsg_find_attr, nlmsg_for_each_attr
+from libnl.msg import nlmsg_alloc, nlmsg_hdr, nlmsg_find_attr, nlmsg_for_each_attr, nlmsg_total_size
+from libnl.msg_ import nlmsg_datalen
 from libnl.nl import nl_sendmsg, nl_connect, nl_complete_msg
 from libnl.socket_ import nl_socket_alloc, nl_socket_free
 
@@ -49,6 +50,7 @@ def test_nla_put_get_u32():
         i += 1
 
 
+@pytest.mark.skipif('True')
 def test_socket(tcp_server):
     """// gcc $(pkg-config --cflags --libs libnl-genl-3.0) a.c && (nc -l 2000 |base64 &) && sleep 0.1 && ./a.out
     #include <netlink/msg.h>
@@ -238,21 +240,50 @@ def test_nested():
     """// gcc $(pkg-config --cflags --libs libnl-genl-3.0) a.c && ./a.out
     #include <netlink/msg.h>
     int main() {
+        int i, rem1, rem2;
+        struct nlattr *nla;
         struct nl_msg *msg = nlmsg_alloc();
         struct nl_msg *sub = nlmsg_alloc();
-        nla_put_string(sub, 2, "sub level A");
-        nla_put_string(sub, 3, "sub level B");
-        nla_put_string(sub, 6, "sub level C");
-        nla_put_nested(msg, 9, sub);
+        struct nlmsghdr *nlh = nlmsg_hdr(sub);
+        unsigned char *buf = (unsigned char *) nlh;
+        nla_put_string(sub, 0, "");
+        nla_put_string(sub, 1, "Just tell me why!");
+        nla_put_string(sub, 2, "Please read this 55-page warrant.");
+        nla_put_string(sub, 3, "There must be robots worse than I!");
+        nla_put_string(sub, 4, "We've checked around, there really aren't.");
+        nlmsg_for_each_attr(nla, nlh, 0, rem1) {
+            printf("type: %d len: %d; nla_get_string: %s\n", nla_type(nla), nla_len(nla), nla_get_string(nla));
+        }
+        for (i = 0; i < nlmsg_total_size(nlmsg_datalen(nlh)); i++) printf("%02x", buf[i]); printf("\n");
+        nla_put_nested(msg, 5, sub);
         nlmsg_free(sub);
 
-        struct nlattr *nla, *nla_outer;
-        struct nlmsghdr *nlh = nlmsg_hdr(msg);
-        int rem;
-        nlmsg_for_each_attr(nla_outer, nlh, 0, rem) {
-            printf("Outer type: %d\n", nla_type(nla_outer));
-            nla_for_each_nested(nla, nla_outer, rem) {
-                printf("type: %d; nla_get_string: %s\n", nla_type(nla), nla_get_string(nla));
+        sub = nlmsg_alloc();
+        nlh = nlmsg_hdr(sub);
+        buf = (unsigned char *) nlh;
+        nla_put_string(sub, 6, "Aw, don't blame me,");
+        nla_put_string(sub, 7, "Blame my upbringing!");
+        nlmsg_for_each_attr(nla, nlh, 0, rem1) {
+            printf("type: %d len: %d; nla_get_string: %s\n", nla_type(nla), nla_len(nla), nla_get_string(nla));
+        }
+        for (i = 0; i < nlmsg_total_size(nlmsg_datalen(nlh)); i++) printf("%02x", buf[i]); printf("\n");
+        nla_put_nested(msg, 8, sub);
+        nlmsg_free(sub);
+
+        nlh = nlmsg_hdr(msg);
+        buf = (unsigned char *) nlh;
+        nla_put_u16(msg, 9, 666);
+        for (i = 0; i < nlmsg_total_size(nlmsg_datalen(nlh)); i++) printf("%02x", buf[i]); printf("\n");
+
+        struct nlattr *nla_outer;
+        nlmsg_for_each_attr(nla_outer, nlh, 0, rem1) {
+            if (nla_type(nla_outer) != 9) {
+                printf("Outer type: %d len:%d\n", nla_type(nla_outer), nla_len(nla_outer));
+                nla_for_each_nested(nla, nla_outer, rem2) {
+                    printf("type: %d len: %d; nla_get_string: %s\n", nla_type(nla), nla_len(nla), nla_get_string(nla));
+                }
+            } else {
+                printf("t: %d l:%d; get_u16: %d\n", nla_type(nla_outer), nla_len(nla_outer), nla_get_u16(nla_outer));
             }
         }
 
@@ -260,31 +291,108 @@ def test_nested():
         return 0;
     }
     // Expected output:
-    // Outer type: 9
-    // type: 2; nla_get_string: sub level A
-    // type: 3; nla_get_string: sub level B
-    // type: 6; nla_get_string: sub level C
+    // type: 0 len: 1; nla_get_string:
+    // type: 1 len: 18; nla_get_string: Just tell me why!
+    // type: 2 len: 34; nla_get_string: Please read this 55-page warrant.
+    // type: 3 len: 35; nla_get_string: There must be robots worse than I!
+    // type: 4 len: 43; nla_get_string: We've checked around, there really aren't.
+    // b00000000000000000000000000000000500000000000000160001004a7573742074656c6c206d65207768792100000026000200506c65617
+    365207265616420746869732035352d706167652077617272616e742e000000270003005468657265206d75737420626520726f626f747320776
+    f727365207468616e20492100002f000400576527766520636865636b65642061726f756e642c207468657265207265616c6c79206172656e277
+    42e0000
+    // type: 6 len: 20; nla_get_string: Aw, don't blame me,
+    // type: 7 len: 21; nla_get_string: Blame my upbringing!
+    // 440000000000000000000000000000001800060041772c20646f6e277420626c616d65206d652c0019000700426c616d65206d79207570627
+    2696e67696e672100000000
+    // f4000000000000000000000000000000a40005000500000000000000160001004a7573742074656c6c206d652077687921000000260002005
+    06c65617365207265616420746869732035352d706167652077617272616e742e000000270003005468657265206d75737420626520726f626f7
+    47320776f727365207468616e20492100002f000400576527766520636865636b65642061726f756e642c207468657265207265616c6c7920617
+    2656e27742e0000380008001800060041772c20646f6e277420626c616d65206d652c0019000700426c616d65206d792075706272696e67696e6
+    72100000000060009009a020000
+    // Outer type: 5 len:160
+    // type: 0 len: 1; nla_get_string:
+    // type: 1 len: 18; nla_get_string: Just tell me why!
+    // type: 2 len: 34; nla_get_string: Please read this 55-page warrant.
+    // type: 3 len: 35; nla_get_string: There must be robots worse than I!
+    // type: 4 len: 43; nla_get_string: We've checked around, there really aren't.
+    // Outer type: 8 len:52
+    // type: 6 len: 20; nla_get_string: Aw, don't blame me,
+    // type: 7 len: 21; nla_get_string: Blame my upbringing!
+    // t: 9 l:2; get_u16: 666
     """
+    rem1, rem2 = ctypes.c_int(), ctypes.c_int()
     msg = nlmsg_alloc()
     sub = nlmsg_alloc()
-    nla_put_string(sub, 2, b'sub level A')
-    nla_put_string(sub, 3, b'sub level B')
-    nla_put_string(sub, 6, b'sub level C')
-    nla_put_nested(msg, 9, sub)
+    nlh = nlmsg_hdr(sub)
+    nla_put_string(sub, 0, b'')
+    nla_put_string(sub, 1, b'Just tell me why!')
+    nla_put_string(sub, 2, b'Please read this 55-page warrant.')
+    nla_put_string(sub, 3, b'There must be robots worse than I!')
+    nla_put_string(sub, 4, b"We've checked around, there really aren't.")
+    actual = list()
+    for nla in nlmsg_for_each_attr(nlh, 0, rem1):
+        actual.append((nla_type(nla), nla_len(nla), nla_get_string(nla)))
+    expected = [
+        (0, 1, b''),
+        (1, 18, b'Just tell me why!'),
+        (2, 34, b'Please read this 55-page warrant.'),
+        (3, 35, b'There must be robots worse than I!'),
+        (4, 43, b"We've checked around, there really aren't."),
+    ]
+    assert expected == actual
+    expected = ('b00000000000000000000000000000000500000000000000160001004a7573742074656c6c206d652077687921000000260002'
+                '00506c65617365207265616420746869732035352d706167652077617272616e742e000000270003005468657265206d757374'
+                '20626520726f626f747320776f727365207468616e20492100002f000400576527766520636865636b65642061726f756e642c'
+                '207468657265207265616c6c79206172656e27742e0000')
+    assert expected == ''.join(format(c, '02x') for c in nlh.bytearray[:nlmsg_total_size(nlmsg_datalen(nlh))])
+    nla_put_nested(msg, 5, sub)
 
-    actual = dict()
+    sub = nlmsg_alloc()
+    nlh = nlmsg_hdr(sub)
+    nla_put_string(sub, 6, b"Aw, don't blame me,")
+    nla_put_string(sub, 7, b'Blame my upbringing!')
+    actual = list()
+    for nla in nlmsg_for_each_attr(nlh, 0, rem1):
+        actual.append((nla_type(nla), nla_len(nla), nla_get_string(nla)))
+    expected = [
+        (6, 20, b"Aw, don't blame me,"),
+        (7, 21, b'Blame my upbringing!'),
+    ]
+    assert expected == actual
+    expected = ('440000000000000000000000000000001800060041772c20646f6e277420626c616d65206d652c0019000700426c616d65206d'
+                '792075706272696e67696e672100000000')
+    assert expected == ''.join(format(c, '02x') for c in nlh.bytearray[:nlmsg_total_size(nlmsg_datalen(nlh))])
+    nla_put_nested(msg, 8, sub)
+
     nlh = nlmsg_hdr(msg)
-    rem = ctypes.c_int()
-    for nla_outer in nlmsg_for_each_attr(nlh, 0, rem):
-        actual[nla_type(nla_outer)] = b'Outer'
-        for nla in nla_for_each_nested(nla_outer, rem):
-            actual[nla_type(nla)] = nla_get_string(nla)
-    expected = {
-        9: b'Outer',
-        2: b'sub level A',
-        3: b'sub level B',
-        6: b'sub level C',
-    }
+    nla_put_u16(msg, 9, 666)
+    expected = ('f4000000000000000000000000000000a40005000500000000000000160001004a7573742074656c6c206d6520776879210000'
+                '0026000200506c65617365207265616420746869732035352d706167652077617272616e742e00000027000300546865726520'
+                '6d75737420626520726f626f747320776f727365207468616e20492100002f000400576527766520636865636b65642061726f'
+                '756e642c207468657265207265616c6c79206172656e27742e0000380008001800060041772c20646f6e277420626c616d6520'
+                '6d652c0019000700426c616d65206d792075706272696e67696e672100000000060009009a020000')
+    assert expected == ''.join(format(c, '02x') for c in nlh.bytearray[:nlmsg_total_size(nlmsg_datalen(nlh))])
+
+    actual = list()
+    for nla_outer in nlmsg_for_each_attr(nlh, 0, rem1):
+        if nla_type(nla_outer) != 9:
+            actual.append((nla_type(nla_outer), nla_len(nla_outer), b'Outer'))
+            for nla in nla_for_each_nested(nla_outer, rem2):
+                actual.append((nla_type(nla), nla_len(nla), nla_get_string(nla)))
+        else:
+            actual.append((nla_type(nla_outer), nla_len(nla_outer), nla_get_u16(nla_outer)))
+    expected = [
+        (5, 160, b'Outer'),
+        (0, 1, b''),
+        (1, 18, b'Just tell me why!'),
+        (2, 34, b'Please read this 55-page warrant.'),
+        (3, 35, b'There must be robots worse than I!'),
+        (4, 43, b"We've checked around, there really aren't."),
+        (8, 52, b'Outer'),
+        (6, 20, b"Aw, don't blame me,"),
+        (7, 21, b'Blame my upbringing!'),
+        (9, 2, 666),
+    ]
     assert expected == actual
 
 

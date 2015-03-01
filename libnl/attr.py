@@ -309,7 +309,7 @@ def nla_for_each_nested(nla, rem):
     Returns:
     Generator yielding nlattr instances.
     """
-    pos = nla if isinstance(nla, nlattr) else nlattr(nla_data(nla))
+    pos = nlattr(nla_data(nla))
     rem.value = nla_len(nla)
     while nla_ok(pos, rem):
         yield pos

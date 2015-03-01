@@ -9,7 +9,7 @@ of the License.
 
 import ctypes
 
-from libnl.misc import StructNoPointers, SIZEOF_UINT, SIZEOF_USHORT, SIZEOF_U32, SIZEOF_U16, SIZEOF_INT
+from libnl.misc import StructNoPointers, SIZEOF_UINT, SIZEOF_USHORT, SIZEOF_U32, SIZEOF_U16, SIZEOF_INT, bytearray_ptr
 
 NETLINK_ROUTE = 0  # Routing/device hook.
 NETLINK_GENERIC = 16
@@ -47,12 +47,16 @@ class sockaddr_nl(StructNoPointers):
     SIGNATURE = (SIZEOF_UINT, SIZEOF_USHORT, SIZEOF_U32, SIZEOF_U32)
     SIZEOF = sum(SIGNATURE)
 
-    def __init__(self, nl_family=0, nl_pad=0, nl_pid=0, nl_groups=0):
-        super().__init__(self.SIZEOF)
-        self.nl_family = nl_family
-        self.nl_pad = nl_pad
-        self.nl_pid = nl_pid
-        self.nl_groups = nl_groups
+    def __init__(self, ba, nl_family=None, nl_pad=None, nl_pid=None, nl_groups=None):
+        super().__init__(ba)
+        if nl_family is not None:
+            self.nl_family = nl_family
+        if nl_pad is not None:
+            self.nl_pad = nl_pad
+        if nl_pid is not None:
+            self.nl_pid = nl_pid
+        if nl_groups is not None:
+            self.nl_groups = nl_groups
 
     def __iter__(self):
         yield self.nl_pid
@@ -119,13 +123,18 @@ class nlmsghdr(StructNoPointers):
     SIGNATURE = (SIZEOF_U32, SIZEOF_U16, SIZEOF_U16, SIZEOF_U32, SIZEOF_U32)
     SIZEOF = sum(SIGNATURE)
 
-    def __init__(self, nlmsg_len=0, nlmsg_type=0, nlmsg_flags=0, nlmsg_seq=0, nlmsg_pid=0):
-        super().__init__(self.SIZEOF)
-        self.nlmsg_len = nlmsg_len
-        self.nlmsg_type = nlmsg_type
-        self.nlmsg_flags = nlmsg_flags
-        self.nlmsg_seq = nlmsg_seq
-        self.nlmsg_pid = nlmsg_pid
+    def __init__(self, ba, nlmsg_len=None, nlmsg_type=None, nlmsg_flags=None, nlmsg_seq=None, nlmsg_pid=None):
+        super().__init__(ba)
+        if nlmsg_len is not None:
+            self.nlmsg_len = nlmsg_len
+        if nlmsg_type is not None:
+            self.nlmsg_type = nlmsg_type
+        if nlmsg_flags is not None:
+            self.nlmsg_flags = nlmsg_flags
+        if nlmsg_seq is not None:
+            self.nlmsg_seq = nlmsg_seq
+        if nlmsg_pid is not None:
+            self.nlmsg_pid = nlmsg_pid
 
     @property
     def nlmsg_len(self):
@@ -174,8 +183,8 @@ class nlmsghdr(StructNoPointers):
 
     @property
     def payload(self):
-        """Payload and padding at the end."""
-        return self.bytearray[self._get_slicers(4).stop:]
+        """Payload and padding at the end (bytearray_ptr)."""
+        return bytearray_ptr(self.bytearray, self._get_slicers(4).stop)
 
 
 NLMSG_ALIGNTO = ctypes.c_uint(4).value
@@ -201,26 +210,13 @@ class nlmsgerr(StructNoPointers):
     SIGNATURE = (SIZEOF_INT, nlmsghdr.SIZEOF)
     SIZEOF = sum(SIGNATURE)
 
-    def __init__(self, error=0, msg=None):
-        super().__init__(self.SIZEOF)
-        self.error = error
-        self.msg = msg
-
     @property
     def error(self):
         return ctypes.c_int.from_buffer(self.bytearray[self._get_slicers(0)]).value
 
-    @error.setter
-    def error(self, value):
-        self.bytearray[self._get_slicers(0)] = bytearray(ctypes.c_int(value or 0))
-
     @property
     def msg(self):
-        return nlmsghdr.from_buffer(self.bytearray[self._get_slicers(1).start:])
-
-    @msg.setter
-    def msg(self, value):
-        self.bytearray[self._get_slicers(1).start:] = value.bytearray
+        return nlmsghdr(self.bytearray[self._get_slicers(1).start:])
 
 
 NETLINK_ADD_MEMBERSHIP = 1
@@ -249,18 +245,20 @@ class nlattr(StructNoPointers):
      <----------- nla_total_size(payload) ----------->
 
     Instance variables:
-    nla_len -- c_uint16.
-    nla_type -- c_uint16 attribute type (e.g. NL80211_ATTR_SCAN_SSIDS).
-    payload -- payload and padding at the end (bytearay).
+    nla_len -- length of attribute including payload (c_uint16).
+    nla_type -- attribute type (e.g. NL80211_ATTR_SCAN_SSIDS) (c_uint16).
+    payload -- payload and padding at the end (bytearay_ptr).
     """
     _REPR = '<{0}.{1} nla_len={2[nla_len]} nla_type={2[nla_type]} payload={2[payload]}>'
     SIGNATURE = (SIZEOF_U16, SIZEOF_U16)
     SIZEOF = sum(SIGNATURE)
 
-    def __init__(self, nla_len=0, nla_type=0):
-        super().__init__(self.SIZEOF)
-        self.nla_len = nla_len
-        self.nla_type = nla_type
+    def __init__(self, ba, nla_len=None, nla_type=None):
+        super().__init__(ba)
+        if nla_len is not None:
+            self.nla_len = nla_len
+        if nla_type is not None:
+            self.nla_type = nla_type
 
     @property
     def nla_len(self):

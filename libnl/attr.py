@@ -12,8 +12,9 @@ import ctypes
 import logging
 
 from libnl.errno_ import NLE_RANGE, NLE_INVAL, NLE_NOMEM
-from libnl.linux_private.netlink import nlattr, NLA_ALIGN, NLA_TYPE_MASK, NLA_HDRLEN, NLA_F_NESTED, NLMSG_ALIGN
-from libnl.misc import SIZEOF_U8, SIZEOF_U16, SIZEOF_U32, SIZEOF_U64
+from libnl.linux_private.netlink import (nlattr, NLA_ALIGN, NLA_TYPE_MASK, NLA_HDRLEN, NLA_F_NESTED, NLMSG_ALIGN,
+                                         NLMSG_HDRLEN)
+from libnl.misc import SIZEOF_U8, SIZEOF_U16, SIZEOF_U32, SIZEOF_U64, bytearray_ptr
 from libnl.netlink_private.netlink import BUG
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,6 +28,24 @@ NLA_FLAG = 6  # Flag.
 NLA_MSECS = 7  # Micro seconds (64bit).
 NLA_NESTED = 8  # Nested attributes.
 NLA_TYPE_MAX = NLA_NESTED
+
+
+def nla_attr_size(payload):
+    """Return size of attribute without padding.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L55
+
+     <-------- nla_attr_size(payload) --------->
+    +------------------+- - -+- - - - - - - - - +- - -+
+    | Attribute Header | Pad |     Payload      | Pad |
+    +------------------+- - -+- - - - - - - - - +- - -+
+
+    Positional arguments:
+    payload -- payload length of attribute (integer).
+
+    Returns:
+    Size of attribute in bytes without padding (integer).
+    """
+    return int(NLA_HDRLEN + payload)
 
 
 class nla_policy(object):
@@ -53,6 +72,42 @@ class nla_policy(object):
         return answer
 
 
+def nla_total_size(payload):
+    """Return size of attribute including padding.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L73
+
+     <----------- nla_total_size(payload) ----------->
+    +------------------+- - -+- - - - - - - - - +- - -+
+    | Attribute Header | Pad |     Payload      | Pad |
+    +------------------+- - -+- - - - - - - - - +- - -+
+
+    Positional arguments:
+    payload -- payload length of attribute (integer).
+
+    Returns:
+    Size of attribute in bytes (integer).
+    """
+    return int(NLA_ALIGN(nla_attr_size(payload)))
+
+
+def nla_padlen(payload):
+    """Return length of padding at the tail of the attribute.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L91
+
+    +------------------+- - -+- - - - - - - - - +- - -+
+    | Attribute Header | Pad |     Payload      | Pad |
+    +------------------+- - -+- - - - - - - - - +- - -+
+                                                 <--->
+
+    Positional arguments:
+    payload -- payload length of attribute (integer).
+
+    Returns:
+    Length of padding in bytes (integer).
+    """
+    return int(nla_total_size(payload) - nla_attr_size(payload))
+
+
 def nla_type(nla):
     """Return type of the attribute.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L109
@@ -67,7 +122,7 @@ def nla_type(nla):
 
 
 def nla_data(nla):
-    """Return bytearray of the payload data.
+    """Return bytearray_ptr of the payload data.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L120
 
     Positional arguments:
@@ -76,7 +131,7 @@ def nla_data(nla):
     Returns:
     Bytearray payload data.
     """
-    return bytearray(nla.payload)
+    return bytearray_ptr(nla.bytearray, NLA_HDRLEN)
 
 
 def nla_len(nla):
@@ -102,12 +157,12 @@ def nla_ok(nla, remaining):
 
     Positional arguments:
     nla -- attribute of any kind (nlattr class instance).
-    remaining -- number of bytes remaining in attribute stream.
+    remaining -- number of bytes remaining in attribute stream (c_int).
 
     Returns:
     True if the attribute can be accessed safely, False otherwise.
     """
-    return remaining >= len(nla.bytearray) and len(nla.bytearray) <= nla.nla_len <= remaining
+    return remaining.value >= len(nla.bytearray) and len(nla.bytearray) <= nla.nla_len <= remaining.value
 
 
 def nla_next(nla, remaining):
@@ -130,7 +185,7 @@ def nla_next(nla, remaining):
     """
     totlen = int(NLA_ALIGN(nla.nla_len))
     remaining.value -= totlen
-    return nlattr.from_buffer(nla.bytearray[totlen:])
+    return nlattr(bytearray_ptr(nla.bytearray, totlen))
 
 
 nla_attr_minlen = {i: 0 for i in range(NLA_TYPE_MAX + 1)}
@@ -283,45 +338,130 @@ def nla_find(head, len_, attrtype):
     return None
 
 
-def nla_put(msg, attrtype, data):
-    """Add a unspecific attribute to netlink message.
-    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L497
+def nlmsg_data(nlh):
+    """Return bytearray_ptr of the message payload.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L105
 
-    Copies the provided data into the message as payload of the attribute.
+    Placing this here to avoid circular imports.
 
     Positional arguments:
-    msg -- netlink message.
-    attrtype -- attribute type.
-    data -- data to be used as attribute payload.
+    nlh -- Netlink message header (nlmsghdr class instance).
 
     Returns:
-    0
+    bytearray_ptr beginning with the start of the message payload.
     """
-    nla = nlattr(nla_type=attrtype, payload=data)
-    msg.nm_nlh.payload.append(nla)
-    if not data:
-        return 0
-    try:
-        datalen = ctypes.sizeof(data)
-    except TypeError:
-        datalen = len(data)
-    _LOGGER.debug('msg 0x%x: attr <0x%x> %d: Wrote %d bytes', id(msg), id(nla), nla.nla_type, datalen)
-    return 0
+    return bytearray_ptr(nlh.bytearray, NLMSG_HDRLEN)
 
 
-def nla_put_u8(msg, attrtype, value):
-    """Add 8 bit integer attribute to netlink message.
-    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L563
+def nlmsg_tail(nlh):
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L110
+
+    Placing this here to avoid circular imports.
+
+    Positional arguments:
+    nlh -- nlmsghdr class instance.
+
+    Returns:
+    bytearray_ptr instance after the last nla in the nlmsghdr.
+    """
+    return bytearray_ptr(nlh.bytearray, NLMSG_ALIGN(nlh.nlmsg_len))
+
+
+def nla_reserve(msg, attrtype, attrlen):
+    """Reserve space for an attribute.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L456
+
+    Reserves room for an attribute in the specified netlink message and fills in the attribute header (type, length).
+    Returns None if there is insufficient space for the attribute.
+
+    Any padding between payload and the start of the next attribute is zeroed out.
 
     Positional arguments:
     msg -- netlink message (nl_msg class instance).
-    attrtype -- attribute type.
+    attrtype -- attribute type (integer).
+    attrlen -- length of payload (integer).
+
+    Returns:
+    nlattr class instance allocated to the new space or None on failure.
+    """
+    tlen = NLMSG_ALIGN(msg.nm_nlh.nlmsg_len) + nla_total_size(attrlen)
+    if tlen > msg.nm_size:
+        return None
+
+    nla = nlattr(nlmsg_tail(msg.nm_nlh))
+    nla.nla_type = attrtype
+    nla.nla_len = nla_attr_size(attrlen)
+
+    if attrlen:
+        padlen = nla_padlen(attrlen)
+        nla.bytearray[nla.nla_len:nla.nla_len + padlen] = bytearray(b'\0') * padlen
+
+    _LOGGER.debug('msg 0x%x: attr <0x%x> %d: Reserved %d (%d) bytes at offset +%d nlmsg_len=%d', id(msg), id(nla),
+                  nla.nla_type, nla_total_size(attrlen), attrlen,
+                  nla.bytearray.slice.start - nlmsg_data(msg.nm_nlh).slice.start, msg.nm_nlh.nlmsg_len)
+
+    return nla
+
+
+def nla_put(msg, attrtype, datalen, data):
+    """Add a unspecific attribute to netlink message.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L497
+
+    Reserves room for an unspecific attribute and copies the provided data into the message as payload of the attribute.
+    Returns an error if there is insufficient space for the attribute.
+
+    Positional arguments:
+    msg -- Netlink message (nl_msg class instance).
+    attrtype -- attribute type (integer).
+    datalen -- length of data to be used as payload (integer).
+    data -- data to be used as attribute payload (bytearray).
+
+    Returns:
+    0 on success or a negative error code.
+    """
+    nla = nla_reserve(msg, attrtype, datalen)
+    if not nla:
+        return -NLE_NOMEM
+    if datalen <= 0:
+        return 0
+
+    nla_data(nla)[:datalen] = data
+    _LOGGER.debug('msg 0x%x: attr <0x%x> %d: Wrote %d bytes at offset +%d', id(msg), id(nla), nla.nla_type, datalen,
+                  nla.bytearray.slice.start - nlmsg_data(msg.nm_nlh).slice.start)
+    return 0
+
+
+def nla_put_data(msg, attrtype, data):
+    """Add abstract data as unspecific attribute to netlink message.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L527
+
+    Equivalent to nla_put() except that the length of the payload is derived from the bytearray data object.
+
+    Positional arguments:
+    msg -- Netlink message (nl_msg class instance).
+    attrtype -- attribute type (integer).
+    data -- data to be used as attribute payload (bytearray).
+
+    Returns:
+    0 on success or a negative error code.
+    """
+    return nla_put(msg, attrtype, len(data), data)
+
+
+def nla_put_u8(msg, attrtype, value):
+    """Add 8 bit integer attribute to Netlink message.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L563
+
+    Positional arguments:
+    msg -- Netlink message (nl_msg class instance).
+    attrtype -- attribute type (integer).
     value -- numeric value to store as payload (int() or c_uint8()).
 
     Returns:
-    0
+    0 on success or a negative error code.
     """
-    return int(nla_put(msg, attrtype, value if isinstance(value, ctypes.c_uint8) else ctypes.c_uint8(value)))
+    data = bytearray(value if isinstance(value, ctypes.c_uint8) else ctypes.c_uint8(value))
+    return nla_put(msg, attrtype, SIZEOF_U8, data)
 
 
 def nla_get_u8(nla):
@@ -329,31 +469,28 @@ def nla_get_u8(nla):
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L574
 
     Positional arguments:
-    nla -- 8 bit integer attribute.
+    nla -- 8 bit integer attribute (nlattr class instance).
 
     Returns:
     Payload as an int().
     """
-    if isinstance(nla.payload, ctypes.c_uint8):
-        value = nla.payload.value
-    else:
-        value = ctypes.c_uint8.from_buffer(nla.payload).value
-    return int(value)
+    return int(ctypes.c_uint8.from_buffer(nla_data(nla)[:SIZEOF_U8]).value)
 
 
 def nla_put_u16(msg, attrtype, value):
-    """Add 16 bit integer attribute to netlink message.
+    """Add 16 bit integer attribute to Netlink message.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L588
 
     Positional arguments:
-    msg -- netlink message (nl_msg class instance).
-    attrtype -- attribute type.
+    msg -- Netlink message (nl_msg class instance).
+    attrtype -- attribute type (integer).
     value -- numeric value to store as payload (int() or c_uint16()).
 
     Returns:
-    0
+    0 on success or a negative error code.
     """
-    return int(nla_put(msg, attrtype, value if isinstance(value, ctypes.c_uint16) else ctypes.c_uint16(value)))
+    data = bytearray(value if isinstance(value, ctypes.c_uint16) else ctypes.c_uint16(value))
+    return nla_put(msg, attrtype, SIZEOF_U16, data)
 
 
 def nla_get_u16(nla):
@@ -361,45 +498,41 @@ def nla_get_u16(nla):
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L599
 
     Positional arguments:
-    nla -- 16 bit integer attribute.
+    nla -- 16 bit integer attribute (nlattr class instance).
 
     Returns:
     Payload as an int().
     """
-    if isinstance(nla.payload, ctypes.c_uint16):
-        value = nla.payload.value
-    else:
-        value = ctypes.c_uint16.from_buffer(nla.payload).value
-    return int(value)
+    return int(ctypes.c_uint16.from_buffer(nla_data(nla)[:SIZEOF_U16]).value)
 
 
 def nla_put_u32(msg, attrtype, value):
-    """Add 32 bit integer attribute to netlink message.
+    """Add 32 bit integer attribute to Netlink message.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L613
 
     Positional arguments:
-    msg -- netlink message (nl_msg class instance).
-    attrtype -- attribute type.
+    msg -- Netlink message (nl_msg class instance).
+    attrtype -- attribute type (integer).
     value -- numeric value to store as payload (int() or c_uint32()).
 
     Returns:
-    0
+    0 on success or a negative error code.
     """
-    return int(nla_put(msg, attrtype, value if isinstance(value, ctypes.c_uint32) else ctypes.c_uint32(value)))
+    data = bytearray(value if isinstance(value, ctypes.c_uint32) else ctypes.c_uint32(value))
+    return nla_put(msg, attrtype, SIZEOF_U32, data)
 
 
 def nla_get_u32(nla):
     """Return value of 32 bit integer attribute as an int().
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L624
 
+    Positional arguments:
+    nla -- 32 bit integer attribute (nlattr class instance).
+
     Returns:
     Payload as an int().
     """
-    if isinstance(nla.payload, ctypes.c_uint32):
-        value = nla.payload.value
-    else:
-        value = ctypes.c_uint32.from_buffer(nla.payload).value
-    return int(value)
+    return int(ctypes.c_uint32.from_buffer(nla_data(nla)[:SIZEOF_U32]).value)
 
 
 def nla_put_u64(msg, attrtype, value):
@@ -408,11 +541,11 @@ def nla_put_u64(msg, attrtype, value):
 
     Positional arguments:
     msg -- netlink message (nl_msg class instance).
-    attrtype -- attribute type.
+    attrtype -- attribute type (integer).
     value -- numeric value to store as payload (int() or c_uint64()).
 
     Returns:
-    0
+    0 on success or a negative error code.
     """
     return int(nla_put(msg, attrtype, value if isinstance(value, ctypes.c_uint64) else ctypes.c_uint64(value)))
 
@@ -420,6 +553,9 @@ def nla_put_u64(msg, attrtype, value):
 def nla_get_u64(nla):
     """Return value of 64 bit integer attribute as an int().
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L649
+
+    Positional arguments:
+    nla -- 64 bit integer attribute (nlattr class instance).
 
     Returns:
     Payload as an int().
@@ -437,11 +573,11 @@ def nla_put_string(msg, attrtype, value):
 
     Positional arguments:
     msg -- netlink message (nl_msg class instance).
-    attrtype -- attribute type.
+    attrtype -- attribute type (integer).
     value -- bytes() string value (e.g. bytes('Test'.encode('ascii'))).
 
     Returns:
-    0
+    0 on success or a negative error code.
     """
     return int(nla_put(msg, attrtype, value if value.endswith(b'\0') else value + b'\0'))
 
@@ -449,6 +585,9 @@ def nla_put_string(msg, attrtype, value):
 def nla_get_string(nla):
     """Return string attribute.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L685
+
+    Positional arguments:
+    nla -- string attribute (nlattr class instance).
 
     Returns:
     bytes() string value.
@@ -462,10 +601,10 @@ def nla_put_flag(msg, attrtype):
 
     Positional arguments:
     msg -- netlink message (nl_msg class instance).
-    attrtype -- attribute type.
+    attrtype -- attribute type (integer).
 
     Returns:
-    0
+    0 on success or a negative error code.
     """
     return int(nla_put(msg, attrtype, None))
 
@@ -473,6 +612,9 @@ def nla_put_flag(msg, attrtype):
 def nla_get_flag(nla):
     """Return True if flag attribute is set.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L720
+
+    Positional arguments:
+    nla -- flag Netlink attribute (nlattr class instance).
 
     Returns:
     True if flag is set, otherwise False.
@@ -486,11 +628,11 @@ def nla_put_msecs(msg, attrtype, value):
 
     Positional arguments:
     msg -- netlink message (nl_msg class instance).
-    attrtype -- attribute type.
+    attrtype -- attribute type (integer).
     value -- numeric msecs (int(), c_uint64(), or c_ulong()).
 
     Returns:
-    0
+    0 on success or a negative error code.
     """
     if isinstance(value, ctypes.c_uint64):
         pass
@@ -504,6 +646,9 @@ def nla_put_msecs(msg, attrtype, value):
 def nla_get_msecs(nla):
     """Return value of msecs attribute as an int().
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L748
+
+    Positional arguments:
+    nla -- msecs Netlink attribute (nlattr class instance).
 
     Returns:
     Payload as an int().

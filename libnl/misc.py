@@ -44,13 +44,12 @@ class _StructBase(object):
 class StructNoPointers(_StructBase):
     """A base class equivalent to a C struct of a fixed size, holding no pointers in the struct definition."""
 
-    def __init__(self, maxlen):
-        """Creates a bytearray() object of a fixed initial size. Pads it with \0 * maxlen."""
-        self.bytearray = bytearray(b'\0') * maxlen
+    def __init__(self, ba):
+        self.bytearray = ba
 
     def __bool__(self):
         """Returns True if self.bytearray is more than just null bytes."""
-        return not not self.bytearray.strip(b'\0')
+        return not not bytearray(self.bytearray).strip(b'\0')
 
     def __bytes__(self):
         """Returns a bytes object."""
@@ -70,19 +69,12 @@ class StructNoPointers(_StructBase):
         slice() object. E.g. `x = _get_slicers(0); ba_instance[x]`
         """
         if not index:  # first item.
-            return 0, self.SIGNATURE[0]
+            return slice(0, self.SIGNATURE[0])
         if index >= len(self.SIGNATURE):
             raise IndexError('index out of self.SIGNATURE range')
         pad_start = sum(self.SIGNATURE[:index])
         pad_stop = pad_start + self.SIGNATURE[index]
         return slice(pad_start, pad_stop)
-
-    @classmethod
-    def from_buffer(cls, buf):
-        """Creates and returns a class instance based on data from a bytearray()."""
-        nlh = cls()
-        nlh.bytearray = buf
-        return nlh
 
 
 class StructWithPointers(_StructBase):

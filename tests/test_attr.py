@@ -36,13 +36,14 @@ def test_nla_put_get_u32():
     // type: 4; nla_get_u32: 20
     // type: 5; nla_get_u32: 50
     """
+    rem = ctypes.c_int()
     range_ = (0, 1, 2, 19, 20, 50)
     msg = nlmsg_alloc()
+    nlh = nlmsg_hdr(msg)
     for i in range(len(range_)):
         nla_put_u32(msg, i, range_[i])
-    nlh = nlmsg_hdr(msg)
     i = 0
-    for nla in nlmsg_for_each_attr(nlh):
+    for nla in nlmsg_for_each_attr(nlh, 0, rem):
         assert i == nla_type(nla)
         assert range_[i] == nla_get_u32(nla)
         i += 1

@@ -91,43 +91,38 @@ class nl_sock(object):
 
 
 class nl_msg(object):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L133"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L133
+
+    Instance variables:
+    nm_protocol --
+    nm_flags --
+    nm_src --
+    nm_dst --
+    nm_creds --
+    nm_nlh --
+    nm_size --
+    nm_refcnt --
+    """
 
     def __init__(self):
         self.nm_protocol = 0
         self.nm_flags = 0
-        self.nm_src = sockaddr_nl()
-        self.nm_dst = sockaddr_nl()
+        self.nm_src = None
+        self.nm_dst = None
         self.nm_creds = None
         self.nm_nlh = None
+        self.nm_size = 0
         self.nm_refcnt = 1
 
-    def __bytes__(self):
-        """Returns a bytes object."""
-        segments = (
-            bytes(ctypes.c_int(self.nm_protocol)),
-            bytes(ctypes.c_int(self.nm_flags)),
-            bytes(self.nm_src),
-            bytes(self.nm_dst),
-            bytes(self.nm_creds or ucred()),
-            bytes(self.nm_nlh or nlmsghdr()),
-            bytes(ctypes.c_uint32(self.nm_size)),
-            bytes(ctypes.c_int(self.nm_refcnt)),
-        )
-        return b''.join(segments)
-
     def __repr__(self):
-        answer_base = "<{0}.{1} nm_protocol={2} nm_flags={3} nm_src='{4}' nm_dst='{5}' nm_creds='{6}' nm_nlh='{7}'>"
+        answer_base = ("<{0}.{1} nm_protocol={2} nm_flags={3} nm_src='{4}' nm_dst='{5}' nm_creds='{6}' nm_nlh='{7}' "
+                       "nm_size='{8}'>")
         answer = answer_base.format(
             self.__class__.__module__,
             self.__class__.__name__,
-            self.nm_protocol, self.nm_flags, self.nm_src, self.nm_dst, self.nm_creds, self.nm_nlh,
+            self.nm_protocol, self.nm_flags, self.nm_src, self.nm_dst, self.nm_creds, self.nm_nlh, self.nm_size,
         )
         return answer
-
-    @property
-    def nm_size(self):
-        return self.nm_nlh.nlmsg_len
 
 
 class genl_family_grp(object):

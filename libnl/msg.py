@@ -13,20 +13,23 @@ of the License.
 import ctypes
 import logging
 import os
+import resource
 import string
 
-from libnl.attr import nla_for_each_attr, nla_find, nla_is_nested, nla_len
+from libnl.attr import nla_for_each_attr, nla_find, nla_is_nested, nla_len, nlmsg_data
 from libnl.cache_mngt import nl_msgtype_lookup, nl_cache_ops_associate_safe
 from libnl.linux_private.genetlink import GENL_HDRLEN, genlmsghdr
 from libnl.linux_private.netlink import (nlmsghdr, NLMSG_ERROR, NLMSG_HDRLEN, NETLINK_GENERIC, NLMSG_NOOP, NLMSG_DONE,
                                          NLMSG_OVERRUN, NLM_F_REQUEST, NLM_F_MULTI, NLM_F_ACK, NLM_F_ECHO, NLM_F_ROOT,
                                          NLM_F_MATCH, NLM_F_ATOMIC, NLM_F_REPLACE, NLM_F_EXCL, NLM_F_CREATE,
                                          NLM_F_APPEND, nlmsgerr, NLMSG_ALIGN, nlattr)
+from libnl.misc import bytearray_ptr
 from libnl.netlink_private.netlink import BUG
 from libnl.netlink_private.types import nl_msg, NL_MSG_CRED_PRESENT
 from libnl.utils import __type2str
 
 _LOGGER = logging.getLogger(__name__)
+default_msg_size = resource.getpagesize()
 NL_AUTO_PORT = 0
 NL_AUTO_PID = NL_AUTO_PORT
 NL_AUTO_SEQ = 0
@@ -40,44 +43,42 @@ def nlmsg_size(payload):
     payload -- length of payload (integer).
 
     Returns:
-    Size of netlink message without padding.
+    Size of netlink message without padding (integer).
     """
-    return NLMSG_HDRLEN + payload
+    return int(NLMSG_HDRLEN + payload)
 
 
 nlmsg_msg_size = nlmsg_size  # Alias. https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L59
 
 
-def nlmsg_data(nlh):
-    """Return the message payload.
-    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L105
+def nlmsg_total_size(payload):
+    """Calculates size of netlink message including padding based on payload length.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L72
+
+    This function is identical to nlmsg_size() + nlmsg_padlen().
 
     Positional arguments:
-    nlh -- netlink message header (nlmsghdr class instance).
+    payload -- length of payload (integer).
 
     Returns:
-    Bytes() or bytearray() representation of the payload.
+    Size of netlink message including padding (integer).
     """
-    if len(nlh.payload) == 1 and isinstance(nlh.payload[0], bytearray):
-        return nlh.payload[0]
-    try:
-        iter(nlh.payload)
-    except TypeError:
-        return bytes(nlh.payload)
-    return b''.join(bytes(p) for p in nlh.payload)
+    return int(NLMSG_ALIGN(nlmsg_msg_size(payload)))
 
 
-def nlmsg_for_each_attr(nlh):
+def nlmsg_for_each_attr(nlh, hdrlen, rem):
     """Iterate over a stream of attributes in a message.
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/msg.h#L123
 
     Positional arguments:
     nlh -- netlink message header (nlmsghdr class instance).
+    hdrlen -- length of family header (integer).
+    rem -- initialized to len, holds bytes currently remaining in stream (c_int).
 
     Returns:
     Generator yielding nl_attr instances.
     """
-    return nla_for_each_attr(nlh.payload)
+    return nla_for_each_attr(nlmsg_attrdata(nlh, hdrlen), nlmsg_attrlen(nlh, hdrlen), rem)
 
 
 def nlmsg_datalen(nlh):
@@ -85,7 +86,7 @@ def nlmsg_datalen(nlh):
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L121
 
     Positional arguments:
-    nlh -- netlink message header (nlmsghdr class instance).
+    nlh -- Netlink message header (nlmsghdr class instance).
 
     Returns:
     Length of message payload in bytes.
@@ -97,27 +98,25 @@ nlmsg_len = nlmsg_datalen  # Alias. https://github.com/thom311/libnl/blob/libnl3
 
 
 def nlmsg_attrdata(nlh, hdrlen):
-    """Returns list of attributes/payload from netlink message header.
+    """Head of attributes data.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L143
 
     Positional arguments:
-    nlh -- netlink message header (nlmsghdr class instance).
-    hdrlen -- length of family specific header (to offset by) (integer).
+    nlh -- Netlink message header (nlmsghdr class instance).
+    hdrlen -- length of family specific header (integer).
 
     Returns:
-    List of attributes.
+    First attribute (nlattr class instance with others in its payload).
     """
-    if len(nlh.payload) == 1 and isinstance(nlh.payload[0], bytearray):
-        payload = nlh.payload[0][NLMSG_ALIGN(hdrlen):]
-        return nlattr.from_buffer_multi(payload)
-    return nlh.payload
+    data = nlmsg_data(nlh)
+    return nlattr(bytearray_ptr(data, NLMSG_ALIGN(hdrlen)))
 
 
 def nlmsg_attrlen(nlh, hdrlen):
     """Length of attributes data.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L154
 
-    nlh -- netlink message header (nlmsghdr class instance).
+    nlh -- Netlink message header (nlmsghdr class instance).
     hdrlen -- length of family specific header (integer).
 
     Returns:
@@ -152,21 +151,28 @@ def nlmsg_find_attr(nlh, hdrlen, attrtype):
     return nla_find(nlmsg_attrdata(nlh, hdrlen), attrtype)
 
 
-def nlmsg_alloc():
-    """Instantiate a new netlink message.
+def nlmsg_alloc(len_=default_msg_size):
+    """Allocate a new netlink message with maximum payload size specified.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L299
 
-    Instantiates a new netlink message without any further payload.
+    Allocates a new netlink message without any further payload. The maximum payload size defaults to
+    resource.getpagesize() or as otherwise specified with nlmsg_set_default_size().
 
     Returns:
     Newly allocated netlink message (nl_msg class instance).
     """
+    len_ = max(nlmsghdr.SIZEOF, len_)
     nm = nl_msg()
-    nm.nm_nlh = nlmsghdr()
     nm.nm_refcnt = 1
+    nm.nm_nlh = nlmsghdr(bytearray(b'\0') * len_)
     nm.nm_protocol = -1
-    _LOGGER.debug('msg 0x%x: Allocated new message', id(nm))
+    nm.nm_size = len_
+    nm.nm_nlh.nlmsg_len = nlmsg_total_size(0)
+    _LOGGER.debug('msg 0x%x: Allocated new message, maxlen=%d', id(nm), len_)
     return nm
+
+
+nlmsg_alloc_size = nlmsg_alloc  # Alias.
 
 
 def nlmsg_inherit(hdr=None):
@@ -207,6 +213,17 @@ def nlmsg_alloc_simple(nlmsgtype, flags):
     msg = nlmsg_inherit(nlh)
     _LOGGER.debug('msg 0x%x: Allocated new simple message', id(msg))
     return msg
+
+
+def nlmsg_set_default_size(max_):
+    """Set the default maximum message payload size for allocated messages.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L365
+
+    Positional arguments:
+    max_ -- size of payload in bytes (integer).
+    """
+    global default_msg_size
+    default_msg_size = max(nlmsg_total_size(0), max_)
 
 
 def nlmsg_convert(hdr):
@@ -270,16 +287,16 @@ def nlmsg_put(n, pid, seq, type_, flags):
 
 
 def nlmsg_hdr(msg):
-    """Return actual netlink message.
+    """Return actual Netlink message.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L536
 
-    Returns the actual netlink message.
+    Returns the actual Netlink message casted to a nlmsghdr class instance.
 
     Positional arguments:
-    msg -- netlink message (nl_msg class instance).
+    msg -- Netlink message (nl_msg class instance).
 
     Returns:
-    The netlink message object.
+    nlmsghdr class instance.
     """
     return msg.nm_nlh
 

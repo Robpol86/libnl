@@ -212,3 +212,83 @@ def __init(func):
     """
     func()
     return func
+
+
+class bytearray_ptr(object):
+    """Pseudo bytearray that references a sliced bytearray.
+
+    Edits allowed, changes to length forbidden.
+    Pointee/actual bytearray can be increased on the right only.
+
+    Instance variables:
+    pointee -- actual bytearray to operate on.
+    start -- index of the actual bytearray to start this pseudo bytearray.
+    stop -- index of the actual bytearray to end this pseudo bytearray.
+    """
+
+    def __init__(self, pointee, start=None, stop=None):
+        self.pointee = pointee
+
+        # Hard-code borders.
+        start = start or 0
+        stop = stop or (start if stop == 0 else len(pointee))
+        if start < 0:
+            start += len(pointee)
+        if stop < 0:
+            stop += len(pointee)
+        self.slice = slice(start, stop)
+
+    def __repr__(self):
+        return '{0}({1})'.format(self.__class__.__name__, bytes(self))
+
+    def __delitem__(self, key):
+        raise TypeError("'{0}' object doesn't support item deletion".format(self.__class__.__name__))
+
+    def __getitem__(self, item):
+        return self.pointee[self.slice][item]
+
+    def __len__(self):
+        return len(self.pointee[self.slice])
+
+    def __setitem__(self, key, value):
+        # Handle integer keys (lookup).
+        try:
+            int(key)
+        except TypeError:
+            key_is_int = False
+        else:
+            key_is_int = True
+            if key < 0:
+                key += len(self)
+            key = slice(key, key + 1)
+
+        # Calculate slices.
+        start = key.start or 0
+        if start < 0:
+            start += len(self)
+        if start >= len(self):
+            raise IndexError('{0} index out of range'.format(self.__class__.__name__))
+        stop = key.stop or (start if key.stop == 0 else len(self))
+        if stop < 0:
+            stop += len(self)
+        start += self.slice.start
+        stop += self.slice.start
+        stop = min(stop, self.slice.stop)
+
+        # Catch invalid length.
+        original_length = len(self.pointee)
+        if not key_is_int and len(self.pointee[start:stop]) != len(value):
+            raise TypeError("length of '{0}' object cannot be changed".format(self.__class__.__name__))
+
+        # Handle slices.
+        if key_is_int:
+            self.pointee[start] = value
+        else:
+            self.pointee[start:stop] = value
+
+        # Catch bugs.
+        if len(self.pointee) != original_length:
+            raise RuntimeError('Bug in {0} found! Please report this.'.format(self.__class__.__name__))
+
+    def copy(self):
+        return bytearray(self.pointee[self.slice])

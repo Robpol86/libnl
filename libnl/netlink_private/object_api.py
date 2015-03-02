@@ -7,6 +7,17 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
+from libnl.misc import Struct
+
+
+class NLHDR_COMMON(Struct):
+    """Common Object Header
+    https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/object-api.h#L185
+
+    Must be used by every "object" definition to allow objects to be cached.
+    """
+    pass
+
 
 class nl_object(object):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/object-api.h#L194"""

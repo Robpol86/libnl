@@ -86,7 +86,7 @@ def genl_family_alloc():
     Returns:
     New `genl_family` class instance.
     """
-    return nl_object_alloc(genl_family_ops)
+    return genl_family(nl_object_alloc(genl_family_ops))
 
 
 def genl_family_get_id(family):

@@ -9,7 +9,7 @@ of the License.
 
 import ctypes
 
-from libnl.misc import StructNoPointers, SIZEOF_UBYTE, SIZEOF_USHORT, SIZEOF_INT, SIZEOF_UINT, bytearray_ptr
+from libnl.misc import Struct, SIZEOF_UBYTE, SIZEOF_USHORT, SIZEOF_INT, SIZEOF_UINT, bytearray_ptr
 
 RTNL_FAMILY_IPMR = 128
 RTNL_FAMILY_IP6MR = 129
@@ -63,7 +63,7 @@ RTM_NR_FAMILIES = RTM_NR_MSGTYPES >> 2
 RTM_FAM = lambda cmd: (cmd - RTM_BASE) >> 2
 
 
-class rtattr(StructNoPointers):
+class rtattr(Struct):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/rtnetlink.h#L137
 
     Generic structure for encapsulation of optional route information. It is reminiscent of sockaddr, but with sa_family
@@ -118,7 +118,7 @@ RTA_DATA = lambda rta: rta.payload.rstrip(b'\0')
 RTA_PAYLOAD = lambda rta: rta.rta_len - RTA_LENGTH(0)
 
 
-class rtgenmsg(StructNoPointers):
+class rtgenmsg(Struct):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/rtnetlink.h#L410
 
     Instance variables:
@@ -129,7 +129,7 @@ class rtgenmsg(StructNoPointers):
     SIZEOF = sum(SIGNATURE)
 
     def __init__(self, rtgen_family=None):
-        super().__init__(bytearray(b'\0') * self.SIZEOF)
+        super().__init__()
         if rtgen_family is not None:
             self.rtgen_family = rtgen_family
 
@@ -143,7 +143,7 @@ class rtgenmsg(StructNoPointers):
         self.bytearray[self._get_slicers(0)] = bytearray(ctypes.c_ubyte(value or 0))
 
 
-class ifinfomsg(StructNoPointers):
+class ifinfomsg(Struct):
     """Passes link level specific information, not dependent on network protocol.
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/rtnetlink.h#L423
 

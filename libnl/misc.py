@@ -1,7 +1,6 @@
 """Misc code not defined in Netlink but used by it."""
 
 import ctypes
-import random
 
 SIZEOF_INT = ctypes.sizeof(ctypes.c_int)
 SIZEOF_POINTER = ctypes.sizeof(ctypes.c_void_p)  # Platform dependant.
@@ -15,7 +14,7 @@ SIZEOF_USHORT = ctypes.sizeof(ctypes.c_ushort)
 
 
 class _DynamicDict(dict):
-    """A dict to be used in str.format() in StructNoPointers and StructWithPointers subclasses."""
+    """A dict to be used in str.format() in Struct."""
 
     def __init__(self, instance):
         super().__init__()
@@ -29,24 +28,14 @@ class _DynamicDict(dict):
         return value
 
 
-class _StructBase(object):
-    """Holds common properties/methods for StructNoPointers and StructWithPointers."""
+class Struct(object):
+    """A base class equivalent to a C struct of a fixed size, holding no pointers in the struct definition."""
     _REPR = '<{0}.{1}>'
     SIGNATURE = ()
     SIZEOF = 0
 
-    def __repr__(self):
-        """Returns a repr of the subclass instance with property values."""
-        dynamic_dict = _DynamicDict(self)
-        answer = self._REPR.format(self.__class__.__module__, self.__class__.__name__, dynamic_dict)
-        return answer
-
-
-class StructNoPointers(_StructBase):
-    """A base class equivalent to a C struct of a fixed size, holding no pointers in the struct definition."""
-
-    def __init__(self, ba):
-        self.bytearray = ba
+    def __init__(self, ba=None):
+        self.bytearray = ba or (bytearray(b'\0') * self.SIZEOF)
 
     def __bool__(self):
         """Returns True if self.bytearray is more than just null bytes."""
@@ -55,6 +44,12 @@ class StructNoPointers(_StructBase):
     def __bytes__(self):
         """Returns a bytes object."""
         return bytes(self.bytearray)
+
+    def __repr__(self):
+        """Returns a repr of the subclass instance with property values."""
+        dynamic_dict = _DynamicDict(self)
+        answer = self._REPR.format(self.__class__.__module__, self.__class__.__name__, dynamic_dict)
+        return answer
 
     def __str__(self):
         """Returns a hex dump (space delimited per byte) of the data."""
@@ -78,53 +73,7 @@ class StructNoPointers(_StructBase):
         return slice(pad_start, pad_stop)
 
 
-class StructWithPointers(_StructBase):
-    """A base class equivalent to a C struct that contains pointers."""
-
-    def __init__(self, var_count):
-        """Creates a list of 0-length bytearray() instances."""
-        self.bytearrays = [bytearray() for _ in range(var_count)]
-        self.pointers = dict()  # Keys are unique (to this dict) bytearray() uints, values are bytearray() payloads.
-
-    def __bool__(self):
-        """Returns True if any bytearray is more than just null bytes."""
-        return not not (c for a in self.bytearrays if a for c in a if c)
-
-    def __bytes__(self):
-        """Returns a bytes object without resolving pointers."""
-        return bytes(c for a in self.bytearrays for c in a)
-
-    def __str__(self):
-        """Returns a hex dump (space delimited per byte) of the data without resolving pointers."""
-        return ' '.join(format(c, '02x') for a in self.bytearrays for c in a)
-
-    @property
-    def bytearray(self):
-        """Returns self.bytearrays merged into a single bytearray with pointers resolved."""
-        resolved = bytearray()
-        for array in self.bytearrays:
-            if array in self.pointers:
-                resolved.extend(self.pointers[array])
-            else:
-                resolved.extend(array)
-        return resolved
-
-    def new_pointer(self):
-        """Picks a random integer from 1 to the maximum pointer size depending on the platform.
-
-        SIZEOF_POINTER is 4 bytes on 32bit systems, and 8bytes on 64bit.
-
-        Returns:
-        Bytearray encoded unsigned integer not in self.pointers.
-        """
-        while True:
-            candidate_int = random.randint(1, 2 ** (8 * SIZEOF_POINTER))
-            candidate_ba = bytearray(bytes(ctypes.c_uint64(candidate_int)))[:SIZEOF_POINTER]
-            if candidate_ba not in self.pointers:
-                return candidate_ba
-
-
-class ucred(StructNoPointers):
+class ucred(Struct):
     """Ancillary message for passing credentials.
     http://linux.die.net/man/7/unix
     http://stackoverflow.com/questions/1922761/size-of-pid-t-uid-t-gid-t-on-linux
@@ -139,7 +88,7 @@ class ucred(StructNoPointers):
     SIZEOF = sum(SIGNATURE)
 
     def __init__(self, pid=0, uid=0, gid=0):
-        super().__init__(bytearray(b'\0') * self.SIZEOF)
+        super().__init__()
         self.pid = pid
         self.uid = uid
         self.gid = gid

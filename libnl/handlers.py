@@ -156,7 +156,7 @@ def nl_cb_alloc(kind):
     Returns:
     Newly allocated callback handle (nl_cb class instance) or None.
     """
-    if kind > NL_CB_KIND_MAX:
+    if kind < 0 or kind > NL_CB_KIND_MAX:
         return None
     cb = nl_cb()
     cb.cb_active = NL_CB_TYPE_MAX + 1
@@ -189,16 +189,16 @@ def nl_cb_set(cb, type_, kind, func, arg):
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L293
 
     Positional arguments:
-    cb -- callback class instance.
-    type_ -- callback to modify.
-    kind -- kind of implementation.
+    cb -- nl_cb class instance.
+    type_ -- callback to modify (integer).
+    kind -- kind of implementation (integer).
     func -- callback function (NL_CB_CUSTOM).
     arg -- argument passed to callback.
 
     Returns:
     0 on success or a negative error code.
     """
-    if type_ > NL_CB_TYPE_MAX or kind > NL_CB_KIND_MAX:
+    if type_ < 0 or type_ > NL_CB_TYPE_MAX or kind < 0 or kind > NL_CB_KIND_MAX:
         return -NLE_RANGE
 
     if kind == NL_CB_CUSTOM:
@@ -216,15 +216,15 @@ def nl_cb_err(cb, kind, func, arg):
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L343
 
     Positional arguments:
-    cb -- callback class instance.
-    kind -- kind of callback.
+    cb -- nl_cb class instance.
+    kind -- kind of callback (integer).
     func -- callback function.
     arg -- argument to be passed to callback function.
 
     Returns:
     0 on success or a negative error code.
     """
-    if kind > NL_CB_KIND_MAX:
+    if kind < 0 or kind > NL_CB_KIND_MAX:
         return -NLE_RANGE
 
     if kind == NL_CB_CUSTOM:
@@ -242,7 +242,7 @@ def nl_cb_overwrite_recv(cb, func):
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L383
 
     Positional arguments:
-    cb -- callback class instance.
+    cb -- nl_cb class instance.
     func -- replacement callback for nl_recv() (a function with args (sk, nla, buf, creds)).
     """
     cb.cb_recv_ow = func
@@ -250,10 +250,10 @@ def nl_cb_overwrite_recv(cb, func):
 
 def nl_cb_overwrite_send(cb, func):
     """Overwrite internal calls to nl_send().
-    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L293
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L395
 
     Positional arguments:
-    cb -- callback class instance.
+    cb -- nl_cb class instance.
     func -- replacement callback for nl_send() (a function with args (sk, msg)).
     """
     cb.cb_send_ow = func

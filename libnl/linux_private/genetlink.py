@@ -10,7 +10,7 @@ of the License.
 import ctypes
 
 from libnl.linux_private.netlink import NLMSG_MIN_TYPE, NLMSG_ALIGN
-from libnl.misc import StructNoPointers, SIZEOF_U8, SIZEOF_U16, bytearray_ptr
+from libnl.misc import Struct, SIZEOF_U8, SIZEOF_U16, bytearray_ptr
 
 
 GENL_NAMSIZ = 16  # Length of family name.
@@ -18,7 +18,7 @@ GENL_MIN_ID = NLMSG_MIN_TYPE
 GENL_MAX_ID = 1023
 
 
-class genlmsghdr(StructNoPointers):
+class genlmsghdr(Struct):
     """Generic Netlink message header (holds payload data).
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/genetlink.h#L12
 

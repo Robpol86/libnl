@@ -9,7 +9,7 @@ of the License.
 
 import ctypes
 
-from libnl.misc import StructNoPointers, SIZEOF_UINT, SIZEOF_USHORT, SIZEOF_U32, SIZEOF_U16, SIZEOF_INT, bytearray_ptr
+from libnl.misc import Struct, SIZEOF_UINT, SIZEOF_USHORT, SIZEOF_U32, SIZEOF_U16, SIZEOF_INT, bytearray_ptr
 
 NETLINK_ROUTE = 0  # Routing/device hook.
 NETLINK_GENERIC = 16
@@ -33,7 +33,7 @@ NLM_F_CREATE = 0x400  # Create, if it does not exist.
 NLM_F_APPEND = 0x800  # Add to end of list.
 
 
-class sockaddr_nl(StructNoPointers):
+class sockaddr_nl(Struct):
     """Netlink sockaddr class (C struct equivalent).
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/netlink.h#L31
 
@@ -48,7 +48,7 @@ class sockaddr_nl(StructNoPointers):
     SIZEOF = sum(SIGNATURE)
 
     def __init__(self, nl_family=0, nl_pad=0, nl_pid=0, nl_groups=0):
-        super().__init__(bytearray(b'\0') * self.SIZEOF)
+        super().__init__()
         self.nl_family = nl_family
         self.nl_pad = nl_pad
         self.nl_pid = nl_pid
@@ -95,7 +95,7 @@ class sockaddr_nl(StructNoPointers):
         self.bytearray[self._get_slicers(3)] = bytearray(ctypes.c_uint32(value or 0))
 
 
-class nlmsghdr(StructNoPointers):
+class nlmsghdr(Struct):
     """Netlink message header (holds actual payload of Netlink message).
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/netlink.h#L38
 
@@ -120,7 +120,7 @@ class nlmsghdr(StructNoPointers):
     SIZEOF = sum(SIGNATURE)
 
     def __init__(self, ba=None, nlmsg_len=None, nlmsg_type=None, nlmsg_flags=None, nlmsg_seq=None, nlmsg_pid=None):
-        super().__init__(ba or (bytearray(b'\0') * self.SIZEOF))
+        super().__init__(ba)
         if nlmsg_len is not None:
             self.nlmsg_len = nlmsg_len
         if nlmsg_type is not None:
@@ -195,7 +195,7 @@ NLMSG_OVERRUN = 0x4  # Data lost.
 NLMSG_MIN_TYPE = 0x10  # < 0x10: reserved control messages.
 
 
-class nlmsgerr(StructNoPointers):
+class nlmsgerr(Struct):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/netlink.h#L95
 
     Instance variables:
@@ -222,7 +222,7 @@ NETLINK_BROADCAST_ERROR = 4
 NETLINK_NO_ENOBUFS = 5
 
 
-class nlattr(StructNoPointers):
+class nlattr(Struct):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/netlink.h#L126
 
     Holds a Netlink attribute along with a payload/data (such as a c_uint32 instance).

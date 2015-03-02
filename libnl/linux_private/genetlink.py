@@ -9,8 +9,8 @@ of the License.
 
 import ctypes
 
-from libnl.linux_private.netlink import NLMSG_MIN_TYPE, NLMSG_ALIGN, nlattr
-from libnl.misc import split_bytearray
+from libnl.linux_private.netlink import NLMSG_MIN_TYPE, NLMSG_ALIGN
+from libnl.misc import StructNoPointers, SIZEOF_U8, SIZEOF_U16, bytearray_ptr
 
 
 GENL_NAMSIZ = 16  # Length of family name.
@@ -18,87 +18,57 @@ GENL_MIN_ID = NLMSG_MIN_TYPE
 GENL_MAX_ID = 1023
 
 
-class genlmsghdr(object):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/genetlink.h#L12
+class genlmsghdr(StructNoPointers):
+    """Generic Netlink message header (holds payload data).
+    https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/genetlink.h#L12
 
     Instance variables:
     cmd -- c_uint8
     version -- c_uint8
     reserved -- c_uint16
-    payload -- list of nlattr instances.
+    payload -- payload and padding at the end (bytearay).
     """
-    SIZEOF = (ctypes.sizeof(ctypes.c_uint8) * 2) + ctypes.sizeof(ctypes.c_uint16)
+    _REPR = '<{0}.{1} cmd={2[cmd]} version={2[version]} reserved={2[reserved]} payload={2[payload]}>'
+    SIGNATURE = (SIZEOF_U8, SIZEOF_U8, SIZEOF_U16)
+    SIZEOF = sum(SIGNATURE)
 
-    def __init__(self, cmd=None, version=None, reserved=None, payload=None):
-        self._cmd = None
-        self._version = None
-        self._reserved = None
-
-        self.payload = payload or list()
-        self.cmd = cmd
-        self.version = version
-        self.reserved = reserved
-
-    def __bytes__(self):
-        """Returns a bytes object formatted for the kernel."""
-        padding = b'\0' * (GENL_HDRLEN - self.SIZEOF)
-        segments = (
-            bytes(self._cmd),
-            bytes(self._version),
-            bytes(self._reserved),
-            padding,
-        )
-        return b''.join(segments)
-
-    def __repr__(self):
-        answer = '<{0}.{1} cmd={2} version={3} reserved={4} payload={5}>'.format(
-            self.__class__.__module__,
-            self.__class__.__name__,
-            self.cmd, self.version, self.reserved,
-            'yes' if self.payload else 'no',
-        )
-        return answer
-
-    @classmethod
-    def from_buffer(cls, buf):
-        """Creates and returns a class instance based on data from a bytearray()."""
-        cmd, version, reserved, buf_remaining = split_bytearray(buf, ctypes.c_uint8, ctypes.c_uint8, ctypes.c_uint16)
-        payload = nlattr.from_buffer_multi(buf_remaining)
-        ghdr = cls(cmd=cmd, version=version, reserved=reserved, payload=payload)
-        return ghdr
+    def __init__(self, ba, cmd=None, version=None, reserved=None):
+        super().__init__(ba)
+        if cmd is not None:
+            self.cmd = cmd
+        if version is not None:
+            self.version = version
+        if reserved is not None:
+            self.reserved = reserved
 
     @property
     def cmd(self):
-        return self._cmd.value
+        return ctypes.c_uint8.from_buffer(self.bytearray[self._get_slicers(0)]).value
 
     @cmd.setter
     def cmd(self, value):
-        if value is None:
-            self._cmd = ctypes.c_uint8()
-            return
-        self._cmd = value if isinstance(value, ctypes.c_uint8) else ctypes.c_uint8(value)
+        self.bytearray[self._get_slicers(0)] = bytearray(ctypes.c_uint8(value or 0))
 
     @property
     def version(self):
-        return self._version.value
+        return ctypes.c_uint8.from_buffer(self.bytearray[self._get_slicers(1)]).value
 
     @version.setter
     def version(self, value):
-        if value is None:
-            self._version = ctypes.c_uint8()
-            return
-        self._version = value if isinstance(value, ctypes.c_uint8) else ctypes.c_uint8(value)
+        self.bytearray[self._get_slicers(1)] = bytearray(ctypes.c_uint8(value or 0))
 
     @property
     def reserved(self):
-        return self._reserved.value
+        return ctypes.c_uint16.from_buffer(self.bytearray[self._get_slicers(2)]).value
 
     @reserved.setter
     def reserved(self, value):
-        if value is None:
-            self._reserved = ctypes.c_uint16()
-            return
-        self._reserved = value if isinstance(value, ctypes.c_uint16) else ctypes.c_uint16(value)
+        self.bytearray[self._get_slicers(2)] = bytearray(ctypes.c_uint16(value or 0))
+
+    @property
+    def payload(self):
+        """Payload and padding at the end (bytearray_ptr)."""
+        return bytearray_ptr(self.bytearray, self._get_slicers(2).stop)
 
 
 GENL_HDRLEN = NLMSG_ALIGN(genlmsghdr.SIZEOF)

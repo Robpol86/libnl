@@ -8,16 +8,21 @@ of the License.
 """
 
 
-def __type2str(type_, tbl):
+def __type2str(type_, buf, _, tbl):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/utils.c#L968
 
     Positional arguments:
     type_ -- integer, key to lookup in `tbl`.
+    buf -- bytearray().
+    _ -- unused.
     tbl -- dict.
 
     Returns:
-    String, a value from `tbl`.
+    Reference to `buf`.
     """
+    buf.clear()
     if type_ in tbl:
-        return str(tbl[type_])
-    return '0x{0:x}'.format(type_)
+        buf.extend(tbl[type_].encode('ascii'))
+    else:
+        buf.extend('0x{0:x}'.format(type_).encode('ascii'))
+    return buf

@@ -119,8 +119,8 @@ class nlmsghdr(StructNoPointers):
     SIGNATURE = (SIZEOF_U32, SIZEOF_U16, SIZEOF_U16, SIZEOF_U32, SIZEOF_U32)
     SIZEOF = sum(SIGNATURE)
 
-    def __init__(self, ba, nlmsg_len=None, nlmsg_type=None, nlmsg_flags=None, nlmsg_seq=None, nlmsg_pid=None):
-        super().__init__(ba)
+    def __init__(self, ba=None, nlmsg_len=None, nlmsg_type=None, nlmsg_flags=None, nlmsg_seq=None, nlmsg_pid=None):
+        super().__init__(ba or (bytearray(b'\0') * self.SIZEOF))
         if nlmsg_len is not None:
             self.nlmsg_len = nlmsg_len
         if nlmsg_type is not None:

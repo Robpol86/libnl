@@ -13,23 +13,25 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
+import ctypes
 import errno
 import logging
 import socket
 import resource
 
-from libnl.errno_ import (NLE_BAD_SOCK, NLE_AF_NOSUPPORT, NLE_INVAL, NLE_SEQ_MISMATCH, NLE_DUMP_INTR, NLE_MSG_OVERFLOW,
+from libnl.errno_ import (NLE_BAD_SOCK, NLE_AF_NOSUPPORT, NLE_SEQ_MISMATCH, NLE_DUMP_INTR, NLE_MSG_OVERFLOW,
                           NLE_MSG_TRUNC)
 from libnl.error import nl_syserr2nlerr
 from libnl.handlers import (NL_OK, NL_CB_MSG_OUT, NL_CB_MSG_IN, NL_CB_SEQ_CHECK, NL_CB_INVALID, NL_SKIP,
                             NL_CB_DUMP_INTR, NL_CB_SEND_ACK, NL_CB_OVERRUN, NL_CB_SKIPPED, NL_CB_FINISH, NL_CB_ACK,
                             NL_STOP, NL_CB_VALID, nl_cb_clone, nl_cb_set, NL_CB_CUSTOM)
 from libnl.linux_private.netlink import (NLM_F_REQUEST, NLM_F_ACK, sockaddr_nl, nlmsghdr, NLMSG_DONE, NLMSG_ERROR,
-                                         NLMSG_NOOP, NLMSG_OVERRUN, NLM_F_MULTI, NLM_F_DUMP_INTR, nlmsgerr, NLMSG_ALIGN,
+                                         NLMSG_NOOP, NLMSG_OVERRUN, NLM_F_MULTI, NLM_F_DUMP_INTR, nlmsgerr,
                                          NLMSG_ALIGNTO)
 from libnl.misc import msghdr, ucred, bytearray_ptr
 from libnl.msg import (nlmsg_alloc_simple, nlmsg_append, NL_AUTO_PORT, nlmsg_get_dst, nlmsg_get_creds, nlmsg_set_src,
-                       nlmsg_hdr, NL_AUTO_SEQ, nlmsg_convert, nlmsg_set_proto, nlmsg_data, nlmsg_size)
+                       nlmsg_hdr, NL_AUTO_SEQ, nlmsg_convert, nlmsg_set_proto, nlmsg_data, nlmsg_size, nlmsg_ok,
+                       nlmsg_next)
 from libnl.netlink_private.netlink import nl_cb_call
 from libnl.netlink_private.types import NL_NO_AUTO_ACK, NL_SOCK_BUFSIZE_SET, NL_MSG_PEEK, NL_SOCK_PASSCRED
 from libnl.socket_ import nl_socket_set_buffer_size, nl_socket_get_local_port
@@ -288,13 +290,13 @@ def nl_recv(sk, nla, buf, creds=None):
     """Receive data from Netlink socket.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/nl.c#L625
 
-    Receives data from a connected Netlink socket using recvmsg(). The peer's Netlink address will be stored in `nla`
-    (second argument passed to this function).
+    Receives data from a connected netlink socket using recvmsg() and returns the number of bytes read. The read data is
+    stored in a newly allocated buffer that is assigned to `buf`. The peer's netlink address will be stored in `nla`.
 
     This function blocks until data is available to be read unless the socket has been put into non-blocking mode using
-    `nl_socket_set_nonblocking()` in which case this function will return immediately with a return value of (0, None).
+    nl_socket_set_nonblocking() in which case this function will return immediately with a return value of 0.
 
-    The buffer size used when reading from the Netlink socket and thus limiting the maximum size of a Netlink message
+    The buffer size used when reading from the netlink socket and thus limiting the maximum size of a netlink message
     that can be read defaults to the size of a memory page (getpagesize()). The buffer size can be modified on a per
     socket level using the function `nl_socket_set_msg_buf_size()`.
 
@@ -305,7 +307,7 @@ def nl_recv(sk, nla, buf, creds=None):
     An eventual interruption of the recvmsg() system call is automatically handled by retrying the operation.
 
     If receiving of credentials has been enabled using the function `nl_socket_set_passcred()`, this function will
-    update the class instance with the received credentials and assign it to `creds`.
+    allocate a new struct `ucred` filled with the received credentials and assign it to `creds`.
 
     Positional arguments:
     sk -- Netlink socket (nl_sock class instance) (input).
@@ -387,15 +389,14 @@ def recvmsgs(sk, cb):
 
     while True:  # This is the `goto continue_reading` implementation.
         _LOGGER.debug('Attempting to read from 0x%x', id(sk))
-        n = cb.cb_recv_ow(sk, nla, buf, creds) if cb.cb_recv_ow else nl_recv(sk, nla, buf, creds)
-        if n <= 0:
-            return n
+        n = ctypes.c_int(cb.cb_recv_ow(sk, nla, buf, creds) if cb.cb_recv_ow else nl_recv(sk, nla, buf, creds))
+        if n.value <= 0:
+            return n.value
 
-        _LOGGER.debug('recvmsgs(0x%x): Read %d bytes', id(sk), n)
+        _LOGGER.debug('recvmsgs(0x%x): Read %d bytes', id(sk), n.value)
 
-        while buf.rstrip(b'\0'):  # nlmsg_ok() loop.
-            hdr = nlmsghdr.from_buffer(buf)
-            buf = buf[NLMSG_ALIGN(hdr.nlmsg_len):]
+        hdr = nlmsghdr(bytearray_ptr(buf))
+        while nlmsg_ok(hdr, n):
             _LOGGER.debug('recvmsgs(0x%x): Processing valid message...', id(sk))
             msg = nlmsg_convert(hdr)
             nlmsg_set_proto(msg, sk.s_proto)
@@ -527,7 +528,7 @@ def recvmsgs(sk, cb):
                     return -NLE_DUMP_INTR if interrupted else -NLE_MSG_OVERFLOW
             elif hdr.nlmsg_type == NLMSG_ERROR:
                 # Message carries a nlmsgerr.
-                e = nlmsgerr.from_buffer(nlmsg_data(hdr))
+                e = nlmsgerr(nlmsg_data(hdr))
                 if hdr.nlmsg_len < nlmsg_size(e.SIZEOF):
                     # Truncated error message, the default action is to stop parsing. The user may overrule this action
                     # by returning NL_SKIP or NL_PROCEED (dangerous).
@@ -578,6 +579,8 @@ def recvmsgs(sk, cb):
                         return -NLE_DUMP_INTR if interrupted else nrecv
                     else:
                         return -NLE_DUMP_INTR if interrupted else (err or nrecv)
+
+            hdr = nlmsg_next(hdr, n)
 
         buf.clear()
         creds = None

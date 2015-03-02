@@ -120,6 +120,37 @@ def nlmsg_valid_hdr(nlh, hdrlen):
     return not nlh.nlmsg_len < nlmsg_msg_size(hdrlen)
 
 
+def nlmsg_ok(nlh, remaining):
+    """Check if the Netlink message fits into the remaining bytes.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L179
+
+    Positional arguments:
+    nlh -- Netlink message header (nlmsghdr class instance).
+    remaining -- number of bytes remaining in message stream (c_int).
+
+    Returns:
+    Boolean.
+    """
+    sizeof = libnl.linux_private.netlink.nlmsghdr.SIZEOF
+    return remaining.value >= sizeof and sizeof <= nlh.nlmsg_len <= remaining.value
+
+
+def nlmsg_next(nlh, remaining):
+    """Next Netlink message in message stream.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L194
+
+    Positional arguments:
+    nlh -- Netlink message header (nlmsghdr class instance).
+    remaining -- number of bytes remaining in message stream (c_int).
+
+    Returns:
+    The next Netlink message in the message stream and decrements remaining by the size of the current message.
+    """
+    totlen = libnl.linux_private.netlink.NLMSG_ALIGN(nlh.nlmsg_len)
+    remaining.value -= totlen
+    return libnl.linux_private.netlink.nlmsghdr(bytearray_ptr(nlh.bytearray, totlen))
+
+
 def nlmsg_find_attr(nlh, hdrlen, attrtype):
     """Find a specific attribute in a Netlink message.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L231
@@ -225,7 +256,7 @@ def nlmsg_convert(hdr):
     nm = nlmsg_alloc(hdr.nlmsg_len)
     if not nm:
         return None
-    nm.nm_nlh = libnl.linux_private.netlink.nlmsghdr(bytearray(hdr)[:hdr.nlmsg_len])
+    nm.nm_nlh.bytearray = hdr.bytearray.copy()[:hdr.nlmsg_len]
     return nm
 
 
@@ -428,7 +459,8 @@ def dump_hex(ofd, start, len_, prefix=0):
     """
     prefix_whitespaces = '  ' * prefix
     limit = 16 - (prefix * 2)
-    for line in (start[i:i+limit] for i in range(0, len_, limit)):  # http://stackoverflow.com/a/9475354/1198943
+    start_ = start[:len_]
+    for line in (start_[i:i+limit] for i in range(0, len(start_), limit)):  # http://stackoverflow.com/a/9475354/1198943
         hex_line = ''.join('{0:02x} '.format(i) for i in line).ljust(limit * 3)
         ascii_line = ''.join(c if c in string.printable[:95] else '.' for c in (chr(i) for i in line))
         ofd('    %s%s%s', prefix_whitespaces, hex_line, ascii_line)

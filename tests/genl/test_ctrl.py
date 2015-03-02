@@ -16,7 +16,7 @@ from libnl.socket_ import nl_socket_alloc, nl_socket_modify_cb, nl_socket_free
 def match(expected, log, is_regex=False):
     log_statement = log.pop(0)
     if is_regex:
-        assert re.match(expected, log_statement)
+        assert re.match(expected + '$', log_statement)
     else:
         assert expected == log_statement
     return True

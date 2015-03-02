@@ -139,7 +139,7 @@ class ucred(StructNoPointers):
     SIZEOF = sum(SIGNATURE)
 
     def __init__(self, pid=0, uid=0, gid=0):
-        super().__init__(self.SIZEOF)
+        super().__init__(bytearray(b'\0') * self.SIZEOF)
         self.pid = pid
         self.uid = uid
         self.gid = gid

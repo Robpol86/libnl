@@ -51,9 +51,9 @@ def print_header_content(nlh):
     nlh -- nlmsghdr class instance.
     """
     answer = 'type={0} length={1} flags=<{2}> sequence-nr={3} pid={4}'.format(
-        nl_nlmsgtype2str(nlh.nlmsg_type),
+        nl_nlmsgtype2str(nlh.nlmsg_type, bytearray(), 32).decode('ascii'),
         nlh.nlmsg_len,
-        nl_nlmsg_flags2str(nlh.nlmsg_flags),
+        nl_nlmsg_flags2str(nlh.nlmsg_flags, bytearray(), 128).decode('ascii'),
         nlh.nlmsg_seq,
         nlh.nlmsg_pid,
     )
@@ -62,64 +62,74 @@ def print_header_content(nlh):
 
 def nl_valid_handler_verbose(msg, arg):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L45"""
-    _LOGGER.debug('-- Warning: unhandled valid message: ' + print_header_content(nlmsg_hdr(msg)))
+    ofd = arg or _LOGGER.debug
+    ofd('-- Warning: unhandled valid message: ' + print_header_content(nlmsg_hdr(msg)))
     return NL_OK
 
 
 def nl_invalid_handler_verbose(msg, arg):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L56"""
-    _LOGGER.debug('-- Error: Invalid message: ' + print_header_content(nlmsg_hdr(msg)))
+    ofd = arg or _LOGGER.debug
+    ofd('-- Error: Invalid message: ' + print_header_content(nlmsg_hdr(msg)))
     return NL_STOP
 
 
 def nl_overrun_handler_verbose(msg, arg):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L67"""
-    _LOGGER.debug('-- Error: Netlink Overrun: ' + print_header_content(nlmsg_hdr(msg)))
+    ofd = arg or _LOGGER.debug
+    ofd('-- Error: Netlink Overrun: ' + print_header_content(nlmsg_hdr(msg)))
     return NL_STOP
 
 
-def nl_error_handler_verbose(who, err, arg):
+def nl_error_handler_verbose(_, err, arg):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L78"""
-    _LOGGER.debug('-- Error received: ' + strerror(-err.error))
-    _LOGGER.debug('-- Original message: ' + print_header_content(err.msg))
+    ofd = arg or _LOGGER.debug
+    ofd('-- Error received: ' + strerror(-err.error))
+    ofd('-- Original message: ' + print_header_content(err.msg))
     return -nl_syserr2nlerr(err.error)
 
 
 def nl_valid_handler_debug(msg, arg):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L92"""
-    _LOGGER.debug('-- Debug: Unhandled Valid message: ' + print_header_content(nlmsg_hdr(msg)))
+    ofd = arg or _LOGGER.debug
+    ofd('-- Debug: Unhandled Valid message: ' + print_header_content(nlmsg_hdr(msg)))
     return NL_OK
 
 
 def nl_finish_handler_debug(msg, arg):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L103"""
-    _LOGGER.debug('-- Debug: End of multipart message block: ' + print_header_content(nlmsg_hdr(msg)))
+    ofd = arg or _LOGGER.debug
+    ofd('-- Debug: End of multipart message block: ' + print_header_content(nlmsg_hdr(msg)))
     return NL_STOP
 
 
 def nl_msg_in_handler_debug(msg, arg):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L114"""
-    _LOGGER.debug('-- Debug: Received Message:')
-    nl_msg_dump(msg)
+    ofd = arg or _LOGGER.debug
+    ofd('-- Debug: Received Message:')
+    nl_msg_dump(msg, ofd)
     return NL_OK
 
 
 def nl_msg_out_handler_debug(msg, arg):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L124"""
-    _LOGGER.debug('-- Debug: Sent Message:')
-    nl_msg_dump(msg)
+    ofd = arg or _LOGGER.debug
+    ofd('-- Debug: Sent Message:')
+    nl_msg_dump(msg, ofd)
     return NL_OK
 
 
 def nl_skipped_handler_debug(msg, arg):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L134"""
-    _LOGGER.debug('-- Debug: Skipped message: ' + print_header_content(nlmsg_hdr(msg)))
+    ofd = arg or _LOGGER.debug
+    ofd('-- Debug: Skipped message: ' + print_header_content(nlmsg_hdr(msg)))
     return NL_SKIP
 
 
 def nl_ack_handler_debug(msg, arg):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L145"""
-    _LOGGER.debug('-- Debug: ACK: ' + print_header_content(nlmsg_hdr(msg)))
+    ofd = arg or _LOGGER.debug
+    ofd('-- Debug: ACK: ' + print_header_content(nlmsg_hdr(msg)))
     return NL_STOP
 
 

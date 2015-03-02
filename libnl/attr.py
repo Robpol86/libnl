@@ -13,7 +13,7 @@ import logging
 
 from libnl.errno_ import NLE_RANGE, NLE_INVAL, NLE_NOMEM
 from libnl.linux_private.netlink import nlattr, NLA_ALIGN, NLA_TYPE_MASK, NLA_HDRLEN, NLA_F_NESTED, NLMSG_ALIGN
-from libnl.misc import SIZEOF_U8, SIZEOF_U16, SIZEOF_U32, SIZEOF_U64, bytearray_ptr
+from libnl.misc import SIZEOF_U8, SIZEOF_U16, SIZEOF_U32, SIZEOF_U64, bytearray_ptr, get_string
 from libnl.msg_ import nlmsg_tail, nlmsg_data, nlmsg_datalen
 from libnl.netlink_private.netlink import BUG
 
@@ -562,12 +562,7 @@ def nla_get_string(nla):
     Returns:
     bytes() value.
     """
-    data = bytearray()
-    for c in nla_data(nla):  # Loops until null byte is encountered, like C's printf() behaves.
-        if not c:
-            break  # null byte.
-        data.append(c)
-    return bytes(data)
+    return get_string(nla_data(nla))
 
 
 def nla_put_flag(msg, attrtype):

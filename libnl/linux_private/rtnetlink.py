@@ -109,9 +109,9 @@ class rtattr(StructNoPointers):
 
 RTA_ALIGNTO = 4
 RTA_ALIGN = lambda len_: (len_ + RTA_ALIGNTO - 1) & ~(RTA_ALIGNTO - 1)
-RTA_OK = lambda rta, len_: len_ >= rtattr.SIZEOF and rtattr.SIZEOF <= rta.rta_len <= len_
+RTA_OK = lambda rta, len_: len_.value >= rtattr.SIZEOF and rtattr.SIZEOF <= rta.rta_len <= len_.value
 RTA_NEXT = lambda rta, attrlen: (setattr(attrlen, 'value', attrlen.value - RTA_ALIGN(rta.rta_len)),
-                                 rtattr(bytearray_ptr(rta.bytearray, RTA_ALIGN(rta.rtalen))))[1]
+                                 rtattr(bytearray_ptr(rta.bytearray, RTA_ALIGN(rta.rta_len))))[1]
 RTA_LENGTH = lambda len_: RTA_ALIGN(rtattr.SIZEOF) + len_
 RTA_SPACE = lambda len_: RTA_ALIGN(RTA_LENGTH(len_))
 RTA_DATA = lambda rta: rta.payload.rstrip(b'\0')

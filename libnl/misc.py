@@ -285,3 +285,22 @@ class bytearray_ptr(object):
 
     def copy(self):
         return bytearray(self.pointee[self.slice])
+
+
+def get_string(stream):
+    """Use this to grab a "string" from a bytearray() stream.
+
+    C's printf() prints until it encounters a null byte (b'\0'). This function behaves the same.
+
+    Positional arguments:
+    stream -- bytearray stream of data.
+
+    Returns:
+    bytes() instance of any characters from the start of the stream until before the first null byte.
+    """
+    ba = bytearray()
+    for c in stream:
+        if not c:
+            break
+        ba.append(c)
+    return bytes(ba)

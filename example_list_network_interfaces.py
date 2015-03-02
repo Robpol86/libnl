@@ -29,6 +29,7 @@ Options:
     -v --verbose    Print debug messages to stderr.
 """
 
+import ctypes
 import logging
 import signal
 import socket
@@ -37,8 +38,9 @@ import sys
 from docopt import docopt
 from libnl.handlers import NL_CB_CUSTOM, NL_CB_VALID, NL_OK
 from libnl.linux_private.if_link import IFLA_IFNAME, IFLA_RTA
-from libnl.linux_private.netlink import NETLINK_ROUTE, NLM_F_DUMP, NLM_F_REQUEST
-from libnl.linux_private.rtnetlink import RTA_DATA, RTA_NEXT, RTM_GETLINK, ifinfomsg, rtgenmsg
+from libnl.linux_private.netlink import NETLINK_ROUTE, NLMSG_LENGTH, NLM_F_DUMP, NLM_F_REQUEST
+from libnl.linux_private.rtnetlink import RTA_DATA, RTA_NEXT, RTA_OK, RTM_GETLINK, ifinfomsg, rtgenmsg
+from libnl.misc import get_string
 from libnl.msg import nlmsg_data, nlmsg_hdr
 from libnl.nl import nl_connect, nl_recvmsgs_default, nl_send_simple
 from libnl.socket_ import nl_socket_alloc, nl_socket_modify_cb
@@ -57,14 +59,17 @@ def callback(msg, _):
     """
     # First convert `msg` into something more manageable.
     nlh = nlmsg_hdr(msg)
-    iface = ifinfomsg.from_buffer(nlmsg_data(nlh))
+    iface = ifinfomsg(nlmsg_data(nlh))
+    hdr = IFLA_RTA(iface)
+    remaining = ctypes.c_int(nlh.nlmsg_len - NLMSG_LENGTH(iface.SIZEOF))
 
     # Now iterate through each rtattr stored in `iface`.
-    for hdr in RTA_NEXT(IFLA_RTA(iface)):
+    while RTA_OK(hdr, remaining):
         # Each rtattr (which is what hdr is) instance is only one type. Looping through all of them until we run into
         # the ones we care about.
         if hdr.rta_type == IFLA_IFNAME:
-            print('Found network interface {0}: {1}'.format(iface.ifi_index, str(RTA_DATA(hdr).decode('ascii'))))
+            print('Found network interface {0}: {1}'.format(iface.ifi_index, get_string(RTA_DATA(hdr)).decode('ascii')))
+        hdr = RTA_NEXT(hdr, remaining)
     return NL_OK
 
 
@@ -76,7 +81,7 @@ def main():
 
     # Next we send the request to the kernel.
     rt_hdr = rtgenmsg(rtgen_family=socket.AF_PACKET)
-    ret = nl_send_simple(sk, RTM_GETLINK, NLM_F_REQUEST | NLM_F_DUMP, rt_hdr)
+    ret = nl_send_simple(sk, RTM_GETLINK, NLM_F_REQUEST | NLM_F_DUMP, rt_hdr, rt_hdr.SIZEOF)
     print('Sent {0} bytes to the kernel.'.format(ret))
 
     # Finally we'll retrieve the kernel's answer, process it, and call any callbacks attached to the `nl_sock` instance.

@@ -5,6 +5,7 @@ from libnl.handlers import NL_OK, NL_CB_VALID, NL_CB_CUSTOM
 from libnl.linux_private.if_link import IFLA_IFNAME, IFLA_RTA
 from libnl.linux_private.netlink import NETLINK_ROUTE, NLM_F_REQUEST, NLM_F_DUMP, NLMSG_LENGTH
 from libnl.linux_private.rtnetlink import rtgenmsg, RTM_GETLINK, ifinfomsg, RTA_NEXT, RTA_DATA, RTA_OK
+from libnl.misc import get_string
 from libnl.msg import nlmsg_hdr, nlmsg_data
 from libnl.nl import nl_connect, nl_recvmsgs_default, nl_send_simple
 from libnl.socket_ import nl_socket_alloc, nl_socket_free, nl_socket_modify_cb
@@ -60,7 +61,7 @@ def test_list_interfaces(ifacesi):
 
         while RTA_OK(hdr, remaining):
             if hdr.rta_type == IFLA_IFNAME:
-                arg[int(iface.ifi_index)] = str(RTA_DATA(hdr).decode('ascii'))
+                arg[int(iface.ifi_index)] = str(get_string(RTA_DATA(hdr)).decode('ascii'))
             hdr = RTA_NEXT(hdr, remaining)
         return NL_OK
 

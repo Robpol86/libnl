@@ -1,9 +1,10 @@
+import ctypes
 import socket
 
 from libnl.handlers import NL_OK, NL_CB_VALID, NL_CB_CUSTOM
 from libnl.linux_private.if_link import IFLA_IFNAME, IFLA_RTA
-from libnl.linux_private.netlink import NETLINK_ROUTE, NLM_F_REQUEST, NLM_F_DUMP
-from libnl.linux_private.rtnetlink import rtgenmsg, RTM_GETLINK, ifinfomsg, RTA_NEXT, RTA_DATA
+from libnl.linux_private.netlink import NETLINK_ROUTE, NLM_F_REQUEST, NLM_F_DUMP, NLMSG_LENGTH
+from libnl.linux_private.rtnetlink import rtgenmsg, RTM_GETLINK, ifinfomsg, RTA_NEXT, RTA_DATA, RTA_OK
 from libnl.msg import nlmsg_hdr, nlmsg_data
 from libnl.nl import nl_connect, nl_recvmsgs_default, nl_send_simple
 from libnl.socket_ import nl_socket_alloc, nl_socket_free, nl_socket_modify_cb
@@ -53,17 +54,20 @@ def test_list_interfaces(ifacesi):
 
     def callback(msg, arg):
         nlh = nlmsg_hdr(msg)
-        iface = ifinfomsg.from_buffer(nlmsg_data(nlh))
+        iface = ifinfomsg(nlmsg_data(nlh))
+        hdr = IFLA_RTA(iface)
+        remaining = ctypes.c_int(nlh.nlmsg_len - NLMSG_LENGTH(iface.SIZEOF))
 
-        for hdr in RTA_NEXT(IFLA_RTA(iface)):
+        while RTA_OK(hdr, remaining):
             if hdr.rta_type == IFLA_IFNAME:
                 arg[int(iface.ifi_index)] = str(RTA_DATA(hdr).decode('ascii'))
+            hdr = RTA_NEXT(hdr, remaining)
         return NL_OK
 
     sk = nl_socket_alloc()
     nl_connect(sk, NETLINK_ROUTE)
     rt_hdr = rtgenmsg(rtgen_family=socket.AF_PACKET)
-    assert 20 == nl_send_simple(sk, RTM_GETLINK, NLM_F_REQUEST | NLM_F_DUMP, rt_hdr)
+    assert 20 == nl_send_simple(sk, RTM_GETLINK, NLM_F_REQUEST | NLM_F_DUMP, rt_hdr, rt_hdr.SIZEOF)
 
     assert 0 == nl_socket_modify_cb(sk, NL_CB_VALID, NL_CB_CUSTOM, callback, got_something)
     assert 0 == nl_recvmsgs_default(sk)

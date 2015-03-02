@@ -7,6 +7,10 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
+from libnl.linux_private.netlink import NLMSG_ALIGN
+from libnl.linux_private.rtnetlink import rtattr, ifinfomsg
+from libnl.misc import bytearray_ptr
+
 
 IFLA_UNSPEC = 0
 IFLA_ADDRESS = 1
@@ -47,4 +51,4 @@ IFLA_CARRIER_CHANGES = 35
 IFLA_MAX = IFLA_CARRIER_CHANGES
 
 
-IFLA_RTA = lambda r: r.payload
+IFLA_RTA = lambda r: rtattr(bytearray_ptr(r.bytearray, NLMSG_ALIGN(ifinfomsg.SIZEOF)))

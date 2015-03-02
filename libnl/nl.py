@@ -25,8 +25,9 @@ from libnl.handlers import (NL_OK, NL_CB_MSG_OUT, NL_CB_MSG_IN, NL_CB_SEQ_CHECK,
                             NL_CB_DUMP_INTR, NL_CB_SEND_ACK, NL_CB_OVERRUN, NL_CB_SKIPPED, NL_CB_FINISH, NL_CB_ACK,
                             NL_STOP, NL_CB_VALID, nl_cb_clone, nl_cb_set, NL_CB_CUSTOM)
 from libnl.linux_private.netlink import (NLM_F_REQUEST, NLM_F_ACK, sockaddr_nl, nlmsghdr, NLMSG_DONE, NLMSG_ERROR,
-                                         NLMSG_NOOP, NLMSG_OVERRUN, NLM_F_MULTI, NLM_F_DUMP_INTR, nlmsgerr, NLMSG_ALIGN)
-from libnl.misc import msghdr, ucred
+                                         NLMSG_NOOP, NLMSG_OVERRUN, NLM_F_MULTI, NLM_F_DUMP_INTR, nlmsgerr, NLMSG_ALIGN,
+                                         NLMSG_ALIGNTO)
+from libnl.misc import msghdr, ucred, bytearray_ptr
 from libnl.msg import (nlmsg_alloc_simple, nlmsg_append, NL_AUTO_PORT, nlmsg_get_dst, nlmsg_get_creds, nlmsg_set_src,
                        nlmsg_hdr, NL_AUTO_SEQ, nlmsg_convert, nlmsg_set_proto, nlmsg_data, nlmsg_size)
 from libnl.netlink_private.netlink import nl_cb_call
@@ -136,7 +137,7 @@ def nl_sendmsg(sk, msg, hdr):
     return ret
 
 
-def nl_send_iovec(sk, msg, iov):
+def nl_send_iovec(sk, msg, iov, _):
     """Transmit Netlink message.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/nl.c#L342
 
@@ -148,6 +149,7 @@ def nl_send_iovec(sk, msg, iov):
     sk -- Netlink socket (nl_sock class instance).
     msg -- Netlink message (nl_msg class instance).
     iov -- bytes() instance to be sent (data payload).
+    _ -- unused.
 
     Returns:
     Number of bytes sent on success or a negative error code.
@@ -198,8 +200,9 @@ def nl_send(sk, msg):
     cb = sk.s_cb
     if cb.cb_send_ow:
         return cb.cb_send_ow(sk, msg)
-    iov = bytes(nlmsg_hdr(msg))
-    return nl_send_iovec(sk, msg, iov)
+    hdr = nlmsg_hdr(msg)
+    iov = bytes(hdr.bytearray[:hdr.nlmsg_len])
+    return nl_send_iovec(sk, msg, iov, 1)
 
 
 def nl_complete_msg(sk, msg):
@@ -252,12 +255,12 @@ def nl_send_auto(sk, msg):
     return nl_send(sk, msg)
 
 
-def nl_send_simple(sk, type_, flags, buf=None):
+def nl_send_simple(sk, type_, flags, buf=None, size=0):
     """Construct and transmit a Netlink message.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/nl.c#L549
 
-    Allocates a new Netlink message based on `type_` and `flags`. If `buf` is specified that payload will be appended to
-    the message.
+    Allocates a new Netlink message based on `type_` and `flags`. If `buf` points to payload of length `size` that
+    payload will be appended to the message.
 
     Sends out the message using `nl_send_auto()`.
 
@@ -268,13 +271,14 @@ def nl_send_simple(sk, type_, flags, buf=None):
 
     Keyword arguments:
     buf -- payload data.
+    size -- size of `data` (integer).
 
     Returns:
     Number of characters sent on success or a negative error code.
     """
     msg = nlmsg_alloc_simple(type_, flags)
-    if buf:
-        err = nlmsg_append(msg, buf)
+    if buf is not None and size:
+        err = nlmsg_append(msg, buf, size, NLMSG_ALIGNTO)
         if err < 0:
             return err
     return nl_send_auto(sk, msg)

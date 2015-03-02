@@ -224,11 +224,12 @@ def test_nl_socket_modify_cb(log, ifaces):
     sk = nl_socket_alloc()
     nl_connect(sk, NETLINK_ROUTE)
     rt_hdr = rtgenmsg(rtgen_family=socket.AF_PACKET)
-    assert 20 == nl_send_simple(sk, RTM_GETLINK, NLM_F_REQUEST | NLM_F_DUMP, rt_hdr)
+    assert 20 == nl_send_simple(sk, RTM_GETLINK, NLM_F_REQUEST | NLM_F_DUMP, rt_hdr, rt_hdr.SIZEOF)
 
-    assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message', log, True)
+    assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message, maxlen=4096', log, True)
     assert match('nlmsg_alloc_simple: msg 0x[a-f0-9]+: Allocated new simple message', log, True)
-    assert match('nlmsg_append: msg 0x[a-f0-9]+: Appended \w+', log, True)
+    assert match('nlmsg_reserve: msg 0x[a-f0-9]+: Reserved 4 \(1\) bytes, pad=4, nlmsg_len=20', log, True)
+    assert match('nlmsg_append: msg 0x[a-f0-9]+: Appended 1 bytes with padding 4', log, True)
     assert match('nl_sendmsg: sent 20 bytes', log)
     assert not log
 
@@ -241,7 +242,7 @@ def test_nl_socket_modify_cb(log, ifaces):
 
     for _ in ifaces:
         assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Processing valid message...', log, True)
-        assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message', log, True)
+        assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message, maxlen=\d{4,}', log, True)
         assert match('nl_msg_dump: --------------------------   BEGIN NETLINK MESSAGE ---------------------------', log)
         assert match('nl_msg_dump:   [NETLINK HEADER] 16 octets', log)
         assert match('print_hdr:     .nlmsg_len = \d{3,}', log, True)
@@ -259,7 +260,7 @@ def test_nl_socket_modify_cb(log, ifaces):
     assert match('recvmsgs: Attempting to read from 0x[a-f0-9]+', log, True)
     assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Read 20 bytes', log, True)
     assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Processing valid message...', log, True)
-    assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message', log, True)
+    assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message, maxlen=20', log, True)
     assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Increased expected sequence number to \d{4,}', log, True)
 
     nl_socket_free(sk)

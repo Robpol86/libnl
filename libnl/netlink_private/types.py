@@ -109,8 +109,8 @@ class nl_msg(object):
     def __init__(self):
         self.nm_protocol = 0
         self.nm_flags = 0
-        self.nm_src = None
-        self.nm_dst = None
+        self.nm_src = sockaddr_nl()
+        self.nm_dst = sockaddr_nl()
         self.nm_creds = None
         self.nm_nlh = None
         self.nm_size = 0

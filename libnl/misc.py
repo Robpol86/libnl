@@ -9,6 +9,7 @@ SIZEOF_U16 = ctypes.sizeof(ctypes.c_uint16)
 SIZEOF_U32 = ctypes.sizeof(ctypes.c_uint32)
 SIZEOF_U64 = ctypes.sizeof(ctypes.c_uint64)
 SIZEOF_U8 = ctypes.sizeof(ctypes.c_uint8)
+SIZEOF_UBYTE = ctypes.sizeof(ctypes.c_ubyte)
 SIZEOF_UINT = ctypes.sizeof(ctypes.c_uint)
 SIZEOF_USHORT = ctypes.sizeof(ctypes.c_ushort)
 

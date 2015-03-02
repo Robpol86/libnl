@@ -9,7 +9,7 @@ of the License.
 
 import ctypes
 
-from libnl.misc import split_bytearray
+from libnl.misc import split_bytearray, StructNoPointers, SIZEOF_UBYTE
 
 RTNL_FAMILY_IPMR = 128
 RTNL_FAMILY_IP6MR = 129
@@ -168,40 +168,29 @@ RTA_DATA = lambda rta: rta.payload.rstrip(b'\0')
 RTA_PAYLOAD = lambda rta: rta.rta_len - RTA_LENGTH(0)
 
 
-class rtgenmsg(object):
+class rtgenmsg(StructNoPointers):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/rtnetlink.h#L410
 
     Instance variables:
-    rtgen_family -- c_ubyte rtgen family.
+    rtgen_family -- rtgen family (c_ubyte).
     """
-    SIZEOF = ctypes.sizeof(ctypes.c_ubyte)
+    _REPR = '<{0}.{1} rtgen_family={2[rtgen_family]}>'
+    SIGNATURE = (SIZEOF_UBYTE, )
+    SIZEOF = sum(SIGNATURE)
 
     def __init__(self, rtgen_family=None):
-        self._rtgen_family = None
-        self.rtgen_family = rtgen_family
-
-    def __bytes__(self):
-        return bytes(self._rtgen_family)
-
-    def __repr__(self):
-        answer = '<{0}.{1} rtgen_family={2}>'.format(
-            self.__class__.__module__,
-            self.__class__.__name__,
-            self.rtgen_family,
-        )
-        return answer
+        super().__init__(bytearray(b'\0') * self.SIZEOF)
+        if rtgen_family is not None:
+            self.rtgen_family = rtgen_family
 
     @property
     def rtgen_family(self):
-        """c_ubyte rtgen family, returns integer."""
-        return self._rtgen_family.value
+        """rtgen family."""
+        return ctypes.c_ubyte.from_buffer(self.bytearray[self._get_slicers(0)]).value
 
     @rtgen_family.setter
     def rtgen_family(self, value):
-        if value is None:
-            self._rtgen_family = ctypes.c_ubyte()
-            return
-        self._rtgen_family = value if isinstance(value, ctypes.c_ubyte) else ctypes.c_ubyte(value)
+        self.bytearray[self._get_slicers(0)] = bytearray(ctypes.c_ubyte(value or 0))
 
 
 class ifinfomsg(object):

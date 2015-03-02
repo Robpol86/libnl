@@ -236,7 +236,7 @@ def nlmsg_reserve(n, len_, pad):
     Reserves room for additional data at the tail of the an existing netlink message. Eventual padding required will be
     zeroed out.
 
-    bytearray_ptr() of additional data or None.
+    bytearray_ptr() at the start of additional data or None.
     """
     nlmsg_len_ = n.nm_nlh.nlmsg_len
     tlen = len_ if not pad else ((len_ + (pad - 1)) & ~(pad - 1))
@@ -244,7 +244,7 @@ def nlmsg_reserve(n, len_, pad):
     if tlen + nlmsg_len_ > n.nm_size:
         return None
 
-    buf = bytearray_ptr(n.nm_nlh, nlmsg_len_)
+    buf = bytearray_ptr(n.nm_nlh.bytearray, nlmsg_len_)
     n.nm_nlh.nlmsg_len += tlen
     if tlen > len_:
         bytearray_ptr(buf, len_, tlen)[:] = bytearray(b'\0') * (tlen - len_)
@@ -261,7 +261,7 @@ def nlmsg_append(n, data, len_, pad):
 
     Positional arguments:
     n -- Netlink message (nl_msg class instance).
-    data -- data to add (bytearray).
+    data -- data to add.
     len_ -- length of data (integer).
     pad -- number of bytes to align data to (integer).
 
@@ -271,7 +271,7 @@ def nlmsg_append(n, data, len_, pad):
     tmp = nlmsg_reserve(n, len_, pad)
     if tmp is None:
         return -NLE_NOMEM
-    tmp[:] = data[:len_]
+    tmp[:len_] = bytes(data)[:len_]
     _LOGGER.debug('msg 0x%x: Appended %d bytes with padding %d', id(n), len_, pad)
     return 0
 

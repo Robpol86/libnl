@@ -1,9 +1,8 @@
 import base64
-import ctypes
 import socket
 
 from libnl.attr import nla_put_u32, nla_put_u64
-from libnl.linux_private.netlink import NETLINK_ROUTE, nlmsghdr
+from libnl.linux_private.netlink import NETLINK_ROUTE
 from libnl.misc import msghdr
 from libnl.msg import nlmsg_alloc, nlmsg_hdr
 from libnl.nl import nl_connect, nl_complete_msg, nl_sendmsg
@@ -129,27 +128,3 @@ def test_two_attrs():
     nlh.nlmsg_pid = 0  # sk.s_local.nl_pid is read-only in Python.
 
     assert b'JAAAAAAABQAAAAAAAAAAAAgABAAIAAAADAAFABEAAAAAAAAA' == base64.b64encode(bytes(nlh)[:nlh.nlmsg_len])
-
-
-def test_from_buffer_no_attrs():
-    nlh = nlmsghdr()
-    nlh.nlmsg_type = 1
-    nlh.nlmsg_flags = 20
-    nlh.nlmsg_seq = 300
-    nlh.nlmsg_pid = 4000
-
-    assert 16 == nlh.nlmsg_len
-    assert bytes(ctypes.c_uint16(1)) == bytes(getattr(nlh, '_nlmsg_type'))
-    assert bytes(ctypes.c_uint16(20)) == bytes(getattr(nlh, '_nlmsg_flags'))
-    assert bytes(ctypes.c_uint32(300)) == bytes(getattr(nlh, '_nlmsg_seq'))
-    assert bytes(ctypes.c_uint32(4000)) == bytes(getattr(nlh, '_nlmsg_pid'))
-    assert list() == nlh.payload
-
-    buf = bytearray(bytes(nlh))
-    nlh2 = nlmsghdr.from_buffer(buf)
-    assert 16 == nlh2.nlmsg_len
-    assert bytes(ctypes.c_uint16(1)) == bytes(getattr(nlh2, '_nlmsg_type'))
-    assert bytes(ctypes.c_uint16(20)) == bytes(getattr(nlh2, '_nlmsg_flags'))
-    assert bytes(ctypes.c_uint32(300)) == bytes(getattr(nlh2, '_nlmsg_seq'))
-    assert bytes(ctypes.c_uint32(4000)) == bytes(getattr(nlh2, '_nlmsg_pid'))
-    assert list() == nlh2.payload

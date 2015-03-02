@@ -1,7 +1,7 @@
 import base64
 import socket
 
-from libnl.linux_private.netlink import NLM_F_REQUEST, NLM_F_DUMP, NETLINK_ROUTE
+from libnl.linux_private.netlink import NLM_F_REQUEST, NLM_F_DUMP, NETLINK_ROUTE, NLMSG_ALIGNTO
 from libnl.linux_private.rtnetlink import rtgenmsg, RTM_GETLINK
 from libnl.msg import nlmsg_alloc_simple, nlmsg_append, nlmsg_hdr
 from libnl.nl import nl_connect, nl_send_simple, nl_complete_msg
@@ -92,7 +92,7 @@ def test_dissect(monkeypatch):
 
     rt_hdr = rtgenmsg(rtgen_family=socket.AF_PACKET)
     msg = nlmsg_alloc_simple(RTM_GETLINK, NLM_F_REQUEST | NLM_F_DUMP)
-    nlmsg_append(msg, rt_hdr)
+    nlmsg_append(msg, rt_hdr, rt_hdr.SIZEOF, NLMSG_ALIGNTO)
     nl_complete_msg(sk, msg)
     nlh = nlmsg_hdr(msg)
 
@@ -137,7 +137,7 @@ def test_full(tcp_server, monkeypatch):
     sk.s_seq_next = 10
     rt_hdr = rtgenmsg(rtgen_family=socket.AF_PACKET)
 
-    assert 20 == nl_send_simple(sk, RTM_GETLINK, NLM_F_REQUEST | NLM_F_DUMP, rt_hdr)
+    assert 20 == nl_send_simple(sk, RTM_GETLINK, NLM_F_REQUEST | NLM_F_DUMP, rt_hdr, rt_hdr.SIZEOF)
     assert 1 == len(tcp_server.data)
     assert b'FAAAABIABQMKAAAA0gQAABEAAAA=' == base64.b64encode(tcp_server.data[0])
     nl_socket_free(sk)

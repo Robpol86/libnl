@@ -79,7 +79,7 @@ def family_compare(a, b, attrs, flags):
     raise NotImplementedError
 
 
-def genl_family_alloc():
+def genl_family_alloc():  # TODO https://github.com/Robpol86/libnl/issues/15
     """Instantiate new Generic Netlink family object.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/family.c#L181
 

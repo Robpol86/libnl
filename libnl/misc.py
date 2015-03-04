@@ -178,7 +178,7 @@ class bytearray_ptr(object):
         stop = stop or (start if stop == 0 else len(pointee))
         if not oob and start < 0:
             start += len(pointee)
-        if not oob and stop < 0:
+        if stop < 0:
             stop += len(pointee)
 
         # Resolve nested references.

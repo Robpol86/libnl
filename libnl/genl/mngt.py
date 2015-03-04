@@ -37,15 +37,15 @@ def genl_msg_parser(ops, who, nlh, pp):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/mngt.c#L85
 
     Positional arguments:
-    ops:
-    who:
-    nlh:
-    pp:
+    ops -- nl_cache_ops class instance.
+    who -- sockaddr_nl class instance.
+    nlh -- nlmsghdr class instance.
+    pp -- nl_parser_param class instance.
 
     Returns:
     Integer, cmd_msg_parser() output.
     """
-    if not ops.co_genl:
+    if ops.co_genl is None:
         raise BUG
     return int(cmd_msg_parser(who, nlh, ops.co_genl, ops, pp))
 
@@ -72,7 +72,7 @@ class genl_cmd(object):
         self.c_attr_policy = c_attr_policy
 
 
-def lookup_family(family):
+def lookup_family(family):  # TODO https://github.com/Robpol86/libnl/issues/15
     """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/mngt.c#L94
 
     Positional arguments:
@@ -87,7 +87,7 @@ def lookup_family(family):
     return None
 
 
-def lookup_family_by_name(name):
+def lookup_family_by_name(name):  # TODO https://github.com/Robpol86/libnl/issues/15
     """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/mngt.c#L106
 
     Positional arguments:
@@ -102,7 +102,7 @@ def lookup_family_by_name(name):
     return None
 
 
-class genl_ops(object):
+class genl_ops(object):  # TODO https://github.com/Robpol86/libnl/issues/15
     """Definition of a Generic Netlink family.
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/genl/mngt.h#L132
 
@@ -123,7 +123,7 @@ class genl_ops(object):
         self.o_cmds = o_cmds
 
 
-def genl_register_family(ops):
+def genl_register_family(ops):  # TODO https://github.com/Robpol86/libnl/issues/15
     """Register Generic Netlink family and associated commands.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/mngt.c#L164
 
@@ -151,7 +151,7 @@ def genl_register_family(ops):
     return 0
 
 
-def genl_register(ops):
+def genl_register(ops):  # TODO https://github.com/Robpol86/libnl/issues/15
     """Register Generic Netlink family backed cache.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/mngt.c#L241
 

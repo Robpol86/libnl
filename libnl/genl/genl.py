@@ -58,7 +58,7 @@ def genl_send_simple(sk, family, cmd, version, flags):
     0 on success or a negative error code.
     """
     hdr = genlmsghdr(cmd=cmd, version=version)
-    return int(nl_send_simple(sk, family, flags, hdr))
+    return int(nl_send_simple(sk, family, flags, hdr, hdr.SIZEOF))
 
 
 def genlmsg_valid_hdr(nlh, hdrlen):
@@ -72,7 +72,7 @@ def genlmsg_valid_hdr(nlh, hdrlen):
 
     Positional arguments:
     nlh -- Netlink message header (nlmsghdr class instance).
-    hdrlen -- length of user header.
+    hdrlen -- length of user header (integer).
 
     Returns:
     True if the headers are valid or False if not.
@@ -80,7 +80,8 @@ def genlmsg_valid_hdr(nlh, hdrlen):
     if not nlmsg_valid_hdr(nlh, GENL_HDRLEN):
         return False
 
-    if nlh.nlmsg_len - GENL_HDRLEN - NLMSG_HDRLEN < NLMSG_ALIGN(hdrlen):
+    ghdr = nlmsg_data(nlh)
+    if genlmsg_len(ghdr) < NLMSG_ALIGN(hdrlen):
         return False
 
     return True

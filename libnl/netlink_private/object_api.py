@@ -8,7 +8,7 @@ of the License.
 """
 
 
-class NLHDR_COMMON(object):
+class NLHDR_COMMON(object):  # TODO https://github.com/Robpol86/libnl/issues/15
     """Common Object Header
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/object-api.h#L185
 
@@ -18,7 +18,7 @@ class NLHDR_COMMON(object):
     ce_refcnt -- c_int.
     ce_ops -- nl_object_ops class instance.
     ce_cache -- nl_cache class instance.
-    ce_list -- TODO.
+    ce_list -- # TODO https://github.com/Robpol86/libnl/issues/15
     ce_msgtype -- c_int.
     ce_flags -- c_int.
     ce_mask -- c_uint32.

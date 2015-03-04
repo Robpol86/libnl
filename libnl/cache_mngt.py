@@ -18,7 +18,7 @@ cache_ops = nl_cache_ops()  # This is pretty much a linked list of other nl_cach
 cache_ops_lock = threading.Lock()
 
 
-def _nl_cache_ops_lookup(name):
+def _nl_cache_ops_lookup(name):  # TODO https://github.com/Robpol86/libnl/issues/15
     """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/cache_mngt.c#L41
 
     Positional arguments:
@@ -35,7 +35,7 @@ def _nl_cache_ops_lookup(name):
     return None
 
 
-def _cache_ops_associate(protocol, msgtype):
+def _cache_ops_associate(protocol, msgtype):  # TODO https://github.com/Robpol86/libnl/issues/15
     """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/cache_mngt.c#L111
 
     Positional arguments:
@@ -72,7 +72,7 @@ def nl_cache_ops_associate_safe(protocol, msgtype):
         return _cache_ops_associate(protocol, msgtype)
 
 
-def nl_msgtype_lookup(ops, msgtype):
+def nl_msgtype_lookup(ops, msgtype):  # TODO https://github.com/Robpol86/libnl/issues/15
     """Lookup message type cache association.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/cache_mngt.c#L189
 
@@ -91,7 +91,7 @@ def nl_msgtype_lookup(ops, msgtype):
     return None
 
 
-def nl_cache_mngt_register(ops):
+def nl_cache_mngt_register(ops):  # TODO https://github.com/Robpol86/libnl/issues/15
     """Register a set of cache operations.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/cache_mngt.c#L252
 

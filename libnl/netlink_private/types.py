@@ -7,10 +7,7 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-import ctypes
-
-from libnl.linux_private.netlink import sockaddr_nl, nlmsghdr
-from libnl.misc import ucred
+from libnl.linux_private.netlink import sockaddr_nl
 from libnl.netlink_private.object_api import NLHDR_COMMON
 
 NL_SOCK_BUFSIZE_SET = 1 << 0
@@ -21,17 +18,17 @@ NL_NO_AUTO_ACK = 1 << 4
 NL_MSG_CRED_PRESENT = 1
 
 
-class nl_cb(object):  # TODO https://github.com/Robpol86/libnl/issues/4
-    """Netlink callback class (C struct equivalent).
-    https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L40
+class nl_cb(object):
+    """Netlink callback class.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L39
 
     Instance variables:
     cb_set -- dictionary of callback functions (values), indexed by callback type (keys).
     cb_args -- dictionary of arguments to be passed to callback functions (values), indexed by callback type (keys).
     cb_err -- error callback function.
     cb_err_arg -- argument to be passed to error callback function.
-    cb_recvmsgs_ow -- TODO https://github.com/Robpol86/libnl/issues/4
-    cb_recv_ow -- TODO https://github.com/Robpol86/libnl/issues/4
+    cb_recvmsgs_ow -- call this function instead of recvmsgs() in nl_recvmsgs_report(). Args are (sk, cb).
+    cb_recv_ow -- call this function instead of nl_recv() in recvmsgs(). Args are (sk, nla, buf, creds).
     cb_send_ow -- call this function instead of nl_send_iovec() in nl_send(). Args are (sk, msg).
     cb_active -- current callback type (e.g. NL_CB_MSG_OUT). Modified before every callback function call.
     """

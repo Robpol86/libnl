@@ -19,6 +19,7 @@ from libnl.error import nl_syserr2nlerr
 from libnl.handlers import NL_CB_DEFAULT, nl_cb_alloc, NL_CB_VERBOSE, NL_CB_DEBUG, nl_cb_set, nl_cb_err
 from libnl.linux_private.netlink import NETLINK_ADD_MEMBERSHIP, NETLINK_DROP_MEMBERSHIP
 from libnl.misc import __init
+from libnl.netlink_private.netlink import BUG
 from libnl.netlink_private.types import nl_sock, NL_OWN_PORT, NL_SOCK_BUFSIZE_SET
 
 _LOGGER = logging.getLogger(__name__)
@@ -137,8 +138,8 @@ def nl_socket_add_membership(sk, group):
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L448
 
     Positional arguments:
-    sk -- AF_NETLINK socket.
-    group -- group identifier integer.
+    sk -- nl_sock class instance.
+    group -- group identifier (integer).
 
     Returns:
     0 on success or a negative error code.
@@ -169,8 +170,8 @@ def nl_socket_drop_membership(sk, group):
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L496
 
     Positional arguments:
-    sk -- AF_NETLINK socket.
-    group -- group identifier integer.
+    sk -- nl_sock class instance.
+    group -- group identifier (integer).
 
     Returns:
     0 on success or a negative error code.
@@ -201,6 +202,8 @@ def nl_socket_set_cb(sk, cb):
     sk -- Netlink socket (nl_sock class instance).
     cb -- callbacks (nl_cb class instance).
     """
+    if cb is None:
+        raise BUG
     sk.s_cb = cb
 
 
@@ -212,8 +215,8 @@ def nl_socket_modify_cb(sk, type_, kind, func, arg):
 
     Positional arguments:
     sk -- Netlink socket (nl_sock class instance).
-    type_ -- which type callback to set.
-    kind -- kind of callback.
+    type_ -- which type callback to set (integer).
+    kind -- kind of callback (integer).
     func -- callback function.
     arg -- argument to be passed to callback function.
 
@@ -229,7 +232,7 @@ def nl_socket_modify_err_cb(sk, kind, func, arg):
 
     Positional arguments:
     sk -- Netlink socket (nl_sock class instance).
-    kind -- kind of callback.
+    kind -- kind of callback (integer).
     func -- callback function.
     arg -- argument to be passed to callback function.
 

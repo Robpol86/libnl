@@ -131,15 +131,16 @@ def probe_response(msg, arg):
     arg -- genl_family class instance to fill out.
 
     Returns:
-    NL_SKIP or NL_STOP.
+    Indicator to keep processing frames or not (NL_SKIP or NL_STOP).
     """
     tb = dict()
     nlh = nlmsg_hdr(msg)
+    ret = arg
     if genlmsg_parse(nlh, 0, tb, CTRL_ATTR_MAX, ctrl_policy):
         return NL_SKIP
     if tb[CTRL_ATTR_FAMILY_ID]:
-        genl_family_set_id(arg, nla_get_u16(tb[CTRL_ATTR_FAMILY_ID]))
-    if tb[CTRL_ATTR_MCAST_GROUPS] and parse_mcast_grps(arg, tb[CTRL_ATTR_MCAST_GROUPS]) < 0:
+        genl_family_set_id(ret, nla_get_u16(tb[CTRL_ATTR_FAMILY_ID]))
+    if tb[CTRL_ATTR_MCAST_GROUPS] and parse_mcast_grps(ret, tb[CTRL_ATTR_MCAST_GROUPS]) < 0:
         return NL_SKIP
     return NL_STOP
 
@@ -155,7 +156,7 @@ def genl_ctrl_probe_by_name(sk, name):
 
     Positional arguments:
     sk -- Generic Netlink socket (nl_sock class instance).
-    name -- family name (string).
+    name -- family name (bytes).
 
     Returns:
     Generic Netlink family `genl_family` class instance or None if no match was found.

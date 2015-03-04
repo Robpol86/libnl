@@ -209,16 +209,10 @@ def test_three_dimension():
         assert next(e_iter) == i
 
 
-@pytest.mark.skipif('True')
-def test_oob_positive():
-    pass
-
-
-@pytest.mark.skipif('True')
 def test_oob_negative():
-    origin = bytearray(b'.') * 30
-    parent = bytearray_ptr(origin, -5, -5)
-    infant = bytearray_ptr(parent, -5, -5)
+    origin = bytearray(b'!') * 30
+    parent = bytearray_ptr(origin, 5, -5)
+    infant = bytearray_ptr(parent, 5, -5)
 
     offset = bytearray_ptr(infant, -3, oob=True)
     offset[:7] = bytearray(b'abcdefg')
@@ -226,10 +220,10 @@ def test_oob_negative():
     assert 10 == len(infant)
     assert 20 == len(parent)
     assert 30 == len(origin)
-    assert bytearray(b'abcdefg......') == bytearray(offset)
-    assert bytearray(b'defg......') == bytearray(infant)
-    assert bytearray(b'..abcdefg...........') == bytearray(parent)
-    assert bytearray(b'.......abcdefg................') == bytearray(origin)
+    assert bytearray(b'abcdefg!!!!!!') == bytearray(offset)
+    assert bytearray(b'defg!!!!!!') == bytearray(infant)
+    assert bytearray(b'!!abcdefg!!!!!!!!!!!') == bytearray(parent)
+    assert bytearray(b'!!!!!!!abcdefg!!!!!!!!!!!!!!!!') == bytearray(origin)
 
     offset = bytearray_ptr(infant, -9, oob=True)
     offset[:7] = bytearray(b'hijklmn')
@@ -237,28 +231,18 @@ def test_oob_negative():
     assert 10 == len(infant)
     assert 20 == len(parent)
     assert 30 == len(origin)
-    assert bytearray(b'hijklmnbcdefg......') == bytearray(offset)
-    assert bytearray(b'defg......') == bytearray(infant)
-    assert bytearray(b'lmnbcdefg...........') == bytearray(parent)
-    assert bytearray(b'hijklmnabcdefg................') == bytearray(origin)
+    assert bytearray(b'hijklmnbcdefg!!!!!!') == bytearray(offset)
+    assert bytearray(b'defg!!!!!!') == bytearray(infant)
+    assert bytearray(b'lmnbcdefg!!!!!!!!!!!') == bytearray(parent)
+    assert bytearray(b'!hijklmnbcdefg!!!!!!!!!!!!!!!!') == bytearray(origin)
 
-    offset = bytearray_ptr(infant, 0, -6, oob=True)
+    offset = bytearray_ptr(infant, 0, -3, oob=True)
     offset[:7] = bytearray(b'opqrstu')
-    assert 16 == len(offset)
+    assert 7 == len(offset)
     assert 10 == len(infant)
     assert 20 == len(parent)
     assert 30 == len(origin)
-    assert bytearray(b'opqrstu.........') == bytearray(offset)
-    assert bytearray(b'opqrstu...') == bytearray(infant)
-    assert bytearray(b'lmnbcopqrstu........') == bytearray(parent)
-    assert bytearray(b'hijklmnabcopqrstu.............') == bytearray(origin)
-
-
-@pytest.mark.skipif('True')
-def test_oob_mixed():
-    pass
-
-
-@pytest.mark.skipif('True')
-def test_oob_IndexError():
-    pass
+    assert bytearray(b'opqrstu') == bytearray(offset)
+    assert bytearray(b'opqrstu!!!') == bytearray(infant)
+    assert bytearray(b'lmnbcopqrstu!!!!!!!!') == bytearray(parent)
+    assert bytearray(b'!hijklmnbcopqrstu!!!!!!!!!!!!!') == bytearray(origin)

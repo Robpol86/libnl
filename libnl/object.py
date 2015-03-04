@@ -14,7 +14,7 @@ from libnl.netlink_private.object_api import nl_object
 _LOGGER = logging.getLogger(__name__)
 
 
-def nl_object_alloc(ops):
+def nl_object_alloc(ops):  # TODO https://github.com/Robpol86/libnl/issues/15
     """Allocate a new object of kind specified by the operations handle.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/object.c#L54
 

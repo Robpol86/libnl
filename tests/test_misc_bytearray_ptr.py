@@ -139,6 +139,9 @@ def test_three_dimension():
     origin = bytearray(b"All letters: The quick brown fox jumps over the lazy dog.\nIsn't it cool?")
     pointee = bytearray_ptr(origin, 13, -15)
     ba = bytearray_ptr(pointee, 4, 15)
+    assert hasattr(ba, 'pointee')
+    assert hasattr(pointee, 'pointee')
+    assert not hasattr(ba.pointee, 'pointee')
     assert bytearray(b'quick brown') == bytearray(ba)
     assert bytearray(b'quick brown') == bytearray(ba[:100])
     assert bytearray(b'The quick brown fox jumps over the lazy dog.') == bytearray(pointee)
@@ -204,3 +207,58 @@ def test_three_dimension():
     e_iter = iter(reversed(expected))
     for i in reversed(ba):
         assert next(e_iter) == i
+
+
+@pytest.mark.skipif('True')
+def test_oob_positive():
+    pass
+
+
+@pytest.mark.skipif('True')
+def test_oob_negative():
+    origin = bytearray(b'.') * 30
+    parent = bytearray_ptr(origin, -5, -5)
+    infant = bytearray_ptr(parent, -5, -5)
+
+    offset = bytearray_ptr(infant, -3, oob=True)
+    offset[:7] = bytearray(b'abcdefg')
+    assert 13 == len(offset)
+    assert 10 == len(infant)
+    assert 20 == len(parent)
+    assert 30 == len(origin)
+    assert bytearray(b'abcdefg......') == bytearray(offset)
+    assert bytearray(b'defg......') == bytearray(infant)
+    assert bytearray(b'..abcdefg...........') == bytearray(parent)
+    assert bytearray(b'.......abcdefg................') == bytearray(origin)
+
+    offset = bytearray_ptr(infant, -9, oob=True)
+    offset[:7] = bytearray(b'hijklmn')
+    assert 19 == len(offset)
+    assert 10 == len(infant)
+    assert 20 == len(parent)
+    assert 30 == len(origin)
+    assert bytearray(b'hijklmnbcdefg......') == bytearray(offset)
+    assert bytearray(b'defg......') == bytearray(infant)
+    assert bytearray(b'lmnbcdefg...........') == bytearray(parent)
+    assert bytearray(b'hijklmnabcdefg................') == bytearray(origin)
+
+    offset = bytearray_ptr(infant, 0, -6, oob=True)
+    offset[:7] = bytearray(b'opqrstu')
+    assert 16 == len(offset)
+    assert 10 == len(infant)
+    assert 20 == len(parent)
+    assert 30 == len(origin)
+    assert bytearray(b'opqrstu.........') == bytearray(offset)
+    assert bytearray(b'opqrstu...') == bytearray(infant)
+    assert bytearray(b'lmnbcopqrstu........') == bytearray(parent)
+    assert bytearray(b'hijklmnabcopqrstu.............') == bytearray(origin)
+
+
+@pytest.mark.skipif('True')
+def test_oob_mixed():
+    pass
+
+
+@pytest.mark.skipif('True')
+def test_oob_IndexError():
+    pass

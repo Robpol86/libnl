@@ -7,20 +7,23 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-from libnl.misc import Struct
 
-
-class NLHDR_COMMON(Struct):
+class NLHDR_COMMON(object):
     """Common Object Header
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/object-api.h#L185
 
     Must be used by every "object" definition to allow objects to be cached.
+
+    Instance variables:
+    ce_refcnt -- c_int.
+    ce_ops -- nl_object_ops class instance.
+    ce_cache -- nl_cache class instance.
+    ce_list -- TODO.
+    ce_msgtype -- c_int.
+    ce_flags -- c_int.
+    ce_mask -- c_uint32.
     """
-    pass
-
-
-class nl_object(object):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/object-api.h#L194"""
+    SIZEOF = 32
 
     def __init__(self):
         self.ce_refcnt = 0
@@ -32,14 +35,19 @@ class nl_object(object):
         self.ce_mask = 0
 
 
+class nl_object(NLHDR_COMMON):
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/object-api.h#L194"""
+    pass
+
+
 class nl_object_ops(object):
     """Object operations.
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/object-api.h#L269
 
     Instance variables:
-    oo_name -- string, unique name of object type. Must be in the form family/name, e.g. "route/addr".
-    oo_size -- c_uint32, size of object including its header.
-    oo_id_attrs -- c_uint32, attributes needed to uniquely identify the object.
+    oo_name -- unique name of object type. Must be in the form family/name, e.g. "route/addr" (bytes()).
+    oo_size -- size of object including its header (c_uint32).
+    oo_id_attrs -- attributes needed to uniquely identify the object (c_uint32).
     oo_constructor -- constructor function, will be called when a new object of this type is allocated. Can be used to
         initialize members such as lists etc.
     oo_free_data -- destructor function, will be called when an object is freed. Must free all resources which may have
@@ -47,9 +55,9 @@ class nl_object_ops(object):
     oo_clone -- cloning function, will be called when an object needs to be cloned. Please note that the generic object
         code will make an exact copy of the object first, therefore you only need to take care of members which require
         reference counting etc. May return a negative error code to abort cloning.
-    oo_dump -- dict, dumping functions as values, NL_DUMP_* integer values as keys. Will be called when an object is
-        dumped. The implementations have to use nl_dump(), nl_dump_line(), and nl_new_line() to dump objects. The
-        functions must return the number of lines printed.
+    oo_dump -- dumping functions as values, NL_DUMP_* integer values as keys. Will be called when an object is dumped.
+        The implementations have to use nl_dump(), nl_dump_line(), and nl_new_line() to dump objects. The functions must
+        return the number of lines printed (dict(), keys are integers, values are functions).
     oo_compare -- comparison function, will be called when two objects of the same type are compared. It takes the two
         objects in question, an object specific bitmask defining which attributes should be compared and flags to
         control the behaviour. The function must return a bitmask with the relevant bit set for each attribute that
@@ -64,7 +72,8 @@ class nl_object_ops(object):
     oo_id_attrs_get -- function to get key attributes by family.
     """
 
-    def __init__(self, oo_name, oo_size=None, oo_constructor=None, oo_free_data=None, oo_clone=None, oo_dump=None, oo_compare=None, oo_id_attrs=None):
+    def __init__(self, oo_name, oo_size=None, oo_constructor=None, oo_free_data=None, oo_clone=None, oo_dump=None,
+                 oo_compare=None, oo_id_attrs=None):
         self.oo_name = oo_name
         self.oo_size = oo_size
         self.oo_id_attrs = oo_id_attrs

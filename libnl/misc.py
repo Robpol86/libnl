@@ -162,22 +162,32 @@ class bytearray_ptr(object):
     Edits allowed, changes to length forbidden.
     Pointee/actual bytearray can be increased on the right only.
 
+    Use `oob` to access nested bytearray_ptr instances to reference data
+    in a pointee's pointee.
+
     Instance variables:
     pointee -- actual bytearray to operate on.
     start -- index of the actual bytearray to start this pseudo bytearray.
     stop -- index of the actual bytearray to end this pseudo bytearray.
+    oob -- go out of bounds with negative start/stop values.
     """
 
-    def __init__(self, pointee, start=None, stop=None):
-        self.pointee = pointee
-
+    def __init__(self, pointee, start=None, stop=None, oob=False):
         # Hard-code borders.
         start = start or 0
         stop = stop or (start if stop == 0 else len(pointee))
-        if start < 0:
+        if not oob and start < 0:
             start += len(pointee)
-        if stop < 0:
+        if not oob and stop < 0:
             stop += len(pointee)
+
+        # Resolve nested references.
+        if hasattr(pointee, 'pointee'):
+            start += pointee.slice.start
+            stop += pointee.slice.start
+            pointee = pointee.pointee
+
+        self.pointee = pointee
         self.slice = slice(start, stop)
 
     def __repr__(self):

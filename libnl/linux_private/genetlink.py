@@ -12,7 +12,6 @@ import ctypes
 from libnl.linux_private.netlink import NLMSG_MIN_TYPE, NLMSG_ALIGN
 from libnl.misc import Struct, SIZEOF_U8, SIZEOF_U16, bytearray_ptr
 
-
 GENL_NAMSIZ = 16  # Length of family name.
 GENL_MIN_ID = NLMSG_MIN_TYPE
 GENL_MAX_ID = 1023
@@ -32,7 +31,7 @@ class genlmsghdr(Struct):
     SIGNATURE = (SIZEOF_U8, SIZEOF_U8, SIZEOF_U16)
     SIZEOF = sum(SIGNATURE)
 
-    def __init__(self, ba, cmd=None, version=None, reserved=None):
+    def __init__(self, ba=None, cmd=None, version=None, reserved=None):
         super().__init__(ba)
         if cmd is not None:
             self.cmd = cmd
@@ -78,7 +77,7 @@ GENL_CMD_CAP_DUMP = 0x04
 GENL_CMD_CAP_HASPOL = 0x08
 GENL_ID_GENERATE = 0
 GENL_ID_CTRL = NLMSG_MIN_TYPE
-GENL_HDRSIZE = lambda hdrlen: GENL_HDRLEN + hdrlen  # /libnl/blob/libnl3_2_25/include/netlink-private/genl.h#L18
+GENL_HDRSIZE = lambda hdrlen: GENL_HDRLEN + hdrlen  # /thom311/libnl/blob/libnl3_2_25/include/netlink-private/genl.h#L18
 
 
 CTRL_CMD_UNSPEC = 0

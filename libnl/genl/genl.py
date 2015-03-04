@@ -12,7 +12,8 @@ import logging
 from libnl.attr import nla_parse
 from libnl.errno_ import NLE_MSG_TOOSHORT
 from libnl.linux_private.genetlink import GENL_HDRLEN, genlmsghdr
-from libnl.linux_private.netlink import NETLINK_GENERIC, NLMSG_ALIGN, NLMSG_HDRLEN
+from libnl.linux_private.netlink import NETLINK_GENERIC, NLMSG_ALIGN, NLMSG_HDRLEN, nlattr, nlmsghdr
+from libnl.misc import bytearray_ptr
 from libnl.msg import nlmsg_data, nlmsg_put, nlmsg_valid_hdr
 from libnl.nl import nl_connect, nl_send_simple
 
@@ -94,10 +95,10 @@ def genlmsg_parse(nlh, hdrlen, tb, maxtype, policy):
 
     Positional arguments:
     nlh -- Netlink message header (nlmsghdr class instance).
-    hdrlen -- length of user header.
+    hdrlen -- length of user header (integer).
     tb -- empty dict, to be updated with nlattr class instances to store parsed attributes.
-    maxtype -- maximum attribute id expected.
-    policy -- attribute validation policy.
+    maxtype -- maximum attribute id expected (integer).
+    policy -- dictionary of nla_policy class instances as values, with nla types as keys.
 
     Returns:
     0 on success or a negative error code.
@@ -105,24 +106,84 @@ def genlmsg_parse(nlh, hdrlen, tb, maxtype, policy):
     if not genlmsg_valid_hdr(nlh, hdrlen):
         return -NLE_MSG_TOOSHORT
 
-    ghdr = genlmsghdr.from_buffer(nlmsg_data(nlh))
-    return nla_parse(tb, maxtype, genlmsg_attrdata(ghdr, hdrlen), policy)
+    ghdr = genlmsghdr(nlmsg_data(nlh))
+    return int(nla_parse(tb, maxtype, genlmsg_attrdata(ghdr, hdrlen), genlmsg_attrlen(ghdr, hdrlen), policy))
 
 
-def genlmsg_attrdata(gnlh, _):
-    """Return list of message attributes.
-    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/genl.c#L287
+def genlmsg_len(gnlh):
+    """Return length of message payload including user header.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/genl.c#L224
 
     Positional arguments:
     gnlh -- Generic Netlink message header (genlmsghdr class instance).
 
     Returns:
-    List of message attributes.
+    Length of user payload including an eventual user header in number of bytes.
     """
-    return gnlh.payload
+    nlh = nlmsghdr(bytearray_ptr(gnlh.bytearray, -NLMSG_HDRLEN, oob=True))
+    return nlh.nlmsg_len - GENL_HDRLEN - NLMSG_HDRLEN
 
 
-def genlmsg_put(msg, port, seq, family, _, flags, cmd, version):
+def genlmsg_user_hdr(gnlh):
+    """Return bytearray_ptr of the user header.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/genl.c#L242
+
+    Calculates the bytearray_ptr of the user header based on the Generic Netlink message header.
+
+    Positional arguments:
+    gnlh -- Generic Netlink message header (genlmsghdr class instance).
+
+    Returns:
+    bytearray_ptr of the user header.
+    """
+    return bytearray_ptr(gnlh, GENL_HDRLEN)
+
+
+def genlmsg_user_data(gnlh, hdrlen):
+    """Return bytearray_ptr of the user data.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/genl.c#L259
+
+    Calculates the bytearray_ptr of the user data based on the Generic Netlink message header.
+
+    Positional arguments:
+    gnlh -- Generic Netlink message header (genlmsghdr class instance).
+    hdrlen -- length of user header (integer).
+
+    Returns:
+    bytearray_ptr of the user data.
+    """
+    return bytearray_ptr(genlmsg_user_hdr(gnlh), NLMSG_ALIGN(hdrlen))
+
+
+def genlmsg_attrdata(gnlh, hdrlen):
+    """Return nlattr at the start of message attributes.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/genl.c#L287
+
+    Positional arguments:
+    gnlh -- Generic Netlink message header (genlmsghdr class instance).
+    hdrlen -- length of user header (integer).
+
+    Returns:
+    nlattr class instance with others in its payload.
+    """
+    return nlattr(genlmsg_user_data(gnlh, hdrlen))
+
+
+def genlmsg_attrlen(gnlh, hdrlen):
+    """Return length of message attributes.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/genl.c#L302
+
+    Positional arguments:
+    gnlh -- Generic Netlink message header (genlmsghdr class instance).
+    hdrlen -- length of user header (integer).
+
+    Returns:
+    Length of the message section containing attributes in number of bytes.
+    """
+    return genlmsg_len(gnlh) - NLMSG_ALIGN(hdrlen)
+
+
+def genlmsg_put(msg, port, seq, family, hdrlen, flags, cmd, version):
     """Add Generic Netlink headers to Netlink message.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/genl.c#L348
 
@@ -131,18 +192,21 @@ def genlmsg_put(msg, port, seq, family, _, flags, cmd, version):
 
     Positional arguments:
     msg -- Netlink message object (nl_msg class instance).
-    port -- Netlink port or NL_AUTO_PORT.
-    seq -- sequence number of message or NL_AUTO_SEQ.
-    family -- numeric family identifier.
-    flags -- additional Netlink message flags.
-    cmd -- numeric command identifier.
-    version -- interface version.
+    port -- Netlink port or NL_AUTO_PORT (c_uint32).
+    seq -- sequence number of message or NL_AUTO_SEQ (c_uint32).
+    family -- numeric family identifier (integer).
+    hdrlen -- length of user header (integer).
+    flags -- additional Netlink message flags (integer).
+    cmd -- numeric command identifier (c_uint8).
+    version -- interface version (c_uint8).
 
     Returns:
-    genlmsghdr class instance.
+    bytearray starting at user header or None if an error occurred.
     """
     hdr = genlmsghdr(cmd=cmd, version=version)
-    nlh = nlmsg_put(msg, port, seq, family, flags)
-    nlh.payload.append(hdr)
+    nlh = nlmsg_put(msg, port, seq, family, GENL_HDRLEN + hdrlen, flags)
+    if nlh is None:
+        return None
+    nlmsg_data(nlh)[:hdr.SIZEOF] = hdr.bytearray[:hdr.SIZEOF]
     _LOGGER.debug('msg 0x%x: Added generic netlink header cmd=%d version=%d', id(msg), cmd, version)
-    return hdr
+    return bytearray_ptr(nlmsg_data(nlh), GENL_HDRLEN)

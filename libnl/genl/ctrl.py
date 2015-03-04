@@ -7,6 +7,8 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
+import ctypes
+
 from libnl.attr import (nla_get_u16, nla_put_string, NLA_U16, NLA_STRING, NLA_U32, NLA_NESTED, nla_policy,
                         nla_for_each_nested, nla_get_u32, nla_get_string, nla_parse_nested)
 from libnl.cache import NL_ACT_UNSPEC
@@ -82,10 +84,11 @@ def parse_mcast_grps(family, grp_attr):
     Returns:
     0 on success or a negative error code.
     """
+    remaining = ctypes.c_int()
     if not grp_attr:
         raise BUG
 
-    for nla in nla_for_each_nested(grp_attr):
+    for nla in nla_for_each_nested(grp_attr, remaining):
         tb = dict()
         err = nla_parse_nested(tb, CTRL_ATTR_MCAST_GRP_MAX, nla, family_grp_policy)
         if err < 0:
@@ -189,7 +192,7 @@ def genl_ctrl_resolve(sk, name):
 
     Positional arguments:
     sk -- Generic Netlink socket (nl_sock class instance).
-    name -- name of Generic Netlink family (string).
+    name -- name of Generic Netlink family (bytes).
 
     Returns:
     The numeric family identifier or a negative error code.

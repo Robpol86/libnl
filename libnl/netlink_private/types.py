@@ -11,6 +11,7 @@ import ctypes
 
 from libnl.linux_private.netlink import sockaddr_nl, nlmsghdr
 from libnl.misc import ucred
+from libnl.netlink_private.object_api import NLHDR_COMMON
 
 NL_SOCK_BUFSIZE_SET = 1 << 0
 NL_SOCK_PASSCRED = 1 << 1
@@ -136,19 +137,12 @@ class genl_family_grp(object):
         self.id_ = id_
 
 
-class genl_family(object):
+class genl_family(NLHDR_COMMON):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L768"""
-    SIZEOF = 80
+    SIZEOF = NLHDR_COMMON.SIZEOF + 48
 
     def __init__(self):
-        self.ce_refcnt = 0
-        self.ce_ops = None
-        self.ce_cache = None
-        self.ce_list = None
-        self.ce_msgtype = 0
-        self.ce_flags = 0
-        self.ce_mask = 0
-
+        super().__init__()
         self.gf_id = 0
         self.gf_name = None
         self.gf_version = 0

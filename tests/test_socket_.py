@@ -242,7 +242,7 @@ def test_nl_socket_modify_cb(log, ifaces):
 
     for _ in ifaces:
         assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Processing valid message...', log, True)
-        assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message, maxlen=\d{4,}', log, True)
+        assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message, maxlen=\d{3,}', log, True)
         assert match('nl_msg_dump: --------------------------   BEGIN NETLINK MESSAGE ---------------------------', log)
         assert match('nl_msg_dump:   [NETLINK HEADER] 16 octets', log)
         assert match('print_hdr:     .nlmsg_len = \d{3,}', log, True)

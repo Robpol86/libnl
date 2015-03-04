@@ -86,18 +86,12 @@ def genl_family_alloc():
     Returns:
     New `genl_family` class instance.
     """
-    return genl_family(nl_object_alloc(genl_family_ops))
+    return nl_object_alloc(genl_family_ops)
 
 
 def genl_family_get_id(family):
     """Return numeric identifier.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/family.c#L213
-
-    This function expects a nl_socket class instance previously allocated via nl_socket_alloc(). It calls nl_connect()
-    to create the local socket file descriptor and binds the socket to the NETLINK_GENERIC Netlink protocol.
-
-    Using this function is equivalent to:
-    nl_connect(sk, NETLINK_GENERIC)
 
     Positional arguments:
     family -- Generic Netlink family object (genl_family class instance).
@@ -114,7 +108,7 @@ def genl_family_set_id(family, id_):
 
     Positional arguments:
     family -- Generic Netlink family object (genl_family class instance).
-    id_ -- new numeric identifier.
+    id_ -- new numeric identifier (c_uint).
     """
     family.gf_id = id_
     family.ce_mask |= FAMILY_ATTR_ID
@@ -126,7 +120,7 @@ def genl_family_set_name(family, name):
 
     Positional arguments:
     family -- Generic Netlink family object (genl_family class instance).
-    name -- new human readable name (string).
+    name -- new human readable name (bytes()).
     """
     family.gf_name = name
     family.ce_mask |= FAMILY_ATTR_NAME
@@ -148,7 +142,7 @@ def genl_family_add_grp(family, id_, name):
 
 
 genl_family_ops = nl_object_ops(  # https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/family.c#L386
-    oo_name="genl/family",
+    oo_name='genl/family',
     oo_size=genl_family.SIZEOF,
     oo_constructor=None,
     oo_free_data=None,

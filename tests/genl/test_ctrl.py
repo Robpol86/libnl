@@ -1,3 +1,4 @@
+import logging
 import re
 
 import pytest
@@ -9,6 +10,7 @@ from libnl.genl.genl import genl_connect, genlmsg_put
 from libnl.handlers import NL_CB_VALID, NL_CB_CUSTOM, NL_OK, nl_cb_overwrite_send, nl_cb_overwrite_recv
 from libnl.linux_private.genetlink import GENL_ID_CTRL, CTRL_CMD_GETFAMILY, CTRL_ATTR_FAMILY_NAME
 from libnl.msg import nlmsg_alloc, NL_AUTO_PORT, NL_AUTO_SEQ, dump_hex, nlmsg_hdr
+from libnl.msg_ import nlmsg_datalen
 from libnl.nl import nl_send_auto, nl_recvmsgs_default, nl_send_iovec, nl_recv
 from libnl.socket_ import nl_socket_alloc, nl_socket_modify_cb, nl_socket_free
 
@@ -93,7 +95,7 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
         printf("%d == msg.nm_nlh.nlmsg_pid\n", msg->nm_nlh->nlmsg_pid);
         printf("%d == msg.nm_size\n", msg->nm_size);
         printf("%d == msg.nm_refcnt\n", msg->nm_refcnt);
-        dump_hex(stdout, (char *) msg, msg->nm_size, 0);
+        dump_hex(stdout, (char *) msg->nm_nlh, nlmsg_datalen(msg->nm_nlh), 0);
         return NL_OK;
     }
     int main() {
@@ -135,15 +137,15 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
     // 0 == msg.nm_creds.gid
     // 16 == msg.nm_nlh.nlmsg_type
     // 5 == msg.nm_nlh.nlmsg_flags
-    // 1861 == msg.nm_nlh.nlmsg_pid
+    // 14272 == msg.nm_nlh.nlmsg_pid
     // 4096 == msg.nm_size
     // 1 == msg.nm_refcnt
-    //     20 00 00 00 10 00 05 00 46 eb ea 54 45 07 00 00  .......F..TE...
+    //     20 00 00 00 10 00 05 00 af aa f6 54 c0 37 00 00  ..........T.7..
     //     03 01 00 00 0c 00 02 00 6e 6c 38 30 32 31 31 00 ........nl80211.
     // nl_sendmsg: sent 32 bytes
     // 32 == nl_send_auto(sk, msg)
     // recvmsgs: Attempting to read from 0x2b5080
-    //     2c 07 00 00 10 00 00 00 46 eb ea 54 45 07 00 00 ,.......F..TE...
+    //     2c 07 00 00 10 00 00 00 af aa f6 54 c0 37 00 00 ,..........T.7..
     //     01 02 00 00 0c 00 02 00 6e 6c 38 30 32 31 31 00 ........nl80211.
     //     06 00 01 00 16 00 00 00 08 00 03 00 01 00 00 00 ................
     //     08 00 04 00 00 00 00 00 08 00 05 00 d5 00 00 00 ................
@@ -173,14 +175,10 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
     // 0 == msg.nm_creds.gid
     // 16 == msg.nm_nlh.nlmsg_type
     // 0 == msg.nm_nlh.nlmsg_flags
-    // 1861 == msg.nm_nlh.nlmsg_pid
+    // 14272 == msg.nm_nlh.nlmsg_pid
     // 1836 == msg.nm_size
     // 1 == msg.nm_refcnt
-    //     10 00 00 00 00 00 00 00 10 00 00 00 00 00 00 00 ................
-    //     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
-    //     00 00 00 00 00 00 00 00 00 00 00 00 a0 e1 36 00 ..............6.
-    //     2c 07 00 00 01 00 00 00 00 00 00 00 31 07 00 00 ,...........1...
-    //     2c 07 00 00 10 00 00 00 46 eb ea 54 45 07 00 00 ,.......F..TE...
+    //     2c 07 00 00 10 00 00 00 af aa f6 54 c0 37 00 00 ,..........T.7..
     //     01 02 00 00 0c 00 02 00 6e 6c 38 30 32 31 31 00 ........nl80211.
     //     06 00 01 00 16 00 00 00 08 00 03 00 01 00 00 00 ................
     //     08 00 04 00 00 00 00 00 08 00 05 00 d5 00 00 00 ................
@@ -189,7 +187,10 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
     //     <trimmed>
     //     63 6f 6e 66 69 67 00 00 18 00 02 00 08 00 02 00 config..........
     //     04 00 00 00 09 00 01 00 73 63 61 6e 00 00 00 00 ........scan....
-    //     1c 00 03 00 08 00 02 00 05 00 00 00             ............
+    //     1c 00 03 00 08 00 02 00 05 00 00 00 0f 00 01 00 ................
+    //     72 65 67 75 6c 61 74 6f 72 79 00 00 18 00 04 00 regulatory......
+    //     08 00 02 00 06 00 00 00 09 00 01 00 6d 6c 6d 65 ............mlme
+    //     00 00 00 00 18 00 05 00 08 00 02 00             ............
     // nlmsg_free: Returned message reference 0x2ba160, 0 remaining
     // nlmsg_free: msg 0x2ba160: Freed
     // 0 == nl_recvmsgs_default(sk)
@@ -209,13 +210,14 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
         assert 5 == msg.nm_nlh.nlmsg_flags
         assert 100 < msg.nm_nlh.nlmsg_pid
         assert 1 == msg.nm_refcnt
-        iov = bytes(nlmsg_hdr(msg))
-        dump_hex(iov, 0)
-        return nl_send_iovec(sk, msg, iov)
+        hdr = nlmsg_hdr(msg)
+        iov = bytes(hdr.bytearray[:hdr.nlmsg_len])
+        dump_hex(logging.getLogger().debug, iov, len(iov), 0)
+        return nl_send_iovec(sk, msg, iov, 1)
 
     def callback_recv(sk, nla, buf, creds):
         n = nl_recv(sk, nla, buf, creds)
-        dump_hex(buf, 0)
+        dump_hex(logging.getLogger().debug, buf, len(buf), 0)
         return n
 
     def callback_recv_msg(msg, _):
@@ -233,7 +235,7 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
         assert 100 < msg.nm_nlh.nlmsg_pid
         assert 1836 == msg.nm_size
         assert 1 == msg.nm_refcnt
-        dump_hex(bytes(msg), 0)
+        dump_hex(logging.getLogger().debug, bytes(msg.nm_nlh), nlmsg_datalen(msg.nm_nlh), 0)
         return NL_OK
 
     log.clear()
@@ -252,18 +254,22 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
     nl_socket_free(sk_main)
 
     assert match('nl_object_alloc: Allocated new object 0x[a-f0-9]+', log, True)
-    assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message', log, True)
+    assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message, maxlen=4096', log, True)
     assert match('nlmsg_put: msg 0x[a-f0-9]+: Added netlink header type=16, flags=0, pid=0, seq=0', log, True)
+    assert match('nlmsg_reserve: msg 0x[a-f0-9]+: Reserved 4 \(4\) bytes, pad=4, nlmsg_len=20', log, True)
     assert match('genlmsg_put: msg 0x[a-f0-9]+: Added generic netlink header cmd=3 version=1', log, True)
-    assert match('nla_put: msg 0x[a-f0-9]+: attr <0x[a-f0-9]+> 2: Wrote 8 bytes', log, True)
+    assert match(
+        'nla_reserve: msg 0x[a-f0-9]+: attr <0x[a-f0-9]+> 2: Reserved 12 \(8\) bytes at offset \+4 nlmsg_len=32',
+        log, True)
+    assert match('nla_put: msg 0x[a-f0-9]+: attr <0x[a-f0-9]+> 2: Wrote 8 bytes at offset \+4', log, True)
 
-    assert match('dump_hex:     20 00 00 00 10 00 05 00 .. .. ea 54 .. .. 00 00  ..........T....', log, True)
+    assert match('dump_hex:     20 00 00 00 10 00 05 00 .. .. .. 54 .. .. 00 00  ..........T....', log, True)
     assert match('dump_hex:     03 01 00 00 0c 00 02 00 6e 6c 38 30 32 31 31 00 ........nl80211.', log)
 
     assert match('nl_sendmsg: sent 32 bytes', log)
     assert match('recvmsgs: Attempting to read from 0x[a-f0-9]+', log, True)
 
-    assert match('dump_hex:     2c 07 00 00 10 00 00 00 .. .. ea 54 .. .. 00 00 ,..........T....', log, True)
+    assert match('dump_hex:     2c 07 00 00 10 00 00 00 .. .. .. 54 .. .. 00 00 ,..........T....', log, True)
     assert match('dump_hex:     01 02 00 00 0c 00 02 00 6e 6c 38 30 32 31 31 00 ........nl80211.', log)
     assert match('dump_hex:     06 00 01 00 16 00 00 00 08 00 03 00 01 00 00 00 ................', log)
     assert match('dump_hex:     08 00 04 00 00 00 00 00 08 00 05 00 d5 00 00 00 ................', log)
@@ -381,13 +387,9 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
 
     assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Read 1836 bytes', log, True)
     assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Processing valid message...', log, True)
-    assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message', log, True)
+    assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message, maxlen=1836', log, True)
 
-    assert match('dump_hex:     10 00 00 00 00 00 00 00 10 00 00 00 00 00 00 00 ................', log)
-    assert match('dump_hex:     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................', log)
-    assert match('dump_hex:     00 00 00 00 00 00 00 00 00 00 00 00 a0 .. .. .. ................', log, True)
-    assert match('dump_hex:     2c 07 00 00 01 00 00 00 00 00 00 00 31 07 00 00 ,...........1...', log)
-    assert match('dump_hex:     2c 07 00 00 10 00 00 00 .. .. ea 54 .. .. 00 00 ,..........T....', log, True)
+    assert match('dump_hex:     2c 07 00 00 10 00 00 00 .. .. .. 54 .. .. 00 00 ,..........T....', log, True)
     assert match('dump_hex:     01 02 00 00 0c 00 02 00 6e 6c 38 30 32 31 31 00 ........nl80211.', log)
     assert match('dump_hex:     06 00 01 00 16 00 00 00 08 00 03 00 01 00 00 00 ................', log)
     assert match('dump_hex:     08 00 04 00 00 00 00 00 08 00 05 00 d5 00 00 00 ................', log)
@@ -497,7 +499,10 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
     assert match('dump_hex:     18 00 01 00 08 00 02 00 03 00 00 00 0b 00 01 00 ................', log)
     assert match('dump_hex:     63 6f 6e 66 69 67 00 00 18 00 02 00 08 00 02 00 config..........', log)
     assert match('dump_hex:     04 00 00 00 09 00 01 00 73 63 61 6e 00 00 00 00 ........scan....', log)
-    assert match('dump_hex:     1c 00 03 00 08 00 02 00 05 00 00 00             ............', log)
+    assert match('dump_hex:     1c 00 03 00 08 00 02 00 05 00 00 00 0f 00 01 00 ................', log)
+    assert match('dump_hex:     72 65 67 75 6c 61 74 6f 72 79 00 00 18 00 04 00 regulatory......', log)
+    assert match('dump_hex:     08 00 02 00 06 00 00 00 09 00 01 00 6d 6c 6d 65 ............mlme', log)
+    assert match('dump_hex:     00 00 00 00 18 00 05 00 08 00 02 00             ............', log)
     assert not log
 
 

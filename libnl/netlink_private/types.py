@@ -138,7 +138,7 @@ class genl_family(NLHDR_COMMON):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L768"""
     SIZEOF = NLHDR_COMMON.SIZEOF + 48
 
-    def __init__(self):
+    def __init__(self, nlo=None):
         super().__init__()
         self.gf_id = 0
         self.gf_name = None
@@ -147,3 +147,13 @@ class genl_family(NLHDR_COMMON):
         self.gf_maxattr = 0
         self.gf_ops = None
         self.gf_mc_grps = None
+
+        # "Cast" from nl_object instance.
+        if nlo:
+            self.ce_refcnt = nlo.ce_refcnt
+            self.ce_ops = nlo.ce_ops
+            self.ce_cache = nlo.ce_cache
+            self.ce_list = nlo.ce_list
+            self.ce_msgtype = nlo.ce_msgtype
+            self.ce_flags = nlo.ce_flags
+            self.ce_mask = nlo.ce_mask

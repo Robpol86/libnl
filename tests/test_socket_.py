@@ -21,7 +21,7 @@ def match(expected, log, is_regex=False):
 
 
 def test_nl_socket_alloc():
-    """// gcc $(pkg-config --cflags --libs libnl-genl-3.0) a.c && ./a.out
+    """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && ./a.out
     #include <netlink/msg.h>
     struct nl_cb {
         nl_recvmsg_msg_cb_t cb_set[NL_CB_TYPE_MAX+1]; void * cb_args[NL_CB_TYPE_MAX+1]; nl_recvmsg_err_cb_t cb_err;
@@ -114,7 +114,7 @@ def test_nl_socket_alloc():
 
 
 def test_nl_socket_modify_cb(log, ifaces):
-    """// gcc $(pkg-config --cflags --libs libnl-genl-3.0) a.c && NLDBG=4 ./a.out
+    """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && NLDBG=4 ./a.out
     #include <netlink/msg.h>
     static int callback(struct nl_msg *msg, void *arg) {
         printf("Got something.\n");
@@ -241,6 +241,10 @@ def test_nl_socket_modify_cb(log, ifaces):
     assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Read \d{4,} bytes', log, True)
 
     for _ in ifaces:
+        if 'Attempting to read' in log[0]:
+            # Lots of network interfaces on this host.
+            assert match('recvmsgs: Attempting to read from 0x[a-f0-9]+', log, True)
+            assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Read \d{4,} bytes', log, True)
         assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Processing valid message...', log, True)
         assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message, maxlen=\d{3,}', log, True)
         assert match('nl_msg_dump: --------------------------   BEGIN NETLINK MESSAGE ---------------------------', log)
@@ -269,7 +273,7 @@ def test_nl_socket_modify_cb(log, ifaces):
 
 @pytest.mark.usefixtures('nlcb_verbose')
 def test_nl_socket_modify_cb_error_verbose(log):
-    """// gcc $(pkg-config --cflags --libs libnl-genl-3.0) a.c && NLDBG=4 NLCB=verbose ./a.out
+    """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && NLDBG=4 NLCB=verbose ./a.out
     #include <netlink/msg.h>
     static int callback(struct sockaddr_nl *nla, struct nlmsgerr *err, void *arg) {
         int *ret = arg;

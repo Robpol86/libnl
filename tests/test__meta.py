@@ -61,8 +61,8 @@ def test_print_hunter():
     """Verifies that there are no print statements in the codebase."""
     root_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     assert 'tests' in os.listdir(root_directory)
-    generator = (os.path.join(r, s) for r, d, f in os.walk(root_directory) for s in f
-                 if s.endswith('.py') and not s.startswith('example_'))
+    generator = (os.path.join(r, s) for r, d, f in os.walk(root_directory) if '.egg/' not in r and '/.tox/' not in r
+                 for s in f if s.endswith('.py') and not s.startswith('example_'))
     regex_print = re.compile(r'^(.*)(?<!\w)print(\(|\s)(.*)$', re.MULTILINE)
 
     # Find all potential prints in Python files. May or may not be in strings.

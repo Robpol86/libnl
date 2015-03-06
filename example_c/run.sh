@@ -5,7 +5,7 @@ set -e
 
 for f in list_network_interfaces.c show_wifi_interface.c; do
     echo "Building $f..."
-    gcc $(pkg-config --cflags --libs libnl-genl-3.0) -o /tmp/program $f
+    gcc -o /tmp/program $f $(pkg-config --cflags --libs libnl-genl-3.0)
     echo "Executing..."
     /tmp/program
     echo
@@ -13,7 +13,7 @@ done
 
 for f in scan_access_points.c; do
     echo "Building $f..."
-    gcc $(pkg-config --cflags --libs libnl-genl-3.0) -o /tmp/program $f
+    gcc -o /tmp/program $f $(pkg-config --cflags --libs libnl-genl-3.0)
     echo "Executing..."
     sudo /tmp/program
     echo

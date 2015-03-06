@@ -6,7 +6,7 @@ from libnl.socket_ import nl_socket_alloc, nl_socket_free
 
 
 def test_nl_connect():
-    """// gcc $(pkg-config --cflags --libs libnl-genl-3.0) a.c && ./a.out
+    """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && ./a.out
     #include <netlink/msg.h>
     #include <dirent.h>
     struct nl_cb {

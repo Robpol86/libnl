@@ -10,7 +10,7 @@ from libnl.socket_ import nl_socket_alloc, nl_socket_get_local_port
 
 @pytest.mark.usefixtures('nlcb_debug')
 def test_defaults(log):  # TODO test nlmsg_seq https://github.com/Robpol86/libnl/issues/5
-    """// gcc $(pkg-config --cflags --libs libnl-genl-3.0) a.c && NLDBG=4 ./a.out
+    """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && NLDBG=4 ./a.out
     #include <netlink/msg.h>
     struct ucred { __u32 pid; __u32 uid; __u32 gid; };
     struct nl_msg {

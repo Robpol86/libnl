@@ -20,7 +20,7 @@ def match(expected, log, is_regex=False):
 
 @pytest.mark.usefixtures('nlcb_debug')
 def test_error(log):
-    """// gcc $(pkg-config --cflags --libs libnl-genl-3.0) a.c && NLDBG=4 NLCB=debug ./a.out
+    """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && NLDBG=4 NLCB=debug ./a.out
     #include <netlink/msg.h>
     struct nl_sock {
         struct sockaddr_nl s_local; struct sockaddr_nl s_peer; int s_fd; int s_proto; unsigned int s_seq_next;
@@ -141,67 +141,9 @@ def test_error(log):
     assert not log
 
 
-def multipart_eth0(log):
-    assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Processing valid message...', log, True)
-    assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message, maxlen=\d{3,}', log, True)
-    assert match('nl_msg_in_handler_debug: -- Debug: Received Message:', log)
-    assert match('nl_msg_dump: --------------------------   BEGIN NETLINK MESSAGE ---------------------------', log)
-    assert match('nl_msg_dump:   [NETLINK HEADER] 16 octets', log)
-    assert match('print_hdr:     .nlmsg_len = \d{3,}', log, True)
-    assert match('print_hdr:     .type = 16 <0x10>', log)
-    assert match('print_hdr:     .flags = 2 <MULTI>', log)
-    assert match('print_hdr:     .seq = \d{10}', log, True)
-    assert match('print_hdr:     .port = \d{3,}', log, True)
-    assert match('print_msg:   \[PAYLOAD\] \d{3,} octets', log, True)
-    assert match('dump_hex:     00 00 01 00 02 00 00 00 .. 10 .. 00 00 00 00 00 ................', log, True)
-    assert match('dump_hex:     09 00 03 00 65 74 68 30 00 00 00 00 08 00 0d 00 ....eth0........', log)
-    assert match('dump_hex:     e8 03 00 00 05 00 10 00 .. 00 00 00 05 00 11 00 ................', log, True)
-    assert match('dump_hex:     00 00 00 00 .. 00 .. 00 dc 05 00 00 .. 00 .. 00 ................', log, True)
-
-    rem = log.index('nl_msg_dump: ---------------------------  END NETLINK MESSAGE   ---------------------------')
-    assert 20 < rem  # At least check that there were a lot of log statements skipped.
-    log2 = log[rem:]
-    log.clear()
-    log.extend(log2)
-
-    assert match('nl_msg_dump: ---------------------------  END NETLINK MESSAGE   ---------------------------', log)
-    assert match('nl_valid_handler_debug: -- Debug: Unhandled Valid message: type=0x10 length=\d{3,} flags=<MULTI> '
-                 'sequence-nr=\d{10,} pid=\d{3,}', log, True)
-    return True
-
-
-def multipart_wlan0(log):
-    assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Processing valid message...', log, True)
-    assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message, maxlen=\d{3,}', log, True)
-    assert match('nl_msg_in_handler_debug: -- Debug: Received Message:', log)
-    assert match('nl_msg_dump: --------------------------   BEGIN NETLINK MESSAGE ---------------------------', log)
-    assert match('nl_msg_dump:   [NETLINK HEADER] 16 octets', log)
-    assert match('print_hdr:     .nlmsg_len = \d{3,}', log, True)
-    assert match('print_hdr:     .type = 16 <0x10>', log)
-    assert match('print_hdr:     .flags = 2 <MULTI>', log)
-    assert match('print_hdr:     .seq = \d{10}', log, True)
-    assert match('print_hdr:     .port = \d{3,}', log, True)
-    assert match('print_msg:   \[PAYLOAD\] \d{3,} octets', log, True)
-    assert match('dump_hex:     00 00 01 00 .. 00 00 00 .. 10 .. 00 00 00 00 00 ................', log, True)
-    assert match('dump_hex:     0a 00 03 00 77 6c 61 6e 30 00 00 00 08 00 0d 00 ....wlan0.......', log)
-    assert match('dump_hex:     e8 03 00 00 05 00 10 00 .. 00 00 00 05 00 11 00 ................', log, True)
-    assert match('dump_hex:     .. 00 00 00 08 00 04 00 dc 05 00 00 .. 00 .. 00 ................', log, True)
-
-    rem = log.index('nl_msg_dump: ---------------------------  END NETLINK MESSAGE   ---------------------------')
-    assert 20 < rem  # At least check that there were a lot of log statements skipped.
-    log2 = log[rem:]
-    log.clear()
-    log.extend(log2)
-
-    assert match('nl_msg_dump: ---------------------------  END NETLINK MESSAGE   ---------------------------', log)
-    assert match('nl_valid_handler_debug: -- Debug: Unhandled Valid message: type=0x10 length=\d{3,} flags=<MULTI> '
-                 'sequence-nr=\d{10,} pid=\d{3,}', log, True)
-    return True
-
-
 @pytest.mark.usefixtures('nlcb_debug')
 def test_multipart(log, ifaces):
-    """// gcc $(pkg-config --cflags --libs libnl-genl-3.0) a.c && NLDBG=4 NLCB=debug ./a.out
+    """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && NLDBG=4 NLCB=debug ./a.out
     #include <netlink/msg.h>
     struct nl_sock {
         struct sockaddr_nl s_local; struct sockaddr_nl s_peer; int s_fd; int s_proto; unsigned int s_seq_next;
@@ -367,25 +309,14 @@ def test_multipart(log, ifaces):
     assert match('dump_hex:     07 00 03 00 6c 6f 00 00 08 00 0d 00 00 00 00 00 ....lo..........', log)
     assert match('dump_hex:     05 00 10 00 00 00 00 00 05 00 11 00 00 00 00 00 ................', log)
 
-    # Done testing this payload. Differs too much between Travis and Raspbian, and probably others.
-    rem = log.index('nl_msg_dump: ---------------------------  END NETLINK MESSAGE   ---------------------------')
-    assert 20 < rem  # At least check that there were a lot of log statements skipped.
-    log = log[rem:]
-
-    assert match('nl_msg_dump: ---------------------------  END NETLINK MESSAGE   ---------------------------', log)
-    assert match('nl_valid_handler_debug: -- Debug: Unhandled Valid message: type=0x10 length=\d{3,} flags=<MULTI> '
-                 'sequence-nr=\d{10,} pid=\d{3,}', log, True)
-
-    if 'eth0' in ifaces:
-        assert multipart_eth0(log)
-    if 'wlan0' in ifaces:
-        assert multipart_wlan0(log)
-    if set(ifaces) - {'lo0', 'eth0', 'wlan0'}:
-        # Unsupported interface found. Nuking everything except last lines from log.
-        search_str = 'nl_msg_dump: ---------------------------  END NETLINK MESSAGE   ---------------------------'
-        while log.count(search_str) > 1:
-            rem = log.index(search_str) + 2
-            log = log[rem:]
+    for _ in ifaces:
+        # Done testing this payload. Differs too much between Travis and Raspbian, and probably others.
+        rem = log.index('nl_msg_dump: ---------------------------  END NETLINK MESSAGE   ---------------------------')
+        assert 20 < rem  # At least check that there were a lot of log statements skipped.
+        log = log[rem:]
+        assert match('nl_msg_dump: ---------------------------  END NETLINK MESSAGE   ---------------------------', log)
+        assert match('nl_valid_handler_debug: -- Debug: Unhandled Valid message: type=0x10 length=\d{3,} flags=<MULTI> '
+                     'sequence-nr=\d{10,} pid=\d{3,}', log, True)
 
     assert match('recvmsgs: Attempting to read from 0x[a-f0-9]+', log, True)
     assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Read 20 bytes', log, True)
@@ -470,6 +401,10 @@ def test_multipart_verbose(log, ifaces):
     assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Read \d{4,} bytes', log, True)
 
     for _ in ifaces:
+        if 'Attempting to read' in log[0]:
+            # Lots of network interfaces on this host.
+            assert match('recvmsgs: Attempting to read from 0x[a-f0-9]+', log, True)
+            assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Read \d{4,} bytes', log, True)
         assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Processing valid message...', log, True)
         assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message, maxlen=\d{3,}', log, True)
         assert match('nl_valid_handler_verbose: -- Warning: unhandled valid message: type=0x10 length=\d{3,} '

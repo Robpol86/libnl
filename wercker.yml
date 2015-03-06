@@ -1,0 +1,25 @@
+box: wercker-labs/docker
+
+build:
+  steps:
+    - script:
+        name: YAML - mac80211_hwsim
+        code: |
+            sudo modprobe mac80211_hwsim radios=1
+            sudo ifconfig wlan0 up
+
+    - script:
+        name: YAML - Install
+        code: |
+            sudo add-apt-repository -y ppa:fkrull/deadsnakes
+            sudo apt-get update -y
+            sudo apt-get install -y python-pip python3.4
+            sudo pip install codecov tox coverage
+
+    - script:
+        name: YAML - Test
+        code: tox
+
+    - script:
+        name: YAML - Coverage
+        code: coverage combine && codecov

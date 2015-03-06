@@ -17,9 +17,6 @@ KEYWORDS = 'netlink libnl libnl-genl nl80211'
 NAME = 'libnl'
 NAME_FILE = NAME
 PACKAGE = True
-REQUIRES_INSTALL = []
-REQUIRES_TEST = ['pytest-cov', 'pygments']
-REQUIRES_PIP = '"' + '" "'.join(set(REQUIRES_INSTALL + REQUIRES_TEST)) + '"'
 
 
 def get_metadata(main_file):
@@ -31,6 +28,14 @@ def get_metadata(main_file):
     Returns:
     Dictionary to be passed into setuptools.setup().
     """
+    install_requires, tests_require = list(), list()
+    if os.path.isfile(os.path.join(HERE, 'requirements.txt')):
+        with open(os.path.join(HERE, 'requirements.txt')) as f:
+            install_requires = f.read().decode('ascii', 'ignore').splitlines()
+    if os.path.isfile(os.path.join(HERE, 'requirements-test.txt')):
+        with open(os.path.join(HERE, 'requirements-test.txt')) as f:
+            tests_require = f.read().decode('ascii', 'ignore').splitlines()
+
     with open(os.path.join(HERE, 'README.rst'), encoding='utf-8') as f:
         long_description = f.read(100000)
 
@@ -44,6 +49,7 @@ def get_metadata(main_file):
         raise ValueError('Failed to obtain metadata from package/module.')
 
     everything.update(dict(packages=[NAME_FILE]) if PACKAGE else dict(py_modules=[NAME_FILE]))
+    everything.update(dict(install_requires=install_requires, tests_require=tests_require))
 
     return everything
 
@@ -103,9 +109,6 @@ ALL_DATA = dict(
 
     keywords=KEYWORDS,
     zip_safe=True,
-
-    install_requires=REQUIRES_INSTALL,
-    tests_require=REQUIRES_TEST,
     cmdclass={PyTest.CMD: PyTest, PyTestPdb.CMD: PyTestPdb, PyTestCovWeb.CMD: PyTestCovWeb},
 
     # Pass the rest from get_metadata().

@@ -8,6 +8,7 @@ of the License.
 """
 
 from libnl.linux_private.genetlink import GENL_ID_GENERATE
+from libnl.list_ import nl_list_add_tail
 from libnl.netlink_private.object_api import nl_object_ops
 from libnl.netlink_private.types import genl_family, genl_family_grp
 from libnl.object import nl_object_alloc
@@ -70,7 +71,7 @@ def family_compare(a, b, attrs, flags):
     Positional arguments:
     a -- nl_object class instance.
     b -- nl_object class instance.
-    attrs -- c_uint32.
+    attrs -- integer.
     flags -- integer.
 
     Returns:
@@ -108,7 +109,7 @@ def genl_family_set_id(family, id_):
 
     Positional arguments:
     family -- Generic Netlink family object (genl_family class instance).
-    id_ -- new numeric identifier (c_uint).
+    id_ -- new numeric identifier (integer).
     """
     family.gf_id = id_
     family.ce_mask |= FAMILY_ATTR_ID
@@ -131,14 +132,15 @@ def genl_family_add_grp(family, id_, name):
 
     Positional arguments:
     family -- Generic Netlink family object (genl_family class instance).
-    id_ -- new numeric identifier.
+    id_ -- new numeric identifier (integer).
     name -- new human readable name (string).
 
     Returns:
     0
     """
-    grp = genl_family_grp(id_=id, name=name)
-    raise NotImplementedError
+    grp = genl_family_grp(id_=id_, name=name)
+    nl_list_add_tail(grp.list_, family.gf_mc_grps)
+    return 0
 
 
 genl_family_ops = nl_object_ops(  # https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/family.c#L386

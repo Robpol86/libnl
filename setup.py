@@ -31,10 +31,12 @@ def get_metadata(main_file):
     install_requires, tests_require = list(), list()
     if os.path.isfile(os.path.join(HERE, 'requirements.txt')):
         with open(os.path.join(HERE, 'requirements.txt')) as f:
-            install_requires = f.read().decode('ascii', 'ignore').splitlines()
+            data = f.read()
+            install_requires = (data.decode('ascii', 'ignore') if hasattr(data, 'decode') else data).splitlines()
     if os.path.isfile(os.path.join(HERE, 'requirements-test.txt')):
         with open(os.path.join(HERE, 'requirements-test.txt')) as f:
-            tests_require = f.read().decode('ascii', 'ignore').splitlines()
+            data = f.read()
+            (data.decode('ascii', 'ignore') if hasattr(data, 'decode') else data).splitlines()
 
     with open(os.path.join(HERE, 'README.rst'), encoding='utf-8') as f:
         long_description = f.read(100000)

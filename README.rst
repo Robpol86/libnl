@@ -1,7 +1,7 @@
 libnl
 =====
 
-Pure python port of the Netlink protocol library suite.
+Pure Python port of the Netlink protocol library suite.
 
 Work in progress, unfinished and unpublished. API can and will change without notice or documentation until 0.1.0 is
 reached. Currently only supported on Python 3.4.

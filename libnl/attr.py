@@ -268,7 +268,7 @@ def nla_parse(tb, maxtype, head, len_, policy):
             if err < 0:
                 return err
 
-        if type_ in tb:
+        if type_ in tb and tb[type_]:
             _LOGGER.debug('Attribute of type %d found multiple times in message, previous attribute is being ignored.',
                           type_)
         tb[type_] = nla

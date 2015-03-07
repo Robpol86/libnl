@@ -4,7 +4,7 @@ import re
 import pytest
 
 from libnl.attr import nla_put_string
-from libnl.genl.ctrl import genl_ctrl_resolve
+from libnl.genl.ctrl import genl_ctrl_resolve, genl_ctrl_probe_by_name
 from libnl.genl.family import genl_family_set_name, genl_family_alloc
 from libnl.genl.genl import genl_connect, genlmsg_put
 from libnl.handlers import NL_CB_VALID, NL_CB_CUSTOM, NL_OK, nl_cb_overwrite_send, nl_cb_overwrite_recv
@@ -293,7 +293,144 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
     assert not log
 
 
-@pytest.mark.skipif('True')  # @pytest.mark.skipif('not os.path.exists("/sys/module/mac80211")')
+@pytest.mark.skipif('not os.path.exists("/sys/module/mac80211")')
+def test_genl_ctrl_probe_by_name():
+    """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && ./a.out
+    #include <netlink/msg.h>
+    #define NL_NO_AUTO_ACK (1<<4)
+    struct nl_sock {
+        struct sockaddr_nl s_local; struct sockaddr_nl s_peer; int s_fd; int s_proto; unsigned int s_seq_next;
+        unsigned int s_seq_expect; int s_flags; struct nl_cb *s_cb; size_t s_bufsize;
+    };
+    struct genl_family {
+        int ce_refcnt; struct nl_object_ops *ce_ops; struct nl_cache *ce_cache; struct nl_list_head ce_list;
+        int ce_msgtype; int ce_flags; uint32_t ce_mask; uint16_t gf_id; char gf_name[GENL_NAMSIZ]; uint32_t gf_version;
+        uint32_t gf_hdrsize; uint32_t gf_maxattr; struct nl_list_head gf_ops; struct nl_list_head gf_mc_grps;
+    };
+    static struct nla_policy ctrl_policy[CTRL_ATTR_MAX+1] = {
+        [CTRL_ATTR_FAMILY_ID] = { .type = NLA_U16 },
+        [CTRL_ATTR_FAMILY_NAME] = { .type = NLA_STRING, .maxlen = GENL_NAMSIZ },
+        [CTRL_ATTR_VERSION] = { .type = NLA_U32 }, [CTRL_ATTR_HDRSIZE] = { .type = NLA_U32 },
+        [CTRL_ATTR_MAXATTR] = { .type = NLA_U32 }, [CTRL_ATTR_OPS] = { .type = NLA_NESTED },
+        [CTRL_ATTR_MCAST_GROUPS] = { .type = NLA_NESTED },
+    };
+    static struct nla_policy family_grp_policy[CTRL_ATTR_MCAST_GRP_MAX+1] = {
+        [CTRL_ATTR_MCAST_GRP_NAME] = { .type = NLA_STRING }, [CTRL_ATTR_MCAST_GRP_ID] = { .type = NLA_U32 },
+    };
+    static inline int wait_for_ack(struct nl_sock *sk) {
+        if (sk->s_flags & NL_NO_AUTO_ACK) return 0;
+        else return nl_wait_for_ack(sk);
+    }
+    static int parse_mcast_grps(struct genl_family *family, struct nlattr *grp_attr) {
+        struct nlattr *nla; int remaining, err;
+        nla_for_each_nested(nla, grp_attr, remaining) {
+            struct nlattr *tb[CTRL_ATTR_MCAST_GRP_MAX+1];
+            int id;
+            const char *name;
+            err = nla_parse_nested(tb, CTRL_ATTR_MCAST_GRP_MAX, nla, family_grp_policy);
+            if (err < 0) goto errout;
+            if (tb[CTRL_ATTR_MCAST_GRP_ID] == NULL) { err = -NLE_MISSING_ATTR; goto errout; }
+            id = nla_get_u32(tb[CTRL_ATTR_MCAST_GRP_ID]);
+            if (tb[CTRL_ATTR_MCAST_GRP_NAME] == NULL) { err = -NLE_MISSING_ATTR; goto errout; }
+            name = nla_get_string(tb[CTRL_ATTR_MCAST_GRP_NAME]);
+            err = genl_family_add_grp(family, id, name);
+            if (err < 0) goto errout;
+        }
+        err = 0;
+        errout:
+            return err;
+    }
+    static int probe_response(struct nl_msg *msg, void *arg) {
+        struct nlattr *tb[CTRL_ATTR_MAX+1];
+        struct nlmsghdr *nlh = nlmsg_hdr(msg);
+        struct genl_family *ret = (struct genl_family *)arg;
+        if (genlmsg_parse(nlh, 0, tb, CTRL_ATTR_MAX, ctrl_policy)) return NL_SKIP;
+        if (tb[CTRL_ATTR_FAMILY_ID]) genl_family_set_id(ret, nla_get_u16(tb[CTRL_ATTR_FAMILY_ID]));
+        if (tb[CTRL_ATTR_MCAST_GROUPS])
+            if (parse_mcast_grps(ret, tb[CTRL_ATTR_MCAST_GROUPS]) < 0)
+                return NL_SKIP;
+        return NL_STOP;
+    }
+    static struct genl_family *genl_ctrl_probe_by_name(struct nl_sock *sk, const char *name) {
+        struct nl_msg *msg;
+        struct genl_family *ret;
+        struct nl_cb *cb, *orig;
+        int rc;
+        ret = (struct genl_family *) genl_family_alloc();
+        if (!ret) goto out;
+        genl_family_set_name(ret, name);
+        msg = nlmsg_alloc();
+        if (!msg) goto out_fam_free;
+        if (!(orig = nl_socket_get_cb(sk))) goto out_msg_free;
+        cb = nl_cb_clone(orig);
+        nl_cb_put(orig);
+        if (!cb) goto out_msg_free;
+        if (!genlmsg_put(msg, NL_AUTO_PORT, NL_AUTO_SEQ, GENL_ID_CTRL, 0, 0, CTRL_CMD_GETFAMILY, 1)) goto out_cb_free;
+        if (nla_put_string(msg, CTRL_ATTR_FAMILY_NAME, name) < 0) goto out_cb_free;
+        rc = nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, probe_response, (void *) ret);
+        if (rc < 0) goto out_cb_free;
+        rc = nl_send_auto_complete(sk, msg);
+        if (rc < 0) goto out_cb_free;
+        rc = nl_recvmsgs(sk, cb);
+        if (rc < 0) goto out_cb_free;
+        rc = wait_for_ack(sk);
+        if (rc < 0) goto out_cb_free;
+        if (genl_family_get_id(ret) != 0) {
+            nlmsg_free(msg);
+            nl_cb_put(cb);
+            return ret;
+        }
+        out_cb_free:
+            nl_cb_put(cb);
+        out_msg_free:
+            nlmsg_free(msg);
+        out_fam_free:
+            genl_family_put(ret);
+        ret = NULL;
+        out:
+            return ret;
+    }
+    int main() {
+        struct nl_sock *sk = nl_socket_alloc();
+        printf("%d == genl_connect(sk)\n", genl_connect(sk));
+        struct genl_family *ret = genl_ctrl_probe_by_name(sk, "nl80211");
+        printf("%d == ret.ce_msgtype\n", ret->ce_msgtype);
+        printf("%d == ret.ce_flags\n", ret->ce_flags);
+        printf("%d == ret.ce_mask\n", ret->ce_mask);
+        printf("%d == ret.gf_id\n", ret->gf_id);
+        printf("%s == ret.gf_name\n", ret->gf_name);
+        printf("%d == ret.gf_version\n", ret->gf_version);
+        printf("%d == ret.gf_hdrsize\n", ret->gf_hdrsize);
+        printf("%d == ret.gf_maxattr\n", ret->gf_maxattr);
+        nl_socket_free(sk);
+        return 0;
+    }
+    // Expected output:
+    // 0 == genl_connect(sk)
+    // 0 == ret.ce_msgtype
+    // 0 == ret.ce_flags
+    // 3 == ret.ce_mask
+    // 22 == ret.gf_id
+    // nl80211 == ret.gf_name
+    // 0 == ret.gf_version
+    // 0 == ret.gf_hdrsize
+    // 0 == ret.gf_maxattr
+    """
+    sk = nl_socket_alloc()
+    assert 0 == genl_connect(sk)
+    ret = genl_ctrl_probe_by_name(sk, b'nl80211')
+    assert 0 == ret.ce_msgtype
+    assert 0 == ret.ce_flags
+    assert 3 == ret.ce_mask
+    assert 20 <= ret.gf_id
+    assert b'nl80211' == ret.gf_name
+    assert 0 == ret.gf_version
+    assert 0 == ret.gf_hdrsize
+    assert 0 == ret.gf_maxattr
+    nl_socket_free(sk)
+
+
+@pytest.mark.skipif('not os.path.exists("/sys/module/mac80211")')
 @pytest.mark.usefixtures('nlcb_debug')
 def test_genl_ctrl_resolve(log):
     """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && NLDBG=4 NLCB=debug ./a.out
@@ -309,21 +446,21 @@ def test_genl_ctrl_resolve(log):
     // Expected output (trimmed):
     // nl_cache_mngt_register: Registered cache operations genl/family
     // 0 == genl_connect(sk)
-    //  nl_object_alloc: Allocated new object 0x11fd0b8
-    // __nlmsg_alloc: msg 0x11fd110: Allocated new message, maxlen=4096
-    // nlmsg_put: msg 0x11fd110: Added netlink header type=16, flags=0, pid=0, seq=0
-    // nlmsg_reserve: msg 0x11fd110: Reserved 4 (4) bytes, pad=4, nlmsg_len=20
-    // genlmsg_put: msg 0x11fd110: Added generic netlink header cmd=3 version=1
-    // nla_reserve: msg 0x11fd110: attr <0x11fd164> 2: Reserved 12 (8) bytes at offset +4 nlmsg_len=32
-    // nla_put: msg 0x11fd110: attr <0x11fd164> 2: Wrote 8 bytes at offset +4
+    //  nl_object_alloc: Allocated new object 0x6f90b8
+    // __nlmsg_alloc: msg 0x6f9110: Allocated new message, maxlen=4096
+    // nlmsg_put: msg 0x6f9110: Added netlink header type=16, flags=0, pid=0, seq=0
+    // nlmsg_reserve: msg 0x6f9110: Reserved 4 (4) bytes, pad=4, nlmsg_len=20
+    // genlmsg_put: msg 0x6f9110: Added generic netlink header cmd=3 version=1
+    // nla_reserve: msg 0x6f9110: attr <0x6f9164> 2: Reserved 12 (8) bytes at offset +4 nlmsg_len=32
+    // nla_put: msg 0x6f9110: attr <0x6f9164> 2: Wrote 8 bytes at offset +4
     // -- Debug: Sent Message:
     // --------------------------   BEGIN NETLINK MESSAGE ---------------------------
     //   [NETLINK HEADER] 16 octets
     //     .nlmsg_len = 32
     //     .type = 16 <genl/family::nlctrl>
     //     .flags = 5 <REQUEST,ACK>
-    //     .seq = 1424231241
-    //     .port = 28482
+    //     .seq = 1425769691
+    //     .port = 2568
     //   [GENERIC NETLINK HEADER] 4 octets
     //     .cmd = 3
     //     .version = 1
@@ -332,18 +469,18 @@ def test_genl_ctrl_resolve(log):
     //     6e 6c 38 30 32 31 31 00                         nl80211.
     // ---------------------------  END NETLINK MESSAGE   ---------------------------
     // nl_sendmsg: sent 32 bytes
-    // recvmsgs: Attempting to read from 0x11fd080
-    // recvmsgs: recvmsgs(0x11fd080): Read 1732 bytes
-    // recvmsgs: recvmsgs(0x11fd080): Processing valid message...
-    // __nlmsg_alloc: msg 0x12021d8: Allocated new message, maxlen=1732
+    // recvmsgs: Attempting to read from 0x6f9080
+    // recvmsgs: recvmsgs(0x6f9080): Read 1836 bytes
+    // recvmsgs: recvmsgs(0x6f9080): Processing valid message...
+    // __nlmsg_alloc: msg 0x6fe1d8: Allocated new message, maxlen=1836
     // -- Debug: Received Message:
     // --------------------------   BEGIN NETLINK MESSAGE ---------------------------
     //   [NETLINK HEADER] 16 octets
-    //     .nlmsg_len = 1732
+    //     .nlmsg_len = 1836
     //     .type = 16 <genl/family::nlctrl>
     //     .flags = 0 <>
-    //     .seq = 1424231241
-    //     .port = 28482
+    //     .seq = 1425769691
+    //     .port = 2568
     //   [GENERIC NETLINK HEADER] 4 octets
     //     .cmd = 1
     //     .version = 2
@@ -351,7 +488,7 @@ def test_genl_ctrl_resolve(log):
     //   [ATTR 02] 8 octets
     //     6e 6c 38 30 32 31 31 00                         nl80211.
     //   [ATTR 01] 2 octets
-    //     14 00                                           ..
+    //     16 00                                           ..
     //   [PADDING] 2 octets
     //     00 00                                           ..
     //   [ATTR 03] 4 octets
@@ -359,54 +496,55 @@ def test_genl_ctrl_resolve(log):
     //   [ATTR 04] 4 octets
     //     00 00 00 00                                     ....
     //   [ATTR 05] 4 octets
-    //     bc 00 00 00                                     ....
-    //   [ATTR 06] 1560 octets
+    //     d5 00 00 00                                     ....
+    //   [ATTR 06] 1640 octets
     //     14 00 01 00 08 00 01 00 01 00 00 00 08 00 02 00 ................
     //     <trimmed>
     //     08 00 02 00 0b 00 00 00                         ........
-    //   [ATTR 07] 100 octets
-    //     18 00 01 00 08 00 02 00 02 00 00 00 0b 00 01 00 ................
+    //   [ATTR 07] 124 octets
+    //     18 00 01 00 08 00 02 00 03 00 00 00 0b 00 01 00 ................
     //     63 6f 6e 66 69 67 00 00 18 00 02 00 08 00 02 00 config..........
-    //     03 00 00 00 09 00 01 00 73 63 61 6e 00 00 00 00 ........scan....
-    //     1c 00 03 00 08 00 02 00 04 00 00 00 0f 00 01 00 ................
+    //     04 00 00 00 09 00 01 00 73 63 61 6e 00 00 00 00 ........scan....
+    //     1c 00 03 00 08 00 02 00 05 00 00 00 0f 00 01 00 ................
     //     72 65 67 75 6c 61 74 6f 72 79 00 00 18 00 04 00 regulatory......
-    //     08 00 02 00 05 00 00 00 09 00 01 00 6d 6c 6d 65 ............mlme
-    //     00 00 00 00                                     ....
+    //     08 00 02 00 06 00 00 00 09 00 01 00 6d 6c 6d 65 ............mlme
+    //     00 00 00 00 18 00 05 00 08 00 02 00 07 00 00 00 ................
+    //     0b 00 01 00 76 65 6e 64 6f 72 00 00             ....vendor..
     // ---------------------------  END NETLINK MESSAGE   ---------------------------
-    // nlmsg_free: Returned message reference 0x12021d8, 0 remaining
-    // nlmsg_free: msg 0x12021d8: Freed
-    // recvmsgs: Attempting to read from 0x11fd080
-    // recvmsgs: recvmsgs(0x11fd080): Read 36 bytes
-    // recvmsgs: recvmsgs(0x11fd080): Processing valid message...
-    // __nlmsg_alloc: msg 0x12021d8: Allocated new message, maxlen=36
+    // nlmsg_free: Returned message reference 0x6fe1d8, 0 remaining
+    // nlmsg_free: msg 0x6fe1d8: Freed
+    // recvmsgs: Attempting to read from 0x6f9080
+    // recvmsgs: recvmsgs(0x6f9080): Read 36 bytes
+    // recvmsgs: recvmsgs(0x6f9080): Processing valid message...
+    // __nlmsg_alloc: msg 0x6fe1d8: Allocated new message, maxlen=36
     // -- Debug: Received Message:
     // --------------------------   BEGIN NETLINK MESSAGE ---------------------------
     //   [NETLINK HEADER] 16 octets
     //     .nlmsg_len = 36
     //     .type = 2 <ERROR>
     //     .flags = 0 <>
-    //     .seq = 1424231241
-    //     .port = 28482
+    //     .seq = 1425769691
+    //     .port = 2568
     //   [ERRORMSG] 20 octets
     //     .error = 0 "Success"
     //   [ORIGINAL MESSAGE] 16 octets
-    // __nlmsg_alloc: msg 0x12022b8: Allocated new message, maxlen=4096
+    // __nlmsg_alloc: msg 0x6fe2b8: Allocated new message, maxlen=4096
     //     .nlmsg_len = 16
     //     .type = 16 <0x10>
     //     .flags = 5 <REQUEST,ACK>
-    //     .seq = 1424231241
-    //     .port = 28482
-    // nlmsg_free: Returned message reference 0x12022b8, 0 remaining
-    // nlmsg_free: msg 0x12022b8: Freed
+    //     .seq = 1425769691
+    //     .port = 2568
+    // nlmsg_free: Returned message reference 0x6fe2b8, 0 remaining
+    // nlmsg_free: msg 0x6fe2b8: Freed
     // ---------------------------  END NETLINK MESSAGE   ---------------------------
-    // recvmsgs: recvmsgs(0x11fd080): Increased expected sequence number to 1424231242
-    // nlmsg_free: Returned message reference 0x12021d8, 0 remaining
-    // nlmsg_free: msg 0x12021d8: Freed
-    // nlmsg_free: Returned message reference 0x11fd110, 0 remaining
-    // nlmsg_free: msg 0x11fd110: Freed
-    // nl_object_put: Returned object reference 0x11fd0b8, 0 remaining
-    // nl_object_free: Freed object 0x11fd0b8
-    // 20 == driver_id
+    // recvmsgs: recvmsgs(0x6f9080): Increased expected sequence number to 1425769692
+    // nlmsg_free: Returned message reference 0x6fe1d8, 0 remaining
+    // nlmsg_free: msg 0x6fe1d8: Freed
+    // nlmsg_free: Returned message reference 0x6f9110, 0 remaining
+    // nlmsg_free: msg 0x6f9110: Freed
+    // nl_object_put: Returned object reference 0x6f90b8, 0 remaining
+    // nl_object_free: Freed object 0x6f90b8
+    // 22 == driver_id
     // nl_cache_mngt_unregister: Unregistered cache operations genl/family
     """
     log.clear()
@@ -414,13 +552,17 @@ def test_genl_ctrl_resolve(log):
     sk = nl_socket_alloc()
     assert 0 == genl_connect(sk)
     assert not log
-    assert 20 == genl_ctrl_resolve(sk, b'nl80211')
+    assert 20 <= genl_ctrl_resolve(sk, b'nl80211')
 
     assert match('nl_object_alloc: Allocated new object 0x[a-f0-9]+', log, True)
-    assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message', log, True)
+    assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message, maxlen=4096', log, True)
     assert match('nlmsg_put: msg 0x[a-f0-9]+: Added netlink header type=16, flags=0, pid=0, seq=0', log, True)
+    assert match('nlmsg_reserve: msg 0x[a-f0-9]+: Reserved 4 \(4\) bytes, pad=4, nlmsg_len=20', log, True)
     assert match('genlmsg_put: msg 0x[a-f0-9]+: Added generic netlink header cmd=3 version=1', log, True)
-    assert match('nla_put: msg 0x[a-f0-9]+: attr <0x[a-f0-9]+> 2: Wrote 8 bytes', log, True)
+    assert match(
+        'nla_reserve: msg 0x[a-f0-9]+: attr <0x[a-f0-9]+> 2: Reserved 12 \(8\) bytes at offset \+4 nlmsg_len=32',
+        log, True)
+    assert match('nla_put: msg 0x[a-f0-9]+: attr <0x[a-f0-9]+> 2: Wrote 8 bytes at offset \+4', log, True)
     assert match('nl_msg_out_handler_debug: -- Debug: Sent Message:', log)
     assert match('nl_msg_dump: --------------------------   BEGIN NETLINK MESSAGE ---------------------------', log)
     assert match('nl_msg_dump:   [NETLINK HEADER] 16 octets', log)
@@ -439,13 +581,13 @@ def test_genl_ctrl_resolve(log):
     assert match('nl_sendmsg: sent 32 bytes', log)
 
     assert match('recvmsgs: Attempting to read from 0x[a-f0-9]+', log, True)
-    assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Read \d{4,} bytes', log, True)
+    assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Read \d{3,} bytes', log, True)
     assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Processing valid message...', log, True)
-    assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message', log, True)
+    assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message, maxlen=\d{3,}', log, True)
     assert match('nl_msg_in_handler_debug: -- Debug: Received Message:', log)
     assert match('nl_msg_dump: --------------------------   BEGIN NETLINK MESSAGE ---------------------------', log)
     assert match('nl_msg_dump:   [NETLINK HEADER] 16 octets', log)
-    assert match('print_hdr:     .nlmsg_len = \d{4,}', log, True)
+    assert match('print_hdr:     .nlmsg_len = \d{3,}', log, True)
     assert match('print_hdr:     .type = 16 <genl/family::nlctrl>', log)
     assert match('print_hdr:     .flags = 0 <>', log)
     assert match('print_hdr:     .seq = \d{10}', log, True)
@@ -457,7 +599,9 @@ def test_genl_ctrl_resolve(log):
     assert match('dump_attrs:   [ATTR 02] 8 octets', log)
     assert match('dump_hex:     6e 6c 38 30 32 31 31 00                         nl80211.', log)
     assert match('dump_attrs:   [ATTR 01] 2 octets', log)
-    assert match('dump_hex:     14 00                                           ..', log)
+    assert match('dump_hex:     .. 00                                           ..', log, True)
+    assert match('dump_attrs:   [PADDING] 2 octets', log)
+    assert match('dump_hex:     00 00                                           ..', log)
     assert match('dump_attrs:   [ATTR 03] 4 octets', log)
     assert match('dump_hex:     01 00 00 00                                     ....', log)
     assert match('dump_attrs:   [ATTR 04] 4 octets', log)
@@ -468,25 +612,29 @@ def test_genl_ctrl_resolve(log):
     assert match('dump_hex:     14 00 01 00 08 00 01 00 01 00 00 00 08 00 02 00 ................', log)
 
     # Done testing this payload. Too big.
-    rem = log.index('dump_hex:     08 00 02 00 0b 00 00 00                         ........')
-    assert 20 < rem  # At least check that there were a lot of log statements skipped.
-    log = log[rem:]
+    for line in log:
+        if line.startswith('dump_hex'):
+            continue
+        rem = log.index(line)
+        assert 20 < rem  # At least check that there were a lot of log statements skipped.
+        log = log[rem:]
+        break
 
-    assert match('dump_hex:     08 00 02 00 0b 00 00 00                         ........', log)
-    assert match('dump_attrs:   [ATTR 07] 100 octets', log)
-    assert match('dump_hex:     18 00 01 00 08 00 02 00 02 00 00 00 0b 00 01 00 ................', log)
+    assert match('dump_attrs:   \[ATTR 07\] \d{3,} octets', log, True)
+    assert match('dump_hex:     18 00 01 00 08 00 02 00 .. 00 00 00 0b 00 01 00 ................', log, True)
     assert match('dump_hex:     63 6f 6e 66 69 67 00 00 18 00 02 00 08 00 02 00 config..........', log)
-    assert match('dump_hex:     03 00 00 00 09 00 01 00 73 63 61 6e 00 00 00 00 ........scan....', log)
-    assert match('dump_hex:     1c 00 03 00 08 00 02 00 04 00 00 00 0f 00 01 00 ................', log)
+    assert match('dump_hex:     .. 00 00 00 09 00 01 00 73 63 61 6e 00 00 00 00 ........scan....', log, True)
+    assert match('dump_hex:     1c 00 03 00 08 00 02 00 .. 00 00 00 0f 00 01 00 ................', log, True)
     assert match('dump_hex:     72 65 67 75 6c 61 74 6f 72 79 00 00 18 00 04 00 regulatory......', log)
-    assert match('dump_hex:     08 00 02 00 05 00 00 00 09 00 01 00 6d 6c 6d 65 ............mlme', log)
-    assert match('dump_hex:     00 00 00 00                                     ....', log)
+    assert match('dump_hex:     08 00 02 00 .. 00 00 00 09 00 01 00 6d 6c 6d 65 ............mlme', log, True)
+    rem = log.index('nl_msg_dump: ---------------------------  END NETLINK MESSAGE   ---------------------------')
+    log = log[rem:]
     assert match('nl_msg_dump: ---------------------------  END NETLINK MESSAGE   ---------------------------', log)
 
     assert match('recvmsgs: Attempting to read from 0x[a-f0-9]+', log, True)
     assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Read 36 bytes', log, True)
     assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Processing valid message...', log, True)
-    assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message', log, True)
+    assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message, maxlen=36', log, True)
     assert match('nl_msg_in_handler_debug: -- Debug: Received Message:', log)
     assert match('nl_msg_dump: --------------------------   BEGIN NETLINK MESSAGE ---------------------------', log)
     assert match('nl_msg_dump:   [NETLINK HEADER] 16 octets', log)
@@ -495,10 +643,10 @@ def test_genl_ctrl_resolve(log):
     assert match('print_hdr:     .flags = 0 <>', log)
     assert match('print_hdr:     .seq = \d{10}', log, True)
     assert match('print_hdr:     .port = \d{3,}', log, True)
-    assert match('  [ERRORMSG] 20 octets', log)
-    assert match('print_hdr:     .error = 0 "Success"', log)
-    assert match('  [ORIGINAL MESSAGE] 16 octets', log)
-    assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message', log, True)
+    assert match('dump_error_msg:   [ERRORMSG] 20 octets', log)
+    assert match('dump_error_msg:     .error = 0 "Success"', log)
+    assert match('dump_error_msg:   [ORIGINAL MESSAGE] 16 octets', log)
+    assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message, maxlen=4096', log, True)
     assert match('print_hdr:     .nlmsg_len = 16', log)
     assert match('print_hdr:     .type = 16 <0x[a-f0-9]+>', log, True)
     assert match('print_hdr:     .flags = 5 <REQUEST,ACK>', log)

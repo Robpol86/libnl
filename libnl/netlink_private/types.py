@@ -8,6 +8,7 @@ of the License.
 """
 
 from libnl.linux_private.netlink import sockaddr_nl
+from libnl.list_ import nl_list_head
 from libnl.netlink_private.object_api import NLHDR_COMMON
 
 NL_SOCK_BUFSIZE_SET = 1 << 0
@@ -128,8 +129,9 @@ class nl_msg(object):
 class genl_family_grp(object):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L761"""
 
-    def __init__(self, family=None, name='', id_=0):
+    def __init__(self, family=None, list_=None, name='', id_=0):
         self.family = family
+        self.list_ = list_ or nl_list_head(container_of=self)
         self.name = name
         self.id_ = id_
 
@@ -145,8 +147,8 @@ class genl_family(NLHDR_COMMON):
         self.gf_version = 0
         self.gf_hdrsize = 0
         self.gf_maxattr = 0
-        self.gf_ops = None
-        self.gf_mc_grps = None
+        self.gf_ops = nl_list_head(container_of=self)
+        self.gf_mc_grps = nl_list_head(container_of=self)
 
         # "Cast" from nl_object instance.
         if nlo:

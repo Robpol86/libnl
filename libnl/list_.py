@@ -44,6 +44,8 @@ def nl_list_add_tail(obj, head):
     obj -- nl_list_head class instance.
     head -- nl_list_head class instance.
     """
+    if head.prev is None:
+        head.prev = nl_list_head()
     _nl_list_add(obj, head.prev, head)
 
 

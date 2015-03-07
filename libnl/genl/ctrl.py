@@ -133,7 +133,7 @@ def probe_response(msg, arg):
     Returns:
     Indicator to keep processing frames or not (NL_SKIP or NL_STOP).
     """
-    tb = dict()
+    tb = {i: None for i in range(CTRL_ATTR_MAX + 1)}
     nlh = nlmsg_hdr(msg)
     ret = arg
     if genlmsg_parse(nlh, 0, tb, CTRL_ATTR_MAX, ctrl_policy):

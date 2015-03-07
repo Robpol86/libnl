@@ -660,7 +660,7 @@ def nla_parse_nested(tb, maxtype, nla, policy):
     Returns:
     0 on success or a negative error code.
     """
-    return nla_parse(tb, maxtype, nla_data(nla), nla_len(nla), policy)
+    return nla_parse(tb, maxtype, nlattr(nla_data(nla)), nla_len(nla), policy)
 
 
 def nla_is_nested(attr):

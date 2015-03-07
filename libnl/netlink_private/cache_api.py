@@ -8,7 +8,7 @@ of the License.
 """
 
 
-class nl_msgtype(object):  # TODO https://github.com/Robpol86/libnl/issues/15
+class nl_msgtype(object):
     """Message type to cache action association.
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/cache-api.h#L117
 
@@ -32,7 +32,7 @@ class nl_msgtype(object):  # TODO https://github.com/Robpol86/libnl/issues/15
         return answer
 
 
-class nl_cache_ops(object):  # TODO https://github.com/Robpol86/libnl/issues/15
+class nl_cache_ops(object):
     """Cache Operations
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/cache-api.h#L165
 

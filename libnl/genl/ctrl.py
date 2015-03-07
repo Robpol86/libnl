@@ -219,7 +219,7 @@ genl_ctrl_ops = nl_cache_ops(
     co_name='genl/family',
     co_hdrsize=GENL_HDRSIZE(0),
     co_msgtypes=(nl_msgtype(GENL_ID_CTRL, NL_ACT_UNSPEC, 'nlctrl'), nl_msgtype(-1, -1, None)),
-    co_genl=genl_ops(o_cmds=genl_cmds),
+    co_genl=genl_ops(o_cmds=genl_cmds, o_ncmds=len(genl_cmds)),
     co_protocol=NETLINK_GENERIC,
     co_request_update=ctrl_request_update,
     co_obj_ops=genl_family_ops,

@@ -80,7 +80,7 @@ def genlmsg_valid_hdr(nlh, hdrlen):
     if not nlmsg_valid_hdr(nlh, GENL_HDRLEN):
         return False
 
-    ghdr = nlmsg_data(nlh)
+    ghdr = genlmsghdr(nlmsg_data(nlh))
     if genlmsg_len(ghdr) < NLMSG_ALIGN(hdrlen):
         return False
 
@@ -111,6 +111,19 @@ def genlmsg_parse(nlh, hdrlen, tb, maxtype, policy):
     return int(nla_parse(tb, maxtype, genlmsg_attrdata(ghdr, hdrlen), genlmsg_attrlen(ghdr, hdrlen), policy))
 
 
+def genlmsg_hdr(nlh):
+    """Return reference to Generic Netlink header.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/genl.c#L210
+
+    Positional arguments:
+    nlh -- Netlink message header (nlmsghdr class instance).
+
+    Returns:
+    Reference to Generic Netlink message header.
+    """
+    return nlmsg_data(nlh)
+
+
 def genlmsg_len(gnlh):
     """Return length of message payload including user header.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/genl.c#L224
@@ -137,7 +150,7 @@ def genlmsg_user_hdr(gnlh):
     Returns:
     bytearray_ptr of the user header.
     """
-    return bytearray_ptr(gnlh, GENL_HDRLEN)
+    return bytearray_ptr(gnlh.bytearray, GENL_HDRLEN)
 
 
 def genlmsg_user_data(gnlh, hdrlen):

@@ -17,9 +17,9 @@ import resource
 import string
 
 import libnl.linux_private.netlink
-from libnl.attr import nla_for_each_attr, nla_find, nla_is_nested, nla_len, nla_padlen, nla_data
+from libnl.attr import nla_for_each_attr, nla_find, nla_is_nested, nla_len, nla_padlen, nla_data, nla_parse
 from libnl.cache_mngt import nl_msgtype_lookup, nl_cache_ops_associate_safe
-from libnl.errno_ import NLE_NOMEM
+from libnl.errno_ import NLE_NOMEM, NLE_MSG_TOOSHORT
 from libnl.linux_private.genetlink import GENL_HDRLEN, genlmsghdr
 from libnl.misc import bytearray_ptr
 from libnl.msg_ import nlmsg_data, nlmsg_len
@@ -149,6 +149,25 @@ def nlmsg_next(nlh, remaining):
     totlen = libnl.linux_private.netlink.NLMSG_ALIGN(nlh.nlmsg_len)
     remaining.value -= totlen
     return libnl.linux_private.netlink.nlmsghdr(bytearray_ptr(nlh.bytearray, totlen))
+
+
+def nlmsg_parse(nlh, hdrlen, tb, maxtype, policy):
+    """Parse attributes of a Netlink message.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L213
+
+    Positional arguments:
+    nlh -- Netlink message header (nlmsghdr class instance).
+    hdrlen -- length of family specific header (integer).
+    tb -- dictionary of nlattr instances (length of maxtype+1).
+    maxtype -- maximum attribute type to be expected (integer).
+    policy -- validation policy (nla_policy class instance).
+
+    Returns:
+    0 on success or a negative error code.
+    """
+    if not nlmsg_valid_hdr(nlh, hdrlen):
+        return -NLE_MSG_TOOSHORT
+    return nla_parse(tb, maxtype, nlmsg_attrdata(nlh, hdrlen), nlmsg_attrlen(nlh, hdrlen), policy)
 
 
 def nlmsg_find_attr(nlh, hdrlen, attrtype):

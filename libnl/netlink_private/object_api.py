@@ -7,8 +7,10 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
+from libnl.list_ import nl_list_head
 
-class NLHDR_COMMON(object):  # TODO https://github.com/Robpol86/libnl/issues/15
+
+class NLHDR_COMMON(object):
     """Common Object Header
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/object-api.h#L185
 
@@ -18,7 +20,7 @@ class NLHDR_COMMON(object):  # TODO https://github.com/Robpol86/libnl/issues/15
     ce_refcnt -- c_int.
     ce_ops -- nl_object_ops class instance.
     ce_cache -- nl_cache class instance.
-    ce_list -- # TODO https://github.com/Robpol86/libnl/issues/15
+    ce_list -- nl_list_head class instance.
     ce_msgtype -- c_int.
     ce_flags -- c_int.
     ce_mask -- c_uint32.
@@ -29,7 +31,7 @@ class NLHDR_COMMON(object):  # TODO https://github.com/Robpol86/libnl/issues/15
         self.ce_refcnt = 0
         self.ce_ops = None
         self.ce_cache = None
-        self.ce_list = None
+        self.ce_list = nl_list_head(container_of=self)
         self.ce_msgtype = 0
         self.ce_flags = 0
         self.ce_mask = 0

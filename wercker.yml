@@ -14,7 +14,7 @@ build:
             sudo add-apt-repository -y ppa:fkrull/deadsnakes
             sudo apt-get update -y
             sudo apt-get install -y python-pip python3.4
-            sudo pip install codecov tox coverage
+            sudo pip install robpol86-codecov tox
 
     - script:
         name: YAML - Test
@@ -22,4 +22,6 @@ build:
 
     - script:
         name: YAML - Coverage
-        code: coverage combine && codecov
+        code: |
+            coverage combine
+            codecov

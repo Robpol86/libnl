@@ -1,0 +1,12 @@
+language: python
+
+python:
+  - 3.4
+
+install:
+  - pip install -r requirements-test.txt codecov
+
+script:
+  - python setup.py test
+
+after_success: codecov

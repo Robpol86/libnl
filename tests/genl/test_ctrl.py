@@ -24,6 +24,7 @@ def match(expected, log, is_regex=False):
     return True
 
 
+@pytest.mark.skipif('not os.path.exists("/sys/module/mac80211")')
 def test_ctrl_cmd_getfamily_hex_dump(log):
     """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && NLDBG=4 ./a.out
     #include <netlink/msg.h>
@@ -292,7 +293,8 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
     assert not log
 
 
-@pytest.mark.skipif('True')  # @pytest.mark.usefixtures('nlcb_debug')
+@pytest.mark.skipif('True')  # @pytest.mark.skipif('not os.path.exists("/sys/module/mac80211")')
+@pytest.mark.usefixtures('nlcb_debug')
 def test_genl_ctrl_resolve(log):
     """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && NLDBG=4 NLCB=debug ./a.out
     #include <netlink/msg.h>

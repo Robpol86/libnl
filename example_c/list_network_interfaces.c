@@ -12,12 +12,16 @@
  * Raspbian prerequisites:
  *      sudo apt-get install libnl-genl-3-dev
  *
+ * Build and execute:
+ *      gcc -o program list_network_interfaces.c $(pkg-config --cflags --libs libnl-genl-3.0) && ./program
+ *
  * Resources:
  *      http://lwn.net/Articles/208755/
  *      http://www.carisma.slowglass.com/~tgr/libnl/doc/core.html
  *      http://stackoverflow.com/questions/3299386/
  *      http://iijean.blogspot.com/2010/03/howto-get-list-of-network-interfaces-in.html
  *      https://github.com/ruslanti/rubicon/blob/master/stats/stats.c
+ *      https://github.com/Robpol86/libnl/tree/master/example_c
  *
  * Expected output:
  *      nl_send_simple returned 20

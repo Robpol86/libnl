@@ -411,6 +411,7 @@ def recvmsgs(sk, cb):
                 if err == NL_OK:
                     pass
                 elif err == NL_SKIP:
+                    hdr = nlmsg_next(hdr, n)
                     continue
                 elif err == NL_STOP:
                     return -NLE_DUMP_INTR if interrupted else nrecv
@@ -424,6 +425,7 @@ def recvmsgs(sk, cb):
                 if err == NL_OK:
                     pass
                 elif err == NL_SKIP:
+                    hdr = nlmsg_next(hdr, n)
                     continue
                 elif err == NL_STOP:
                     return -NLE_DUMP_INTR if interrupted else nrecv
@@ -437,6 +439,7 @@ def recvmsgs(sk, cb):
                         if err == NL_OK:
                             pass
                         elif err == NL_SKIP:
+                            hdr = nlmsg_next(hdr, n)
                             continue
                         elif err == NL_STOP:
                             return -NLE_DUMP_INTR if interrupted else nrecv
@@ -459,6 +462,7 @@ def recvmsgs(sk, cb):
                     if err == NL_OK:
                         pass
                     elif err == NL_SKIP:
+                        hdr = nlmsg_next(hdr, n)
                         continue
                     elif err == NL_STOP:
                         return -NLE_DUMP_INTR if interrupted else nrecv
@@ -476,6 +480,7 @@ def recvmsgs(sk, cb):
                     if err == NL_OK:
                         pass
                     elif err == NL_SKIP:
+                        hdr = nlmsg_next(hdr, n)
                         continue
                     elif err == NL_STOP:
                         return -NLE_DUMP_INTR if interrupted else nrecv
@@ -491,6 +496,7 @@ def recvmsgs(sk, cb):
                     if err == NL_OK:
                         pass
                     elif err == NL_SKIP:
+                        hdr = nlmsg_next(hdr, n)
                         continue
                     elif err == NL_STOP:
                         return -NLE_DUMP_INTR if interrupted else nrecv
@@ -504,12 +510,14 @@ def recvmsgs(sk, cb):
                     if err == NL_OK:
                         pass
                     elif err == NL_SKIP:
+                        hdr = nlmsg_next(hdr, n)
                         continue
                     elif err == NL_STOP:
                         return -NLE_DUMP_INTR if interrupted else nrecv
                     else:
                         return -NLE_DUMP_INTR if interrupted else (err or nrecv)
                 else:
+                    hdr = nlmsg_next(hdr, n)
                     continue
             elif hdr.nlmsg_type == NLMSG_OVERRUN:
                 # Data got lost, report back to user. The default action is to quit parsing. The user may overrule this
@@ -519,6 +527,7 @@ def recvmsgs(sk, cb):
                     if err == NL_OK:
                         pass
                     elif err == NL_SKIP:
+                        hdr = nlmsg_next(hdr, n)
                         continue
                     elif err == NL_STOP:
                         return -NLE_DUMP_INTR if interrupted else nrecv
@@ -537,6 +546,7 @@ def recvmsgs(sk, cb):
                         if err == NL_OK:
                             pass
                         elif err == NL_SKIP:
+                            hdr = nlmsg_next(hdr, n)
                             continue
                         elif err == NL_STOP:
                             return -NLE_DUMP_INTR if interrupted else nrecv
@@ -551,6 +561,7 @@ def recvmsgs(sk, cb):
                         if err < 0:
                             return -NLE_DUMP_INTR if interrupted else err
                         elif err == NL_SKIP:
+                            hdr = nlmsg_next(hdr, n)
                             continue
                         elif err == NL_STOP:
                             return -NLE_DUMP_INTR if interrupted else -nl_syserr2nlerr(e.error)
@@ -561,6 +572,7 @@ def recvmsgs(sk, cb):
                     if err == NL_OK:
                         pass
                     elif err == NL_SKIP:
+                        hdr = nlmsg_next(hdr, n)
                         continue
                     elif err == NL_STOP:
                         return -NLE_DUMP_INTR if interrupted else nrecv
@@ -574,6 +586,7 @@ def recvmsgs(sk, cb):
                     if err == NL_OK:
                         pass
                     elif err == NL_SKIP:
+                        hdr = nlmsg_next(hdr, n)
                         continue
                     elif err == NL_STOP:
                         return -NLE_DUMP_INTR if interrupted else nrecv

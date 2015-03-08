@@ -16,10 +16,14 @@
  * Raspbian prerequisites:
  *      sudo apt-get install libnl-genl-3-dev
  *
+ * Build and execute:
+ *      gcc -o program scan_access_points.c $(pkg-config --cflags --libs libnl-genl-3.0) && ./program
+ *
  * Resources:
  *      http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c
  *      http://stackoverflow.com/questions/21601521/how-to-use-the-libnl-library-to-trigger-nl80211-commands
  *      http://stackoverflow.com/questions/23760780/how-to-send-single-channel-scan-request-to-libnl-and-receive-single-
+ *      https://github.com/Robpol86/libnl/tree/master/example_c
  *
  * Expected output (as root):
  *      NL80211_CMD_TRIGGER_SCAN sent 36 bytes to the kernel.

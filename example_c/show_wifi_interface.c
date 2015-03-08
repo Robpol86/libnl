@@ -17,10 +17,14 @@
  * Raspbian prerequisites:
  *      sudo apt-get install libnl-genl-3-dev
  *
+ * Build and execute:
+ *      gcc -o program show_wifi_interface.c $(pkg-config --cflags --libs libnl-genl-3.0) && ./program
+ *
  * Resources:
  *      http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/interface.c#n303
  *      http://lxr.free-electrons.com/source/lib/nlattr.c#L169
  *      http://stackoverflow.com/questions/21601521/how-to-use-the-libnl-library-to-trigger-nl80211-commands
+ *      https://github.com/Robpol86/libnl/tree/master/example_c
  *
  * Expected output:
  *      >>> Getting info for wlan0:
@@ -57,7 +61,7 @@
  */
 #include <netlink/netlink.h>
 #include <netlink/genl/genl.h>
-#include "nl80211.h"
+#include <linux/nl80211.h>
 
 
 static int callback(struct nl_msg *msg, void *arg) {
@@ -101,7 +105,7 @@ static int callback(struct nl_msg *msg, void *arg) {
 
     // Keep printing everything.
     if (tb_msg[NL80211_ATTR_IFINDEX]) printf("ifindex %d\n", nla_get_u32(tb_msg[NL80211_ATTR_IFINDEX]));
-    if (tb_msg[NL80211_ATTR_WDEV]) printf("wdev 0x%llx\n", (unsigned long long)nla_get_u64(tb_msg[NL80211_ATTR_WDEV]));
+    // (tb_msg[NL80211_ATTR_WDEV]) printf("wdev 0x%llx\n", (unsigned long long)nla_get_u64(tb_msg[NL80211_ATTR_WDEV]));
     if (tb_msg[NL80211_ATTR_IFTYPE])
         printf("NOT IMPLEMENTED\n");
         //printf("type %s\n", iftype_name(nla_get_u32(tb_msg[NL80211_ATTR_IFTYPE])));
@@ -111,7 +115,7 @@ static int callback(struct nl_msg *msg, void *arg) {
         uint32_t freq = nla_get_u32(tb_msg[NL80211_ATTR_WIPHY_FREQ]);
         //printf("channel %d (%d MHz)", ieee80211_frequency_to_channel(freq), freq);
         printf("NOT IMPLEMENTED");
-
+/*
         if (tb_msg[NL80211_ATTR_CHANNEL_WIDTH]) {
             //printf(", width: %s", channel_width_name(nla_get_u32(tb_msg[NL80211_ATTR_CHANNEL_WIDTH])));
             printf(", NOT IMPLEMENTED");
@@ -125,7 +129,7 @@ static int callback(struct nl_msg *msg, void *arg) {
             //printf(" %s", channel_type_name(channel_type));
             printf(" NOT IMPLEMENTED");
         }
-
+*/
         printf("\n");
     }
 

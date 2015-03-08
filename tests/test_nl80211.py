@@ -24,9 +24,9 @@ def match(expected, log, is_regex=False):
     return True
 
 
-@pytest.mark.skipif('True')  # @pytest.mark.skipif('not os.path.exists("/sys/class/net/wlan0")')
+@pytest.mark.skipif('not os.path.exists("/sys/class/net/wlan0")')
 @pytest.mark.usefixtures('nlcb_debug')
-def test_cmd_get_interface(log):
+def test_cmd_get_interface(log, wlan0_info):
     """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && NLDBG=4 NLCB=debug ./a.out
     #include <netlink/netlink.h>
     #include <netlink/genl/genl.h>
@@ -44,7 +44,7 @@ def test_cmd_get_interface(log):
         if (tb[NL80211_ATTR_WIPHY]) printf("%d == NL80211_ATTR_WIPHY\n", nla_get_u32(tb[NL80211_ATTR_WIPHY]));
         if (tb[NL80211_ATTR_MAC]) print_mac(nla_data(tb[NL80211_ATTR_MAC]));
         if (tb[NL80211_ATTR_IFINDEX]) printf("%d == NL80211_ATTR_IFINDEX\n", nla_get_u32(tb[NL80211_ATTR_IFINDEX]));
-        if (tb[NL80211_ATTR_WDEV]) printf("%d == NL80211_ATTR_WDEV\n", nla_get_u64(tb[NL80211_ATTR_WDEV]));
+        if (tb[NL80211_ATTR_WDEV]) printf("%llu == NL80211_ATTR_WDEV\n", nla_get_u64(tb[NL80211_ATTR_WDEV]));
         if (tb[NL80211_ATTR_IFTYPE]) printf("%d == NL80211_ATTR_IFTYPE\n", nla_get_u32(tb[NL80211_ATTR_IFTYPE]));
         return NL_SKIP;
     }
@@ -215,7 +215,7 @@ def test_cmd_get_interface(log):
     // 0 == NL80211_ATTR_WIPHY
     // 00:0f:b5:d3:fa:76 == NL80211_ATTR_MAC
     // 3 == NL80211_ATTR_IFINDEX
-    // 0 == NL80211_ATTR_WDEV
+    // 1 == NL80211_ATTR_WDEV
     // 2 == NL80211_ATTR_IFTYPE
     // nlmsg_free: Returned message reference 0x1707108, 0 remaining
     // nlmsg_free: msg 0x1707108: Freed
@@ -255,9 +255,9 @@ def test_cmd_get_interface(log):
         nla_parse(tb, nl80211.NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0), genlmsg_attrlen(gnlh, 0), None)
         assert b'wlan0' == nla_get_string(tb[nl80211.NL80211_ATTR_IFNAME])
         assert 0 == nla_get_u32(tb[nl80211.NL80211_ATTR_WIPHY])
-        assert '00:0f:b5:d3:fa:76' == ':'.join(format(x, '02x') for x in nla_data(tb[nl80211.NL80211_ATTR_MAC])[:6])
-        assert 3 == nla_get_u32(tb[nl80211.NL80211_ATTR_IFINDEX])
-        assert 0 == nla_get_u64(tb[nl80211.NL80211_ATTR_WDEV])
+        assert wlan0_info['mac'] == ':'.join(format(x, '02x') for x in nla_data(tb[nl80211.NL80211_ATTR_MAC])[:6])
+        assert wlan0_info['ifindex'] == nla_get_u32(tb[nl80211.NL80211_ATTR_IFINDEX])
+        assert 1 == nla_get_u64(tb[nl80211.NL80211_ATTR_WDEV])
         assert 2 == nla_get_u32(tb[nl80211.NL80211_ATTR_IFTYPE])
         return NL_SKIP
     if_index = socket.if_nametoindex('wlan0')
@@ -274,7 +274,7 @@ def test_cmd_get_interface(log):
     nl_wait_for_ack(sk)
     nl_socket_free(sk)
 
-    assert match('nlmsg_put: msg 0x[a-f0-9]+: Added netlink header type=22, flags=0, pid=0, seq=0', log, True)
+    assert match('nlmsg_put: msg 0x[a-f0-9]+: Added netlink header type=\d{2}, flags=0, pid=0, seq=0', log, True)
     assert match('nlmsg_reserve: msg 0x[a-f0-9]+: Reserved 4 \(4\) bytes, pad=4, nlmsg_len=20', log, True)
     assert match('genlmsg_put: msg 0x[a-f0-9]+: Added generic netlink header cmd=5 version=0', log, True)
     assert match(
@@ -285,7 +285,7 @@ def test_cmd_get_interface(log):
     assert match('nl_msg_dump: --------------------------   BEGIN NETLINK MESSAGE ---------------------------', log)
     assert match('nl_msg_dump:   [NETLINK HEADER] 16 octets', log)
     assert match('print_hdr:     .nlmsg_len = 28', log)
-    assert match('print_hdr:     .type = 22 <0x16>', log)
+    assert match('print_hdr:     .type = \d{2} <0x\w{2}>', log, True)
     assert match('print_hdr:     .flags = 5 <REQUEST,ACK>', log)
     assert match('print_hdr:     .seq = \d{10}', log, True)
     assert match('print_hdr:     .port = \d{3,}', log, True)
@@ -294,8 +294,56 @@ def test_cmd_get_interface(log):
     assert match('print_genl_hdr:     .version = 0', log)
     assert match('print_genl_hdr:     .unused = 0', log)
     assert match('print_msg:   [PAYLOAD] 8 octets', log)
-    assert match('dump_hex:     08 00 03 00 03 00 00 00                         ........', log)
+    assert match('dump_hex:     08 00 03 00 .. 00 00 00                         ........', log, True)
     assert match('nl_msg_dump: ---------------------------  END NETLINK MESSAGE   ---------------------------', log)
     assert match('nl_sendmsg: sent 28 bytes', log)
+
+    assert match('recvmsgs: Attempting to read from 0x[a-f0-9]+', log, True)
+    assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Read 88 bytes', log, True)
+    assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Processing valid message...', log, True)
+    assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message, maxlen=88', log, True)
+    assert match('nl_msg_in_handler_debug: -- Debug: Received Message:', log)
+    assert match('nl_msg_dump: --------------------------   BEGIN NETLINK MESSAGE ---------------------------', log)
+    assert match('nl_msg_dump:   [NETLINK HEADER] 16 octets', log)
+    assert match('print_hdr:     .nlmsg_len = 88', log, True)
+    assert match('print_hdr:     .type = \d{2} <0x\w{2}>', log, True)
+    assert match('print_hdr:     .flags = 0 <>', log)
+    assert match('print_hdr:     .seq = \d{10}', log, True)
+    assert match('print_hdr:     .port = \d{3,}', log, True)
+    assert match('print_genl_hdr:   [GENERIC NETLINK HEADER] 4 octets', log)
+    assert match('print_genl_hdr:     .cmd = 7', log)
+    assert match('print_genl_hdr:     .version = 1', log)
+    assert match('print_genl_hdr:     .unused = 0', log)
+    assert match('print_msg:   [PAYLOAD] 68 octets', log)
+    assert match('dump_hex:     08 00 03 00 .. 00 00 00 0a 00 04 00 77 6c 61 6e ............wlan', log, True)
+    assert match('dump_hex:     30 00 00 00 08 00 01 00 00 00 00 00 08 00 05 00 0...............', log)
+    assert match('dump_hex:     02 00 00 00 0c 00 99 00 01 00 00 00 00 00 00 00 ................', log)
+    assert match('dump_hex:     0a 00 06 00 .. .. .. .. .. .. 00 00 08 00 2e 00 ................', log, True)
+    assert match('dump_hex:     .. 00 00 00                                     ....', log, True)
+    assert match('nl_msg_dump: ---------------------------  END NETLINK MESSAGE   ---------------------------', log)
+
+    assert match('recvmsgs: Attempting to read from 0x[a-f0-9]+', log, True)
+    assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Read 36 bytes', log, True)
+    assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Processing valid message...', log, True)
+    assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message, maxlen=36', log, True)
+    assert match('nl_msg_in_handler_debug: -- Debug: Received Message:', log)
+    assert match('nl_msg_dump: --------------------------   BEGIN NETLINK MESSAGE ---------------------------', log)
+    assert match('nl_msg_dump:   [NETLINK HEADER] 16 octets', log)
+    assert match('print_hdr:     .nlmsg_len = 36', log, True)
+    assert match('print_hdr:     .type = 2 <ERROR>', log)
+    assert match('print_hdr:     .flags = 0 <>', log)
+    assert match('print_hdr:     .seq = \d{10}', log, True)
+    assert match('print_hdr:     .port = \d{3,}', log, True)
+    assert match('dump_error_msg:   [ERRORMSG] 20 octets', log)
+    assert match('dump_error_msg:     .error = 0 "Success"', log)
+    assert match('dump_error_msg:   [ORIGINAL MESSAGE] 16 octets', log)
+    assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message, maxlen=4096', log, True)
+    assert match('print_hdr:     .nlmsg_len = 16', log)
+    assert match('print_hdr:     .type = \d{2} <0x\w{2}>', log, True)
+    assert match('print_hdr:     .flags = 5 <REQUEST,ACK>', log)
+    assert match('print_hdr:     .seq = \d{10}', log, True)
+    assert match('print_hdr:     .port = \d{3,}', log, True)
+    assert match('nl_msg_dump: ---------------------------  END NETLINK MESSAGE   ---------------------------', log)
+    assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Increased expected sequence number to \d{10}', log, True)
 
     assert not log

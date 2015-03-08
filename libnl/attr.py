@@ -533,7 +533,10 @@ def nla_get_u64(nla):
     Returns:
     Payload as an int().
     """
-    return int(ctypes.c_uint64.from_buffer(nla_data(nla)[:SIZEOF_U64]).value)
+    tmp = ctypes.c_uint64(0)
+    if nla and nla_len(nla) >= ctypes.sizeof(tmp):
+        tmp = ctypes.c_uint64.from_buffer(nla_data(nla)[:SIZEOF_U64])
+    return int(tmp.value)
 
 
 def nla_put_string(msg, attrtype, value):

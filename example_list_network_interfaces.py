@@ -2,11 +2,11 @@
 """Shows all Netlink-compatible network interfaces on the host.
 
 This is a pure-Python port of the C program available here:
-    github.com/Robpol86/libnl/blob/master/example_c/list_network_interfaces.c
+    github.com/Robpol86/libnl/blob/7186e04/example_c/list_network_interfaces.c
 
 Derived from a Python test of libnl available here (URL split in two lines):
     github.com/Robpol86
-    /libnl/blob/master/tests/linux_private/test_rtnetlink_rtattr.py#L12
+    /libnl/blob/7186e04/tests/linux_private/test_rtnetlink_rtattr.py#L14
 
 This script is a showcase for the Linux Netlink libnl Python library, ported
 from the C library with the same name. Using libnl, Python scripts/applications

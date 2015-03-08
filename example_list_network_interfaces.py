@@ -36,6 +36,7 @@ import socket
 import sys
 
 from docopt import docopt
+from libnl.error import errmsg
 from libnl.handlers import NL_CB_CUSTOM, NL_CB_VALID, NL_OK
 from libnl.linux_private.if_link import IFLA_IFNAME, IFLA_RTA
 from libnl.linux_private.netlink import NETLINK_ROUTE, NLMSG_LENGTH, NLM_F_DUMP, NLM_F_REQUEST
@@ -46,6 +47,15 @@ from libnl.nl import nl_connect, nl_recvmsgs_default, nl_send_simple
 from libnl.socket_ import nl_socket_alloc, nl_socket_modify_cb
 
 OPTIONS = docopt(__doc__) if __name__ == '__main__' else dict()
+
+
+def error(message, code=1):
+    """Prints an error message to stderr and exits with a status of 1 by default."""
+    if message:
+        print('ERROR: {0}'.format(message), file=sys.stderr)
+    else:
+        print(file=sys.stderr)
+    sys.exit(code)
 
 
 def callback(msg, _):
@@ -77,16 +87,25 @@ def main():
     """Main function called upon script execution."""
     # First open a socket to the kernel. Same one used for sending and receiving.
     sk = nl_socket_alloc()  # Creates an `nl_sock` instance.
-    nl_connect(sk, NETLINK_ROUTE)  # Create file descriptor and bind socket.
+    ret = nl_connect(sk, NETLINK_ROUTE)  # Create file descriptor and bind socket.
+    if ret < 0:
+        reason = errmsg[abs(ret)]
+        return error('nl_connect() returned {0} ({1})'.format(ret, reason))
 
     # Next we send the request to the kernel.
     rt_hdr = rtgenmsg(rtgen_family=socket.AF_PACKET)
     ret = nl_send_simple(sk, RTM_GETLINK, NLM_F_REQUEST | NLM_F_DUMP, rt_hdr, rt_hdr.SIZEOF)
+    if ret < 0:
+        reason = errmsg[abs(ret)]
+        return error('nl_send_simple() returned {0} ({1})'.format(ret, reason))
     print('Sent {0} bytes to the kernel.'.format(ret))
 
     # Finally we'll retrieve the kernel's answer, process it, and call any callbacks attached to the `nl_sock` instance.
     nl_socket_modify_cb(sk, NL_CB_VALID, NL_CB_CUSTOM, callback, None)  # Add callback to the `nl_sock` instance.
-    nl_recvmsgs_default(sk)  # Get kernel's answer, and call attached callbacks.
+    ret = nl_recvmsgs_default(sk)  # Get kernel's answer, and call attached callbacks.
+    if ret < 0:
+        reason = errmsg[abs(ret)]
+        return error('nl_recvmsgs_default() returned {0} ({1})'.format(ret, reason))
 
 
 def setup_logging():

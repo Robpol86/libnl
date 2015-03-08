@@ -110,7 +110,10 @@ def main():
     """Main function called upon script execution."""
     # First open a socket to the kernel. Same one used for sending and receiving.
     sk = nl_socket_alloc()  # Creates an `nl_sock` instance.
-    genl_connect(sk)  # Create file descriptor and bind socket.
+    ret = genl_connect(sk)  # Create file descriptor and bind socket.
+    if ret < 0:
+        reason = errmsg[abs(ret)]
+        return error('genl_connect() returned {0} ({1})'.format(ret, reason))
 
     # Now get the nl80211 driver ID and the wireless interface index. Handle errors here.
     try:

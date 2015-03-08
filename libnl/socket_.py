@@ -50,9 +50,12 @@ def generate_local_port():
     """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L63"""
     global _PREVIOUS_LOCAL_PORT
     if _PREVIOUS_LOCAL_PORT is None:
-        with socket.socket(socket.AF_NETLINK, socket.SOCK_RAW) as s:
-            s.bind((0, 0))
-            _PREVIOUS_LOCAL_PORT = int(s.getsockname()[0])
+        try:
+            with socket.socket(getattr(socket, 'AF_NETLINK', -1), socket.SOCK_RAW) as s:
+                s.bind((0, 0))
+                _PREVIOUS_LOCAL_PORT = int(s.getsockname()[0])
+        except OSError:
+            _PREVIOUS_LOCAL_PORT = 4294967295  # UINT32_MAX
     return int(_PREVIOUS_LOCAL_PORT)
 
 
@@ -77,8 +80,8 @@ def nl_socket_alloc(cb=None):
     # Allocate the socket.
     sk = nl_sock()
     sk.s_cb = cb
-    sk.s_local.nl_family = socket.AF_NETLINK
-    sk.s_peer.nl_family = socket.AF_NETLINK
+    sk.s_local.nl_family = getattr(socket, 'AF_NETLINK', -1)
+    sk.s_peer.nl_family = getattr(socket, 'AF_NETLINK', -1)
     sk.s_seq_expect = sk.s_seq_next = int(time.time())
     sk.s_flags = NL_OWN_PORT  # The port is 0 (unspecified), meaning NL_OWN_PORT.
 

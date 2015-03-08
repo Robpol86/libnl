@@ -53,11 +53,11 @@ def nl_connect(sk, protocol):
     Returns:
     0 on success or a negative error code.
     """
-    flags = socket.SOCK_CLOEXEC
+    flags = getattr(socket, 'SOCK_CLOEXEC', 0)
     if sk.s_fd != -1:
         return -NLE_BAD_SOCK
     try:
-        sk.socket_instance = socket.socket(socket.AF_NETLINK, socket.SOCK_RAW | flags, protocol)
+        sk.socket_instance = socket.socket(getattr(socket, 'AF_NETLINK', -1), socket.SOCK_RAW | flags, protocol)
     except OSError as exc:
         return -nl_syserr2nlerr(exc.errno)
 

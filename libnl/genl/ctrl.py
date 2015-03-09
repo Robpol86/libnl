@@ -26,10 +26,12 @@ from libnl.linux_private.genetlink import (CTRL_CMD_GETFAMILY, GENL_ID_CTRL, CTR
                                            CTRL_ATTR_MCAST_GRP_NAME, CTRL_ATTR_OP_MAX, CTRL_ATTR_OP_ID,
                                            CTRL_ATTR_OP_FLAGS)
 from libnl.linux_private.netlink import NETLINK_GENERIC, NLM_F_DUMP
+from libnl.list_ import nl_list_for_each_entry
 from libnl.misc import __init
 from libnl.msg import NL_AUTO_SEQ, NL_AUTO_PORT, nlmsg_alloc, nlmsg_hdr
 from libnl.netlink_private.cache_api import nl_cache_ops, nl_msgtype
 from libnl.netlink_private.netlink import BUG
+from libnl.netlink_private.types import genl_family_grp
 from libnl.nl import nl_recvmsgs, nl_send_auto, wait_for_ack
 from libnl.socket_ import nl_socket_get_cb
 
@@ -205,7 +207,43 @@ def genl_ctrl_resolve(sk, name):
     return int(genl_family_get_id(family))
 
 
-genl_cmds = (
+def genl_ctrl_grp_by_name(family, grp_name):
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L446
+
+    Positional arguments:
+    family -- genl_family class instance.
+    grp_name -- bytes.
+
+    Returns:
+    group ID or negative error code.
+    """
+    for grp in nl_list_for_each_entry(genl_family_grp(), family.gf_mc_grps, 'list_'):
+        if grp.name == grp_name:
+            return grp.id_
+    return -NLE_OBJ_NOTFOUND
+
+
+def genl_ctrl_resolve_grp(sk, family_name, grp_name):
+    """Resolve Generic Netlink family group name.
+    https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L471
+
+    Looks up the family object and resolves the group name to the numeric group identifier.
+
+    Positional arguments:
+    sk -- Generic Netlink socket (nl_sock class instance).
+    family_name -- name of Generic Netlink family (bytes).
+    grp_name -- name of group to resolve (bytes).
+
+    Returns:
+    The numeric group identifier or a negative error code.
+    """
+    family = genl_ctrl_probe_by_name(sk, family_name)
+    if family is None:
+        return -NLE_OBJ_NOTFOUND
+    return genl_ctrl_grp_by_name(family, grp_name)
+
+
+genl_cmds = (  # https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L493
     genl_cmd(c_id=CTRL_CMD_NEWFAMILY, c_name='NEWFAMILY', c_maxattr=CTRL_ATTR_MAX, c_attr_policy=ctrl_policy,
              c_msg_parser=ctrl_msg_parser),
     genl_cmd(c_id=CTRL_CMD_DELFAMILY, c_name='DELFAMILY'),
@@ -215,7 +253,7 @@ genl_cmds = (
 )
 
 
-genl_ctrl_ops = nl_cache_ops(
+genl_ctrl_ops = nl_cache_ops(  # https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L526
     co_name='genl/family',
     co_hdrsize=GENL_HDRSIZE(0),
     co_msgtypes=(nl_msgtype(GENL_ID_CTRL, NL_ACT_UNSPEC, 'nlctrl'), nl_msgtype(-1, -1, None)),

@@ -5,7 +5,7 @@ build:
     - script:
         name: YAML - mac80211_hwsim
         code: |
-            sudo modprobe mac80211_hwsim radios=1
+            sudo modprobe mac80211_hwsim radios=1 fake_hw_scan=1
             sudo ifconfig wlan0 up
 
     - script:

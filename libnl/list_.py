@@ -31,10 +31,10 @@ def _nl_list_add(obj, prev, next_):
     prev -- nl_list_head class instance.
     next_ -- nl_list_head class instance.
     """
-    prev.next = obj
+    prev.next_ = obj
     obj.prev = prev
     next_.prev = obj
-    obj.next = next_
+    obj.next_ = next_
 
 
 def nl_list_add_tail(obj, head):
@@ -83,7 +83,7 @@ def nl_list_for_each_entry(pos, head, member):
         pos = nl_list_entry(head.next_, type(pos), member)
         yield pos
         if getattr(pos, member) != head:
-            pos = nl_list_entry(getattr(pos, member).next, type(pos), member)
+            pos = nl_list_entry(getattr(pos, member).next_, type(pos), member)
             continue
         break
 

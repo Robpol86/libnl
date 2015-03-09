@@ -1,18 +1,22 @@
+import ctypes
 import re
 import socket
 
 import pytest
 
-from libnl.attr import nla_put_u32, nla_get_u32, nla_parse, nla_get_string, nla_get_u64, nla_data
-from libnl.genl.ctrl import genl_ctrl_resolve
+from libnl.attr import nla_put_u32, nla_get_u32, nla_parse, nla_get_string, nla_data, nla_put, nla_put_nested
+from libnl.genl.ctrl import genl_ctrl_resolve, genl_ctrl_resolve_grp
 from libnl.genl.genl import genl_connect, genlmsg_put, genlmsg_attrdata, genlmsg_attrlen
-from libnl.handlers import NL_CB_VALID, NL_CB_CUSTOM, NL_SKIP
+from libnl.handlers import (NL_CB_VALID, NL_CB_CUSTOM, NL_SKIP, nl_cb_alloc, NL_CB_DEFAULT, nl_cb_set, nl_cb_err,
+                            NL_CB_ACK, NL_CB_SEQ_CHECK, NL_STOP, NL_OK)
 from libnl.linux_private.genetlink import genlmsghdr
+from libnl.linux_private.netlink import NLM_F_DUMP
 from libnl.msg import nlmsg_alloc, nlmsg_hdr
 from libnl.msg_ import nlmsg_data
-from libnl.nl import nl_send_auto, nl_recvmsgs_default, nl_wait_for_ack
+from libnl.nl import nl_send_auto, nl_recvmsgs_default, nl_wait_for_ack, nl_recvmsgs
 from libnl import nl80211
-from libnl.socket_ import nl_socket_alloc, nl_socket_modify_cb, nl_socket_free
+from libnl.socket_ import (nl_socket_alloc, nl_socket_modify_cb, nl_socket_free, nl_socket_add_membership,
+                           nl_socket_drop_membership)
 
 
 def match(expected, log, is_regex=False):
@@ -254,10 +258,8 @@ def test_cmd_get_interface(log, wlan0_info):
         tb = {i: None for i in range(nl80211.NL80211_ATTR_MAX + 1)}
         nla_parse(tb, nl80211.NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0), genlmsg_attrlen(gnlh, 0), None)
         assert b'wlan0' == nla_get_string(tb[nl80211.NL80211_ATTR_IFNAME])
-        assert 0 == nla_get_u32(tb[nl80211.NL80211_ATTR_WIPHY])
         assert wlan0_info['mac'] == ':'.join(format(x, '02x') for x in nla_data(tb[nl80211.NL80211_ATTR_MAC])[:6])
         assert wlan0_info['ifindex'] == nla_get_u32(tb[nl80211.NL80211_ATTR_IFINDEX])
-        assert 1 == nla_get_u64(tb[nl80211.NL80211_ATTR_WDEV])
         assert 2 == nla_get_u32(tb[nl80211.NL80211_ATTR_IFTYPE])
         return NL_SKIP
     if_index = socket.if_nametoindex('wlan0')
@@ -316,8 +318,8 @@ def test_cmd_get_interface(log, wlan0_info):
     assert match('print_genl_hdr:     .unused = 0', log)
     assert match('print_msg:   [PAYLOAD] 68 octets', log)
     assert match('dump_hex:     08 00 03 00 .. 00 00 00 0a 00 04 00 77 6c 61 6e ............wlan', log, True)
-    assert match('dump_hex:     30 00 00 00 08 00 01 00 00 00 00 00 08 00 05 00 0...............', log)
-    assert match('dump_hex:     02 00 00 00 0c 00 99 00 01 00 00 00 00 00 00 00 ................', log)
+    assert match('dump_hex:     30 00 00 00 08 00 01 00 .. 00 00 00 08 00 05 00 0...............', log, True)
+    assert match('dump_hex:     02 00 00 00 0c 00 99 00 01 00 00 00 .. 00 00 00 ................', log, True)
     assert match('dump_hex:     0a 00 06 00 .. .. .. .. .. .. 00 00 08 00 2e 00 ................', log, True)
     assert match('dump_hex:     .. 00 00 00                                     ....', log, True)
     assert match('nl_msg_dump: ---------------------------  END NETLINK MESSAGE   ---------------------------', log)
@@ -345,5 +347,641 @@ def test_cmd_get_interface(log, wlan0_info):
     assert match('print_hdr:     .port = \d{3,}', log, True)
     assert match('nl_msg_dump: ---------------------------  END NETLINK MESSAGE   ---------------------------', log)
     assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Increased expected sequence number to \d{10}', log, True)
+
+    assert not log
+
+
+@pytest.mark.skipif('not os.path.exists("/sys/class/net/wlan0") or os.getuid()')
+@pytest.mark.usefixtures('nlcb_debug')
+def test_cmd_trigger_scan(log):
+    """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && sudo NLDBG=4 NLCB=debug ./a.out
+    #include <netlink/genl/genl.h>
+    #include <linux/nl80211.h>
+    static int error_handler(struct sockaddr_nl *nla, struct nlmsgerr *err, void *arg) {
+        int *ret = arg; *ret = err->error; printf("error %d\n", *ret); return NL_STOP;
+    }
+    static int finish_handler(struct nl_msg *msg, void *arg) {
+        int *ret = arg; *ret = 0; printf("finish %d\n", *ret); return NL_SKIP;
+    }
+    static int ack_handler(struct nl_msg *msg, void *arg) {
+        int *ret = arg; *ret = 0; printf("ack %d\n", *ret); return NL_STOP;
+    }
+    static int no_seq_check(struct nl_msg *msg, void *arg) { printf("no_seq\n"); return NL_OK; }
+    static int callback_trigger(struct nl_msg *msg, void *arg) {
+        int *ret = arg; struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
+        if (gnlh->cmd == NL80211_CMD_SCAN_ABORTED) *ret = 1;
+        else if (gnlh->cmd == NL80211_CMD_NEW_SCAN_RESULTS) *ret = 0;
+        printf("cb_trigger %d\n", *ret); return NL_SKIP;
+    }
+    int do_scan_trigger(struct nl_sock *sk, int if_index, int driver_id) {
+        int ret, err = 1;
+        int results = -1;  // -1 = not done, 0 = success; 1 = error.
+        int mcid = genl_ctrl_resolve_grp(sk, "nl80211", "scan");
+        printf("%d == mcid\n", mcid);
+        printf("%d == nl_socket_add_membership(sk, mcid)\n", nl_socket_add_membership(sk, mcid));
+        struct nl_msg *msg = nlmsg_alloc();
+        struct nl_msg *msg_ssids = nlmsg_alloc();
+        struct nl_cb *cb = nl_cb_alloc(NL_CB_DEFAULT);
+        genlmsg_put(msg, 0, 0, driver_id, 0, 0, NL80211_CMD_TRIGGER_SCAN, 0);
+        nla_put_u32(msg, NL80211_ATTR_IFINDEX, if_index);
+        nla_put(msg_ssids, 1, 0, "");
+        nla_put_nested(msg, NL80211_ATTR_SCAN_SSIDS, msg_ssids);
+        nlmsg_free(msg_ssids);
+        nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, callback_trigger, &results);
+        nl_cb_err(cb, NL_CB_CUSTOM, error_handler, &err);
+        nl_cb_set(cb, NL_CB_FINISH, NL_CB_CUSTOM, finish_handler, &err);
+        nl_cb_set(cb, NL_CB_ACK, NL_CB_CUSTOM, ack_handler, &err);
+        nl_cb_set(cb, NL_CB_SEQ_CHECK, NL_CB_CUSTOM, no_seq_check, NULL);
+        printf("%d == nl_send_auto(sk, msg)\n", nl_send_auto(sk, msg));
+        while (err > 0) {
+            ret = nl_recvmsgs(sk, cb); printf("%d == nl_recvmsgs err\n", ret); printf("%d == err\n", err);
+        }
+        if (ret < 0) return ret;
+        while (results < 0) printf("%d == nl_recvmsgs results\n", nl_recvmsgs(sk, cb));
+        printf("%d == nl_socket_drop_membership(sk, mcid)\n", nl_socket_drop_membership(sk, mcid));
+        return results;
+    }
+    static int callback_dump(struct nl_msg *msg, void *arg) {
+        struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
+        struct nlattr *tb[NL80211_ATTR_MAX + 1];
+        nla_parse(tb, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0), genlmsg_attrlen(gnlh, 0), NULL);
+        int i, j = 0; for (i = 0; i < NL80211_ATTR_MAX + 1; i++) if (tb[i]) j++;
+        printf("%d == len(i for i in tb.values() if i)\n", j);
+        return NL_SKIP;
+    }
+    int main() {
+        int if_index = if_nametoindex("wlan0");
+        struct nl_sock *sk = nl_socket_alloc();
+        genl_connect(sk);
+        int driver_id = genl_ctrl_resolve(sk, "nl80211");
+        int err = do_scan_trigger(sk, if_index, driver_id);
+        if (err != 0) { printf("FAILED %d\n", err); return err; }
+        struct nl_msg *msg = nlmsg_alloc();
+        genlmsg_put(msg, 0, 0, driver_id, 0, NLM_F_DUMP, NL80211_CMD_GET_SCAN, 0);
+        nla_put_u32(msg, NL80211_ATTR_IFINDEX, if_index);
+        nl_socket_modify_cb(sk, NL_CB_VALID, NL_CB_CUSTOM, callback_dump, NULL);
+        printf("%d == nl_send_auto(sk, msg)\n", nl_send_auto(sk, msg));
+        printf("%d == nl_recvmsgs_default(sk)\n", nl_recvmsgs_default(sk));
+        return 0;
+    }
+    // Expected output (trimmed):
+    // nl_cache_mngt_register: Registered cache operations genl/family
+    //  nl_object_alloc: Allocated new object 0xa330b8
+    // __nlmsg_alloc: msg 0xa33110: Allocated new message, maxlen=4096
+    // nlmsg_put: msg 0xa33110: Added netlink header type=16, flags=0, pid=0, seq=0
+    // nlmsg_reserve: msg 0xa33110: Reserved 4 (4) bytes, pad=4, nlmsg_len=20
+    // genlmsg_put: msg 0xa33110: Added generic netlink header cmd=3 version=1
+    // nla_reserve: msg 0xa33110: attr <0xa33164> 2: Reserved 12 (8) bytes at offset +4 nlmsg_len=32
+    // nla_put: msg 0xa33110: attr <0xa33164> 2: Wrote 8 bytes at offset +4
+    // -- Debug: Sent Message:
+    // --------------------------   BEGIN NETLINK MESSAGE ---------------------------
+    //   [NETLINK HEADER] 16 octets
+    //     .nlmsg_len = 32
+    //     .type = 16 <genl/family::nlctrl>
+    //     .flags = 5 <REQUEST,ACK>
+    //     .seq = 1425856951
+    //     .port = 28841
+    //   [GENERIC NETLINK HEADER] 4 octets
+    //     .cmd = 3
+    //     .version = 1
+    //     .unused = 0
+    //   [ATTR 02] 8 octets
+    //     6e 6c 38 30 32 31 31 00                         nl80211.
+    // ---------------------------  END NETLINK MESSAGE   ---------------------------
+    // nl_sendmsg: sent 32 bytes
+    // recvmsgs: Attempting to read from 0xa33080
+    // recvmsgs: recvmsgs(0xa33080): Read 1836 bytes
+    // recvmsgs: recvmsgs(0xa33080): Processing valid message...
+    // __nlmsg_alloc: msg 0xa381d8: Allocated new message, maxlen=1836
+    // -- Debug: Received Message:
+    // --------------------------   BEGIN NETLINK MESSAGE ---------------------------
+    //   [NETLINK HEADER] 16 octets
+    //     .nlmsg_len = 1836
+    //     .type = 16 <genl/family::nlctrl>
+    //     .flags = 0 <>
+    //     .seq = 1425856951
+    //     .port = 28841
+    //   [GENERIC NETLINK HEADER] 4 octets
+    //     .cmd = 1
+    //     .version = 2
+    //     .unused = 0
+    //   [ATTR 02] 8 octets
+    //     6e 6c 38 30 32 31 31 00                         nl80211.
+    //   [ATTR 01] 2 octets
+    //     16 00                                           ..
+    //   [PADDING] 2 octets
+    //     00 00                                           ..
+    //   [ATTR 03] 4 octets
+    //     01 00 00 00                                     ....
+    //   [ATTR 04] 4 octets
+    //     00 00 00 00                                     ....
+    //   [ATTR 05] 4 octets
+    //     d5 00 00 00                                     ....
+    //   [ATTR 06] 1640 octets
+    //     14 00 01 00 08 00 01 00 01 00 00 00 08 00 02 00 ................
+    //     <trimmed>
+    //     08 00 02 00 0b 00 00 00                         ........
+    //   [ATTR 07] 124 octets
+    //     18 00 01 00 08 00 02 00 03 00 00 00 0b 00 01 00 ................
+    //     63 6f 6e 66 69 67 00 00 18 00 02 00 08 00 02 00 config..........
+    //     04 00 00 00 09 00 01 00 73 63 61 6e 00 00 00 00 ........scan....
+    //     1c 00 03 00 08 00 02 00 05 00 00 00 0f 00 01 00 ................
+    //     72 65 67 75 6c 61 74 6f 72 79 00 00 18 00 04 00 regulatory......
+    //     08 00 02 00 06 00 00 00 09 00 01 00 6d 6c 6d 65 ............mlme
+    //     00 00 00 00 18 00 05 00 08 00 02 00 07 00 00 00 ................
+    //     0b 00 01 00 76 65 6e 64 6f 72 00 00             ....vendor..
+    // ---------------------------  END NETLINK MESSAGE   ---------------------------
+    // nlmsg_free: Returned message reference 0xa381d8, 0 remaining
+    // nlmsg_free: msg 0xa381d8: Freed
+    // recvmsgs: Attempting to read from 0xa33080
+    // recvmsgs: recvmsgs(0xa33080): Read 36 bytes
+    // recvmsgs: recvmsgs(0xa33080): Processing valid message...
+    // __nlmsg_alloc: msg 0xa381d8: Allocated new message, maxlen=36
+    // -- Debug: Received Message:
+    // --------------------------   BEGIN NETLINK MESSAGE ---------------------------
+    //   [NETLINK HEADER] 16 octets
+    //     .nlmsg_len = 36
+    //     .type = 2 <ERROR>
+    //     .flags = 0 <>
+    //     .seq = 1425856951
+    //     .port = 28841
+    //   [ERRORMSG] 20 octets
+    //     .error = 0 "Success"
+    //   [ORIGINAL MESSAGE] 16 octets
+    // __nlmsg_alloc: msg 0xa382b8: Allocated new message, maxlen=4096
+    //     .nlmsg_len = 16
+    //     .type = 16 <0x10>
+    //     .flags = 5 <REQUEST,ACK>
+    //     .seq = 1425856951
+    //     .port = 28841
+    // nlmsg_free: Returned message reference 0xa382b8, 0 remaining
+    // nlmsg_free: msg 0xa382b8: Freed
+    // ---------------------------  END NETLINK MESSAGE   ---------------------------
+    // recvmsgs: recvmsgs(0xa33080): Increased expected sequence number to 1425856952
+    // nlmsg_free: Returned message reference 0xa381d8, 0 remaining
+    // nlmsg_free: msg 0xa381d8: Freed
+    // nlmsg_free: Returned message reference 0xa33110, 0 remaining
+    // nlmsg_free: msg 0xa33110: Freed
+    // nl_object_put: Returned object reference 0xa330b8, 0 remaining
+    // nl_object_free: Freed object 0xa330b8
+    //  nl_object_alloc: Allocated new object 0xa330b8
+    // __nlmsg_alloc: msg 0xa33110: Allocated new message, maxlen=4096
+    // nlmsg_put: msg 0xa33110: Added netlink header type=16, flags=0, pid=0, seq=0
+    // nlmsg_reserve: msg 0xa33110: Reserved 4 (4) bytes, pad=4, nlmsg_len=20
+    // genlmsg_put: msg 0xa33110: Added generic netlink header cmd=3 version=1
+    // nla_reserve: msg 0xa33110: attr <0xa33164> 2: Reserved 12 (8) bytes at offset +4 nlmsg_len=32
+    // nla_put: msg 0xa33110: attr <0xa33164> 2: Wrote 8 bytes at offset +4
+    // -- Debug: Sent Message:
+    // --------------------------   BEGIN NETLINK MESSAGE ---------------------------
+    //   [NETLINK HEADER] 16 octets
+    //     .nlmsg_len = 32
+    //     .type = 16 <genl/family::nlctrl>
+    //     .flags = 5 <REQUEST,ACK>
+    //     .seq = 1425856952
+    //     .port = 28841
+    //   [GENERIC NETLINK HEADER] 4 octets
+    //     .cmd = 3
+    //     .version = 1
+    //     .unused = 0
+    //   [ATTR 02] 8 octets
+    //     6e 6c 38 30 32 31 31 00                         nl80211.
+    // ---------------------------  END NETLINK MESSAGE   ---------------------------
+    // nl_sendmsg: sent 32 bytes
+    // recvmsgs: Attempting to read from 0xa33080
+    // recvmsgs: recvmsgs(0xa33080): Read 1836 bytes
+    // recvmsgs: recvmsgs(0xa33080): Processing valid message...
+    // __nlmsg_alloc: msg 0xa381d8: Allocated new message, maxlen=1836
+    // -- Debug: Received Message:
+    // --------------------------   BEGIN NETLINK MESSAGE ---------------------------
+    //   [NETLINK HEADER] 16 octets
+    //     .nlmsg_len = 1836
+    //     .type = 16 <genl/family::nlctrl>
+    //     .flags = 0 <>
+    //     .seq = 1425856952
+    //     .port = 28841
+    //   [GENERIC NETLINK HEADER] 4 octets
+    //     .cmd = 1
+    //     .version = 2
+    //     .unused = 0
+    //   [ATTR 02] 8 octets
+    //     6e 6c 38 30 32 31 31 00                         nl80211.
+    //   [ATTR 01] 2 octets
+    //     16 00                                           ..
+    //   [PADDING] 2 octets
+    //     00 00                                           ..
+    //   [ATTR 03] 4 octets
+    //     01 00 00 00                                     ....
+    //   [ATTR 04] 4 octets
+    //     00 00 00 00                                     ....
+    //   [ATTR 05] 4 octets
+    //     d5 00 00 00                                     ....
+    //   [ATTR 06] 1640 octets
+    //     14 00 01 00 08 00 01 00 01 00 00 00 08 00 02 00 ................
+    //     <trimmed>
+    //     08 00 02 00 0b 00 00 00                         ........
+    //   [ATTR 07] 124 octets
+    //     18 00 01 00 08 00 02 00 03 00 00 00 0b 00 01 00 ................
+    //     63 6f 6e 66 69 67 00 00 18 00 02 00 08 00 02 00 config..........
+    //     04 00 00 00 09 00 01 00 73 63 61 6e 00 00 00 00 ........scan....
+    //     1c 00 03 00 08 00 02 00 05 00 00 00 0f 00 01 00 ................
+    //     72 65 67 75 6c 61 74 6f 72 79 00 00 18 00 04 00 regulatory......
+    //     08 00 02 00 06 00 00 00 09 00 01 00 6d 6c 6d 65 ............mlme
+    //     00 00 00 00 18 00 05 00 08 00 02 00 07 00 00 00 ................
+    //     0b 00 01 00 76 65 6e 64 6f 72 00 00             ....vendor..
+    // ---------------------------  END NETLINK MESSAGE   ---------------------------
+    // nlmsg_free: Returned message reference 0xa381d8, 0 remaining
+    // nlmsg_free: msg 0xa381d8: Freed
+    // recvmsgs: Attempting to read from 0xa33080
+    // recvmsgs: recvmsgs(0xa33080): Read 36 bytes
+    // recvmsgs: recvmsgs(0xa33080): Processing valid message...
+    // __nlmsg_alloc: msg 0xa381d8: Allocated new message, maxlen=36
+    // -- Debug: Received Message:
+    // --------------------------   BEGIN NETLINK MESSAGE ---------------------------
+    //   [NETLINK HEADER] 16 octets
+    //     .nlmsg_len = 36
+    //     .type = 2 <ERROR>
+    //     .flags = 0 <>
+    //     .seq = 1425856952
+    //     .port = 28841
+    //   [ERRORMSG] 20 octets
+    //     .error = 0 "Success"
+    //   [ORIGINAL MESSAGE] 16 octets
+    // __nlmsg_alloc: msg 0xa382b8: Allocated new message, maxlen=4096
+    //     .nlmsg_len = 16
+    //     .type = 16 <0x10>
+    //     .flags = 5 <REQUEST,ACK>
+    //     .seq = 1425856952
+    //     .port = 28841
+    // nlmsg_free: Returned message reference 0xa382b8, 0 remaining
+    // nlmsg_free: msg 0xa382b8: Freed
+    // ---------------------------  END NETLINK MESSAGE   ---------------------------
+    // recvmsgs: recvmsgs(0xa33080): Increased expected sequence number to 1425856953
+    // nlmsg_free: Returned message reference 0xa381d8, 0 remaining
+    // nlmsg_free: msg 0xa381d8: Freed
+    // nlmsg_free: Returned message reference 0xa33110, 0 remaining
+    // nlmsg_free: msg 0xa33110: Freed
+    // nl_object_put: Returned object reference 0xa330b8, 0 remaining
+    // nl_object_free: Freed object 0xa330b8
+    // 4 == mcid
+    // 0 == nl_socket_add_membership(sk, mcid)
+    // __nlmsg_alloc: msg 0xa33110: Allocated new message, maxlen=4096
+    // __nlmsg_alloc: msg 0xa330b8: Allocated new message, maxlen=4096
+    // nlmsg_put: msg 0xa33110: Added netlink header type=22, flags=0, pid=0, seq=0
+    // nlmsg_reserve: msg 0xa33110: Reserved 4 (4) bytes, pad=4, nlmsg_len=20
+    // genlmsg_put: msg 0xa33110: Added generic netlink header cmd=33 version=0
+    // nla_reserve: msg 0xa33110: attr <0xa33164> 3: Reserved 8 (4) bytes at offset +4 nlmsg_len=28
+    // nla_put: msg 0xa33110: attr <0xa33164> 3: Wrote 4 bytes at offset +4
+    // nla_reserve: msg 0xa330b8: attr <0xa34168> 1: Reserved 4 (0) bytes at offset +0 nlmsg_len=20
+    // nla_put_nested: msg 0xa33110: attr <> 45: adding msg 0xa330b8 as nested attribute
+    // nla_reserve: msg 0xa33110: attr <0xa3316c> 45: Reserved 8 (4) bytes at offset +12 nlmsg_len=36
+    // nla_put: msg 0xa33110: attr <0xa3316c> 45: Wrote 4 bytes at offset +12
+    // nlmsg_free: Returned message reference 0xa330b8, 0 remaining
+    // nlmsg_free: msg 0xa330b8: Freed
+    // -- Debug: Sent Message:
+    // --------------------------   BEGIN NETLINK MESSAGE ---------------------------
+    //   [NETLINK HEADER] 16 octets
+    //     .nlmsg_len = 36
+    //     .type = 22 <0x16>
+    //     .flags = 5 <REQUEST,ACK>
+    //     .seq = 1425856953
+    //     .port = 28841
+    //   [GENERIC NETLINK HEADER] 4 octets
+    //     .cmd = 33
+    //     .version = 0
+    //     .unused = 0
+    //   [PAYLOAD] 16 octets
+    //     08 00 03 00 03 00 00 00 08 00 2d 00 04 00 01 00 ..........-.....
+    // ---------------------------  END NETLINK MESSAGE   ---------------------------
+    // nl_sendmsg: sent 36 bytes
+    // 36 == nl_send_auto(sk, msg)
+    // recvmsgs: Attempting to read from 0xa33080
+    // recvmsgs: recvmsgs(0xa33080): Read 172 bytes
+    // recvmsgs: recvmsgs(0xa33080): Processing valid message...
+    // __nlmsg_alloc: msg 0xa330b8: Allocated new message, maxlen=172
+    // no_seq
+    // cb_trigger -1
+    // nlmsg_free: Returned message reference 0xa330b8, 0 remaining
+    // nlmsg_free: msg 0xa330b8: Freed
+    // 0 == nl_recvmsgs err
+    // 1 == err
+    // recvmsgs: Attempting to read from 0xa33080
+    // recvmsgs: recvmsgs(0xa33080): Read 36 bytes
+    // recvmsgs: recvmsgs(0xa33080): Processing valid message...
+    // __nlmsg_alloc: msg 0xa330b8: Allocated new message, maxlen=36
+    // no_seq
+    // recvmsgs: recvmsgs(0xa33080): Increased expected sequence number to 1425856954
+    // ack 0
+    // nlmsg_free: Returned message reference 0xa330b8, 0 remaining
+    // nlmsg_free: msg 0xa330b8: Freed
+    // 0 == nl_recvmsgs err
+    // 0 == err
+    // recvmsgs: Attempting to read from 0xa33080
+    // recvmsgs: recvmsgs(0xa33080): Read 172 bytes
+    // recvmsgs: recvmsgs(0xa33080): Processing valid message...
+    // __nlmsg_alloc: msg 0xa330b8: Allocated new message, maxlen=172
+    // no_seq
+    // cb_trigger 0
+    // nlmsg_free: Returned message reference 0xa330b8, 0 remaining
+    // nlmsg_free: msg 0xa330b8: Freed
+    // 0 == nl_recvmsgs results
+    // 0 == nl_socket_drop_membership(sk, mcid)
+    // __nlmsg_alloc: msg 0xa330b8: Allocated new message, maxlen=4096
+    // nlmsg_put: msg 0xa330b8: Added netlink header type=22, flags=768, pid=0, seq=0
+    // nlmsg_reserve: msg 0xa330b8: Reserved 4 (4) bytes, pad=4, nlmsg_len=20
+    // genlmsg_put: msg 0xa330b8: Added generic netlink header cmd=32 version=0
+    // nla_reserve: msg 0xa330b8: attr <0xa3416c> 3: Reserved 8 (4) bytes at offset +4 nlmsg_len=28
+    // nla_put: msg 0xa330b8: attr <0xa3416c> 3: Wrote 4 bytes at offset +4
+    // -- Debug: Sent Message:
+    // --------------------------   BEGIN NETLINK MESSAGE ---------------------------
+    //   [NETLINK HEADER] 16 octets
+    //     .nlmsg_len = 28
+    //     .type = 22 <0x16>
+    //     .flags = 773 <REQUEST,ACK,ROOT,MATCH>
+    //     .seq = 1425856954
+    //     .port = 28841
+    //   [GENERIC NETLINK HEADER] 4 octets
+    //     .cmd = 32
+    //     .version = 0
+    //     .unused = 0
+    //   [PAYLOAD] 8 octets
+    //     08 00 03 00 03 00 00 00                         ........
+    // ---------------------------  END NETLINK MESSAGE   ---------------------------
+    // nl_sendmsg: sent 28 bytes
+    // 28 == nl_send_auto(sk, msg)
+    // recvmsgs: Attempting to read from 0xa33080
+    // recvmsgs: recvmsgs(0xa33080): Read 4516 bytes
+    // recvmsgs: recvmsgs(0xa33080): Processing valid message...
+    // __nlmsg_alloc: msg 0xa391e0: Allocated new message, maxlen=456
+    // -- Debug: Received Message:
+    // --------------------------   BEGIN NETLINK MESSAGE ---------------------------
+    //   [NETLINK HEADER] 16 octets
+    //     .nlmsg_len = 456
+    //     .type = 22 <0x16>
+    //     .flags = 2 <MULTI>
+    //     .seq = 1425856954
+    //     .port = 28841
+    //   [GENERIC NETLINK HEADER] 4 octets
+    //     .cmd = 34
+    //     .version = 1
+    //     .unused = 0
+    //   [PAYLOAD] 436 octets
+    //     08 00 2e 00 a0 b9 4b 00 08 00 03 00 03 00 00 00 ......K.........
+    //     <trimmed>
+    //     48 f4 ff ff                                     H...
+    // ---------------------------  END NETLINK MESSAGE   ---------------------------
+    // 4 == len(i for i in tb.values() if i)
+    // recvmsgs: recvmsgs(0xa33080): Processing valid message...
+    // nlmsg_free: Returned message reference 0xa391e0, 0 remaining
+    // nlmsg_free: msg 0xa391e0: Freed
+    // __nlmsg_alloc: msg 0xa391e0: Allocated new message, maxlen=744
+    // -- Debug: Received Message:
+    // --------------------------   BEGIN NETLINK MESSAGE ---------------------------
+    //   [NETLINK HEADER] 16 octets
+    //     .nlmsg_len = 744
+    //     .type = 22 <0x16>
+    //     .flags = 2 <MULTI>
+    //     .seq = 1425856954
+    //     .port = 28841
+    //   [GENERIC NETLINK HEADER] 4 octets
+    //     .cmd = 34
+    //     .version = 1
+    //     .unused = 0
+    //   [PAYLOAD] 724 octets
+    //     08 00 2e 00 a0 b9 4b 00 08 00 03 00 03 00 00 00 ......K.........
+    //     <trimmed>
+    //     bc e9 ff ff                                     ....
+    // ---------------------------  END NETLINK MESSAGE   ---------------------------
+    // 4 == len(i for i in tb.values() if i)
+    // recvmsgs: recvmsgs(0xa33080): Processing valid message...
+    // nlmsg_free: Returned message reference 0xa391e0, 0 remaining
+    // nlmsg_free: msg 0xa391e0: Freed
+    // __nlmsg_alloc: msg 0xa391e0: Allocated new message, maxlen=748
+    // -- Debug: Received Message:
+    // --------------------------   BEGIN NETLINK MESSAGE ---------------------------
+    //   [NETLINK HEADER] 16 octets
+    //     .nlmsg_len = 748
+    //     .type = 22 <0x16>
+    //     .flags = 2 <MULTI>
+    //     .seq = 1425856954
+    //     .port = 28841
+    //   [GENERIC NETLINK HEADER] 4 octets
+    //     .cmd = 34
+    //     .version = 1
+    //     .unused = 0
+    //   [PAYLOAD] 728 octets
+    //     08 00 2e 00 a0 b9 4b 00 08 00 03 00 03 00 00 00 ......K.........
+    //     <trimmed>
+    //     08 00 07 00 78 ec ff ff                         ....x...
+    // ---------------------------  END NETLINK MESSAGE   ---------------------------
+    // 4 == len(i for i in tb.values() if i)
+    // recvmsgs: recvmsgs(0xa33080): Processing valid message...
+    // nlmsg_free: Returned message reference 0xa391e0, 0 remaining
+    // nlmsg_free: msg 0xa391e0: Freed
+    // __nlmsg_alloc: msg 0xa391e0: Allocated new message, maxlen=584
+    // -- Debug: Received Message:
+    // --------------------------   BEGIN NETLINK MESSAGE ---------------------------
+    //   [NETLINK HEADER] 16 octets
+    //     .nlmsg_len = 584
+    //     .type = 22 <0x16>
+    //     .flags = 2 <MULTI>
+    //     .seq = 1425856954
+    //     .port = 28841
+    //   [GENERIC NETLINK HEADER] 4 octets
+    //     .cmd = 34
+    //     .version = 1
+    //     .unused = 0
+    //   [PAYLOAD] 564 octets
+    //     08 00 2e 00 a0 b9 4b 00 08 00 03 00 03 00 00 00 ......K.........
+    //     <trimmed>
+    //     00 00 00 00 08 00 0a 00 ae 06 00 00 08 00 07 00 ................
+    //     64 e7 ff ff                                     d...
+    // ---------------------------  END NETLINK MESSAGE   ---------------------------
+    // 4 == len(i for i in tb.values() if i)
+    // recvmsgs: recvmsgs(0xa33080): Processing valid message...
+    // nlmsg_free: Returned message reference 0xa391e0, 0 remaining
+    // nlmsg_free: msg 0xa391e0: Freed
+    // __nlmsg_alloc: msg 0xa391e0: Allocated new message, maxlen=464
+    // -- Debug: Received Message:
+    // --------------------------   BEGIN NETLINK MESSAGE ---------------------------
+    //   [NETLINK HEADER] 16 octets
+    //     .nlmsg_len = 464
+    //     .type = 22 <0x16>
+    //     .flags = 2 <MULTI>
+    //     .seq = 1425856954
+    //     .port = 28841
+    //   [GENERIC NETLINK HEADER] 4 octets
+    //     .cmd = 34
+    //     .version = 1
+    //     .unused = 0
+    //   [PAYLOAD] 444 octets
+    //     08 00 2e 00 a0 b9 4b 00 08 00 03 00 03 00 00 00 ......K.........
+    //     <trimmed>
+    //     c2 06 00 00 08 00 07 00 70 e5 ff ff             ........p...
+    // ---------------------------  END NETLINK MESSAGE   ---------------------------
+    // 4 == len(i for i in tb.values() if i)
+    // recvmsgs: recvmsgs(0xa33080): Processing valid message...
+    // nlmsg_free: Returned message reference 0xa391e0, 0 remaining
+    // nlmsg_free: msg 0xa391e0: Freed
+    // __nlmsg_alloc: msg 0xa391e0: Allocated new message, maxlen=560
+    // -- Debug: Received Message:
+    // --------------------------   BEGIN NETLINK MESSAGE ---------------------------
+    //   [NETLINK HEADER] 16 octets
+    //     .nlmsg_len = 560
+    //     .type = 22 <0x16>
+    //     .flags = 2 <MULTI>
+    //     .seq = 1425856954
+    //     .port = 28841
+    //   [GENERIC NETLINK HEADER] 4 octets
+    //     .cmd = 34
+    //     .version = 1
+    //     .unused = 0
+    //   [PAYLOAD] 540 octets
+    //     08 00 2e 00 a0 b9 4b 00 08 00 03 00 03 00 00 00 ......K.........
+    //     <trimmed>
+    //     9e 6b 00 00 08 00 07 00 b4 e2 ff ff             .k..........
+    // ---------------------------  END NETLINK MESSAGE   ---------------------------
+    // 4 == len(i for i in tb.values() if i)
+    // recvmsgs: recvmsgs(0xa33080): Processing valid message...
+    // nlmsg_free: Returned message reference 0xa391e0, 0 remaining
+    // nlmsg_free: msg 0xa391e0: Freed
+    // __nlmsg_alloc: msg 0xa391e0: Allocated new message, maxlen=472
+    // -- Debug: Received Message:
+    // --------------------------   BEGIN NETLINK MESSAGE ---------------------------
+    //   [NETLINK HEADER] 16 octets
+    //     .nlmsg_len = 472
+    //     .type = 22 <0x16>
+    //     .flags = 2 <MULTI>
+    //     .seq = 1425856954
+    //     .port = 28841
+    //   [GENERIC NETLINK HEADER] 4 octets
+    //     .cmd = 34
+    //     .version = 1
+    //     .unused = 0
+    //   [PAYLOAD] 452 octets
+    //     08 00 2e 00 a0 b9 4b 00 08 00 03 00 03 00 00 00 ......K.........
+    //     <trimmed>
+    //     70 e5 ff ff                                     p...
+    // ---------------------------  END NETLINK MESSAGE   ---------------------------
+    // 4 == len(i for i in tb.values() if i)
+    // recvmsgs: recvmsgs(0xa33080): Processing valid message...
+    // nlmsg_free: Returned message reference 0xa391e0, 0 remaining
+    // nlmsg_free: msg 0xa391e0: Freed
+    // __nlmsg_alloc: msg 0xa391e0: Allocated new message, maxlen=488
+    // -- Debug: Received Message:
+    // --------------------------   BEGIN NETLINK MESSAGE ---------------------------
+    //   [NETLINK HEADER] 16 octets
+    //     .nlmsg_len = 488
+    //     .type = 22 <0x16>
+    //     .flags = 2 <MULTI>
+    //     .seq = 1425856954
+    //     .port = 28841
+    //   [GENERIC NETLINK HEADER] 4 octets
+    //     .cmd = 34
+    //     .version = 1
+    //     .unused = 0
+    //   [PAYLOAD] 468 octets
+    //     08 00 2e 00 a0 b9 4b 00 08 00 03 00 03 00 00 00 ......K.........
+    //     <trimmed>
+    //     d4 e5 ff ff                                     ....
+    // ---------------------------  END NETLINK MESSAGE   ---------------------------
+    // 4 == len(i for i in tb.values() if i)
+    // nlmsg_free: Returned message reference 0xa391e0, 0 remaining
+    // nlmsg_free: msg 0xa391e0: Freed
+    // recvmsgs: Attempting to read from 0xa33080
+    // recvmsgs: recvmsgs(0xa33080): Read 20 bytes
+    // recvmsgs: recvmsgs(0xa33080): Processing valid message...
+    // __nlmsg_alloc: msg 0xa391e0: Allocated new message, maxlen=20
+    // -- Debug: Received Message:
+    // --------------------------   BEGIN NETLINK MESSAGE ---------------------------
+    //   [NETLINK HEADER] 16 octets
+    //     .nlmsg_len = 20
+    //     .type = 3 <DONE>
+    //     .flags = 2 <MULTI>
+    //     .seq = 1425856954
+    //     .port = 28841
+    //   [GENERIC NETLINK HEADER] 4 octets
+    //     .cmd = 0
+    //     .version = 0
+    //     .unused = 0
+    // ---------------------------  END NETLINK MESSAGE   ---------------------------
+    // recvmsgs: recvmsgs(0xa33080): Increased expected sequence number to 1425856955
+    // -- Debug: End of multipart message block: type=DONE length=20 flags=<MULTI> sequence-nr=1425856954 pid=28841
+    // nlmsg_free: Returned message reference 0xa391e0, 0 remaining
+    // nlmsg_free: msg 0xa391e0: Freed
+    // 0 == nl_recvmsgs_default(sk)
+    // nl_cache_mngt_unregister: Unregistered cache operations genl/family
+    """
+    callbacks_called = dict(ack=False, trigger=False, error=False, seq=False)
+
+    def error_handler(_, err, arg):
+        callbacks_called['error'] = True
+        arg.value = err.error
+        return NL_STOP
+
+    def ack_handler(_, arg):
+        callbacks_called['ack'] = True
+        arg.value = 0
+        return NL_STOP
+
+    def no_seq_check(*_):
+        callbacks_called['seq'] = True
+        return NL_OK
+
+    def callback_trigger(msg, arg):
+        callbacks_called['trigger'] = True
+        gnlh = genlmsghdr(nlmsg_data(nlmsg_hdr(msg)))
+        if gnlh.cmd == nl80211.NL80211_CMD_SCAN_ABORTED:
+            arg.value = 1
+        elif gnlh.cmd == nl80211.NL80211_CMD_NEW_SCAN_RESULTS:
+            arg.value = 0
+        return NL_SKIP
+
+    def do_scan_trigger(sk, if_index, driver_id):
+        err = ctypes.c_int(1)
+        results = ctypes.c_int(-1)
+        mcid = genl_ctrl_resolve_grp(sk, b'nl80211', b'scan')
+        assert 4 == mcid
+        assert 0 == nl_socket_add_membership(sk, mcid)
+        msg = nlmsg_alloc()
+        msg_ssids = nlmsg_alloc()
+        cb = nl_cb_alloc(NL_CB_DEFAULT)
+        genlmsg_put(msg, 0, 0, driver_id, 0, 0, nl80211.NL80211_CMD_TRIGGER_SCAN, 0)
+        nla_put_u32(msg, nl80211.NL80211_ATTR_IFINDEX, if_index)
+        nla_put(msg_ssids, 1, 0, b'')
+        nla_put_nested(msg, nl80211.NL80211_ATTR_SCAN_SSIDS, msg_ssids)
+        nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, callback_trigger, results)
+        nl_cb_err(cb, NL_CB_CUSTOM, error_handler, err)
+        nl_cb_set(cb, NL_CB_ACK, NL_CB_CUSTOM, ack_handler, err)
+        nl_cb_set(cb, NL_CB_SEQ_CHECK, NL_CB_CUSTOM, no_seq_check, None)
+        36 == nl_send_auto(sk, msg)
+        while err.value > 0:
+            assert 0 == nl_recvmsgs(sk, cb)
+            assert 0 == err.value
+        while results.value < 0:
+            assert 0 == nl_recvmsgs(sk, cb)
+        assert 0 == nl_socket_drop_membership(sk, mcid)
+        assert 0 == results.value
+
+    def callback_dump(msg, _):
+        gnlh = genlmsghdr(nlmsg_data(nlmsg_hdr(msg)))
+        tb = {i: None for i in range(nl80211.NL80211_ATTR_MAX + 1)}
+        nla_parse(tb, nl80211.NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0), genlmsg_attrlen(gnlh, 0), None)
+        assert 4 == len([i for i in tb.values() if i])
+        return NL_SKIP
+
+    if_index_main = socket.if_nametoindex('wlan0')
+    sk_main = nl_socket_alloc()
+    genl_connect(sk_main)
+    driver_id_main = genl_ctrl_resolve(sk_main, b'nl80211')
+    log.clear()
+    assert 0 == do_scan_trigger(sk_main, if_index_main, driver_id_main)
+    msg_main = nlmsg_alloc()
+    genlmsg_put(msg_main, 0, 0, driver_id_main, 0, NLM_F_DUMP, nl80211.NL80211_CMD_GET_SCAN, 0)
+    nla_put_u32(msg_main, nl80211.NL80211_ATTR_IFINDEX, if_index_main)
+    nl_socket_modify_cb(sk_main, NL_CB_VALID, NL_CB_CUSTOM, callback_dump, None)
+    assert 28 == nl_send_auto(sk_main, msg_main)
+    assert 0 == nl_recvmsgs_default(sk_main)
+    assert all(callbacks_called.values())
+    nl_socket_free(sk_main)
 
     assert not log

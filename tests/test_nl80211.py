@@ -911,10 +911,10 @@ def test_cmd_trigger_scan(log):
     // 0 == nl_recvmsgs_default(sk)
     // nl_cache_mngt_unregister: Unregistered cache operations genl/family
     """
-    callbacks_called = dict(ack=False, trigger=False, error=False, seq=False)
+    callbacks_called = dict(ack=False, trigger=False, error_not_called=True, seq=False)
 
     def error_handler(_, err, arg):
-        callbacks_called['error'] = True
+        callbacks_called['error_not_called'] = False
         arg.value = err.error
         return NL_STOP
 
@@ -956,11 +956,12 @@ def test_cmd_trigger_scan(log):
         36 == nl_send_auto(sk, msg)
         while err.value > 0:
             assert 0 == nl_recvmsgs(sk, cb)
-            assert 0 == err.value
+        assert 0 == err.value
         while results.value < 0:
             assert 0 == nl_recvmsgs(sk, cb)
         assert 0 == nl_socket_drop_membership(sk, mcid)
         assert 0 == results.value
+        return results.value
 
     def callback_dump(msg, _):
         gnlh = genlmsghdr(nlmsg_data(nlmsg_hdr(msg)))

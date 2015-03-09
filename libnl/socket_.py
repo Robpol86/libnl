@@ -14,7 +14,7 @@ import os
 import socket
 import time
 
-from libnl.errno_ import NLE_BAD_SOCK
+from libnl.errno_ import NLE_BAD_SOCK, NLE_INVAL
 from libnl.error import nl_syserr2nlerr
 from libnl.handlers import NL_CB_DEFAULT, nl_cb_alloc, NL_CB_VERBOSE, NL_CB_DEBUG, nl_cb_set, nl_cb_err
 from libnl.linux_private.netlink import NETLINK_ADD_MEMBERSHIP, NETLINK_DROP_MEMBERSHIP
@@ -119,21 +119,30 @@ def nl_socket_add_memberships(sk, *group):
     """Join groups.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L417
 
-    Joins the specified groups using the modern socket option which is available since kernel version 2.6.14. It allows
-    joining an almost arbitrary number of groups without limitation. The list of groups has to be terminated by 0
-    (%NFNLGRP_NONE).
+    Joins the specified groups using the modern socket option. The list of groups has to be terminated by 0.
 
     Make sure to use the correct group definitions as the older bitmask definitions for nl_join_groups() are likely to
     still be present for backward compatibility reasons.
 
     Positional arguments:
-    sk -- AF_NETLINK socket.
-    group -- group identifier integer.
+    sk -- Netlink socket (nl_sock class instance).
+    group -- group identifier (integer).
 
     Returns:
     0 on success or a negative error code.
     """
-    sk.setsockopt(SOL_NETLINK, NETLINK_ADD_MEMBERSHIP, group)  # TODO group is now a list. /issues/3
+    if sk.s_fd == -1:
+        return -NLE_BAD_SOCK
+    for grp in group:
+        if not grp:
+            break
+        if grp < 0:
+            return -NLE_INVAL
+        try:
+            sk.socket_instance.setsockopt(SOL_NETLINK, NETLINK_ADD_MEMBERSHIP, grp)
+        except OSError as exc:
+            return -nl_syserr2nlerr(exc.errno)
+    return 0
 
 
 def nl_socket_add_membership(sk, group):
@@ -141,7 +150,7 @@ def nl_socket_add_membership(sk, group):
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L448
 
     Positional arguments:
-    sk -- nl_sock class instance.
+    sk -- Netlink socket (nl_sock class instance).
     group -- group identifier (integer).
 
     Returns:
@@ -154,18 +163,27 @@ def nl_socket_drop_memberships(sk, *group):
     """Leave groups.
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L465
 
-    Leaves the specified groups using the modern socket option which is available since kernel version 2.6.14. The list
-    of groups has to terminated by 0 (%NFNLGRP_NONE).
-
+    Leaves the specified groups using the modern socket option. The list of groups has to terminated by 0.
 
     Positional arguments:
-    sk -- AF_NETLINK socket.
-    group -- group identifier integer.
+    sk -- Netlink socket (nl_sock class instance).
+    group -- group identifier (integer).
 
     Returns:
     0 on success or a negative error code.
     """
-    sk.setsockopt(SOL_NETLINK, NETLINK_DROP_MEMBERSHIP, group)  # TODO group is now a list. /issues/3
+    if sk.s_fd == -1:
+        return -NLE_BAD_SOCK
+    for grp in group:
+        if not grp:
+            break
+        if grp < 0:
+            return -NLE_INVAL
+        try:
+            sk.socket_instance.setsockopt(SOL_NETLINK, NETLINK_DROP_MEMBERSHIP, grp)
+        except OSError as exc:
+            return -nl_syserr2nlerr(exc.errno)
+    return 0
 
 
 def nl_socket_drop_membership(sk, group):
@@ -173,7 +191,7 @@ def nl_socket_drop_membership(sk, group):
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L496
 
     Positional arguments:
-    sk -- nl_sock class instance.
+    sk -- Netlink socket (nl_sock class instance).
     group -- group identifier (integer).
 
     Returns:

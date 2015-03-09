@@ -18,7 +18,7 @@ build:
 
     - script:
         name: YAML - Test
-        code: tox
+        code: sudo tox
 
     - script:
         name: YAML - Coverage

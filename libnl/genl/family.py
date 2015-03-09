@@ -8,9 +8,9 @@ of the License.
 """
 
 from libnl.linux_private.genetlink import GENL_ID_GENERATE
-from libnl.list_ import nl_list_add_tail
+from libnl.list_ import nl_list_add_tail, nl_init_list_head, nl_list_for_each_entry_safe, nl_list_del, nl_list_head
 from libnl.netlink_private.object_api import nl_object_ops
-from libnl.netlink_private.types import genl_family, genl_family_grp
+from libnl.netlink_private.types import genl_family, genl_family_grp, genl_family_op
 from libnl.object import nl_object_alloc
 from libnl.types import NL_DUMP_DETAILS, NL_DUMP_LINE, NL_DUMP_STATS
 
@@ -20,6 +20,42 @@ FAMILY_ATTR_VERSION = 0x04
 FAMILY_ATTR_HDRSIZE = 0x08
 FAMILY_ATTR_MAXATTR = 0x10
 FAMILY_ATTR_OPS = 0x20
+
+
+def family_constructor(c):
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/family.c#L37
+
+    Positional arguments:
+    c -- nl_object-derived class instance.
+    """
+    family = c
+    if not hasattr(family, 'gf_ops'):
+        setattr(family, 'gf_ops', nl_list_head(container_of=family))
+    if not hasattr(family, 'gf_mc_grps'):
+        setattr(family, 'gf_mc_grps', nl_list_head(container_of=family))
+    nl_init_list_head(family.gf_ops)
+    nl_init_list_head(family.gf_mc_grps)
+
+
+def family_free_data(c):
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/family.c#L45
+
+    Positional arguments:
+    c -- nl_object-derived class instance.
+    """
+    family = c
+    if not hasattr(family, 'gf_ops'):
+        setattr(family, 'gf_ops', nl_list_head(container_of=family))
+    if not hasattr(family, 'gf_mc_grps'):
+        setattr(family, 'gf_mc_grps', nl_list_head(container_of=family))
+    ops = tmp = genl_family_op()
+    grp = t_grp = genl_family_grp()
+    if family is None:
+        return
+    for ops in nl_list_for_each_entry_safe(ops, tmp, family.gf_ops, 'o_list'):
+        nl_list_del(ops.o_list)
+    for grp in nl_list_for_each_entry_safe(grp, t_grp, family.gf_mc_grps, 'list_'):
+        nl_list_del(grp.list_)
 
 
 def family_clone(dst, src):
@@ -146,8 +182,8 @@ def genl_family_add_grp(family, id_, name):
 genl_family_ops = nl_object_ops(  # https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/family.c#L386
     oo_name='genl/family',
     oo_size=genl_family.SIZEOF,
-    oo_constructor=None,
-    oo_free_data=None,
+    oo_constructor=family_constructor,
+    oo_free_data=family_free_data,
     oo_clone=family_clone,
     oo_dump={NL_DUMP_LINE: family_dump_line, NL_DUMP_DETAILS: family_dump_details, NL_DUMP_STATS: family_dump_stats},
     oo_compare=family_compare,

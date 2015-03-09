@@ -44,8 +44,6 @@ def nl_list_add_tail(obj, head):
     obj -- nl_list_head class instance.
     head -- nl_list_head class instance.
     """
-    if head.prev is None:
-        head.prev = nl_list_head()
     _nl_list_add(obj, head.prev, head)
 
 
@@ -57,6 +55,16 @@ def nl_list_add_head(obj, head):
     head -- nl_list_head class instance.
     """
     _nl_list_add(obj, head, head.next_)
+
+
+def nl_list_del(obj):
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/list.h#L49
+
+    Positional arguments:
+    obj -- nl_list_head class instance.
+    """
+    obj.next.prev = obj.prev
+    obj.prev.next_ = obj.next_
 
 
 def nl_list_entry(ptr, type_, member):
@@ -79,11 +87,34 @@ def nl_list_for_each_entry(pos, head, member):
     Returns:
     Generator yielding a class instances.
     """
+    pos = nl_list_entry(head.next_, type(pos), member)
     while True:
-        pos = nl_list_entry(head.next_, type(pos), member)
         yield pos
         if getattr(pos, member) != head:
             pos = nl_list_entry(getattr(pos, member).next_, type(pos), member)
+            continue
+        break
+
+
+def nl_list_for_each_entry_safe(pos, n, head, member):
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/list.h#L84
+
+    Positional arguments:
+    pos -- class instance holding an nl_list_head instance.
+    n -- class instance holding an nl_list_head instance.
+    head -- nl_list_head class instance.
+    member -- attribute (string).
+
+    Returns:
+    Generator yielding a class instances.
+    """
+    pos = nl_list_entry(head.next_, type(pos), member)
+    n = nl_list_entry(pos.member.next_, type(pos), member)
+    while True:
+        yield pos
+        if getattr(pos, member) != head:
+            pos = n
+            n = nl_list_entry(n.member.next_, type(n), member)
             continue
         break
 

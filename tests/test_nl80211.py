@@ -351,7 +351,7 @@ def test_cmd_get_interface(log, wlan0_info):
     assert not log
 
 
-@pytest.mark.skipif('not os.path.exists("/sys/class/net/wlan0") or os.getuid()')
+@pytest.mark.skipif('not os.path.exists("/sys/class/net/wlan0") or os.getuid() != 0')
 @pytest.mark.usefixtures('nlcb_debug')
 def test_cmd_trigger_scan(log):
     """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && sudo NLDBG=4 NLCB=debug ./a.out

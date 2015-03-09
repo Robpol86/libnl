@@ -126,6 +126,15 @@ class nl_msg(object):
         return answer
 
 
+class genl_family_op(object):
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L753"""
+
+    def __init__(self, o_id=0, o_flags=0, o_list=None):
+        self.o_id = o_id
+        self.o_flags = o_flags
+        self.o_list = o_list
+
+
 class genl_family_grp(object):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L761"""
 
@@ -159,3 +168,7 @@ class genl_family(NLHDR_COMMON):
             self.ce_msgtype = nlo.ce_msgtype
             self.ce_flags = nlo.ce_flags
             self.ce_mask = nlo.ce_mask
+            self.gf_ops = nlo.gf_ops
+            self.gf_ops.container_of = self
+            self.gf_mc_grps = nlo.gf_mc_grps
+            self.gf_mc_grps.container_of = self

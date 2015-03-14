@@ -35,7 +35,7 @@ import socket
 import sys
 
 from docopt import docopt
-from libnl import nl80211
+from libnl.nl80211 import nl80211
 from libnl.attr import nla_data, nla_get_string, nla_get_u32, nla_parse, nla_put_u32
 from libnl.error import errmsg
 from libnl.genl.ctrl import genl_ctrl_resolve

@@ -263,13 +263,13 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
         log, True)
     assert match('nla_put: msg 0x[a-f0-9]+: attr <0x[a-f0-9]+> 2: Wrote 8 bytes at offset \+4', log, True)
 
-    assert match('dump_hex:     20 00 00 00 10 00 05 00 .. .. .. 54 .. .. 00 00  ..........T....', log, True)
+    assert match('dump_hex:     20 00 00 00 10 00 05 00 .. .. .. .. .. .. 00 00  ...............', log, True)
     assert match('dump_hex:     03 01 00 00 0c 00 02 00 6e 6c 38 30 32 31 31 00 ........nl80211.', log)
 
     assert match('nl_sendmsg: sent 32 bytes', log)
     assert match('recvmsgs: Attempting to read from 0x[a-f0-9]+', log, True)
 
-    assert match('dump_hex:     .. .. 00 00 10 00 00 00 .. .. .. 54 .. .. 00 00 ...........T....', log, True)
+    assert match('dump_hex:     .. .. 00 00 10 00 00 00 .. .. .. .. .. .. 00 00 ................', log, True)
     assert match('dump_hex:     01 02 00 00 0c 00 02 00 6e 6c 38 30 32 31 31 00 ........nl80211.', log)
     assert match('dump_hex:     06 00 01 00 .. 00 00 00 08 00 03 00 01 00 00 00 ................', log, True)
     assert match('dump_hex:     08 00 04 00 00 00 00 00 08 00 05 00 .. 00 00 00 ................', log, True)
@@ -283,7 +283,7 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
     assert match('recvmsgs: recvmsgs\(0x[a-f0-9]+\): Processing valid message...', log, True)
     assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message, maxlen=\d{3,}', log, True)
 
-    assert match('dump_hex:     .. .. 00 00 10 00 00 00 .. .. .. 54 .. .. 00 00 ...........T....', log, True)
+    assert match('dump_hex:     .. .. 00 00 10 00 00 00 .. .. .. .. .. .. 00 00 ................', log, True)
     assert match('dump_hex:     01 02 00 00 0c 00 02 00 6e 6c 38 30 32 31 31 00 ........nl80211.', log)
     assert match('dump_hex:     06 00 01 00 .. 00 00 00 08 00 03 00 01 00 00 00 ................', log, True)
     assert match('dump_hex:     08 00 04 00 00 00 00 00 08 00 05 00 .. 00 00 00 ................', log, True)

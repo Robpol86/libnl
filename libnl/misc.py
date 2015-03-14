@@ -4,6 +4,7 @@ import ctypes
 
 SIZEOF_INT = ctypes.sizeof(ctypes.c_int)
 SIZEOF_POINTER = ctypes.sizeof(ctypes.c_void_p)  # Platform dependant.
+SIZEOF_S8 = ctypes.sizeof(ctypes.c_int8)
 SIZEOF_U16 = ctypes.sizeof(ctypes.c_uint16)
 SIZEOF_U32 = ctypes.sizeof(ctypes.c_uint32)
 SIZEOF_U64 = ctypes.sizeof(ctypes.c_uint64)

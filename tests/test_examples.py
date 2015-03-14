@@ -18,13 +18,17 @@ def test_list_network_interfaces(ifacesi):
 
 
 @pytest.mark.skipif('not os.path.exists("/sys/class/net/wlan0")')
-def test_show_wifi_interface():
+def test_show_wifi_interface_all():
     path = os.path.join(os.path.dirname(__file__), '..', 'example_show_wifi_interface.py')
     stdout = subprocess.check_output([sys.executable, path, 'print'])
     if hasattr(stdout, 'decode'):
         stdout = stdout.decode('ascii')
     assert 'NL80211_ATTR_MAC' in stdout
 
+
+@pytest.mark.skipif('not os.path.exists("/sys/class/net/wlan0")')
+def test_show_wifi_interface_wlan0():
+    path = os.path.join(os.path.dirname(__file__), '..', 'example_show_wifi_interface.py')
     stdout = subprocess.check_output([sys.executable, path, 'print', 'wlan0'])
     if hasattr(stdout, 'decode'):
         stdout = stdout.decode('ascii')

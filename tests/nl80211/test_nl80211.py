@@ -7,16 +7,14 @@ import pytest
 from libnl.attr import nla_put_u32, nla_get_u32, nla_parse, nla_get_string, nla_data, nla_put, nla_put_nested
 from libnl.genl.ctrl import genl_ctrl_resolve, genl_ctrl_resolve_grp
 from libnl.genl.genl import genl_connect, genlmsg_put, genlmsg_attrdata, genlmsg_attrlen
-from libnl.handlers import (NL_CB_VALID, NL_CB_CUSTOM, NL_SKIP, nl_cb_alloc, NL_CB_DEFAULT, nl_cb_set, nl_cb_err,
-                            NL_CB_ACK, NL_CB_SEQ_CHECK, NL_STOP, NL_OK)
 from libnl.linux_private.genetlink import genlmsghdr
 from libnl.linux_private.netlink import NLM_F_DUMP
 from libnl.msg import nlmsg_alloc, nlmsg_hdr
 from libnl.msg_ import nlmsg_data
 from libnl.nl import nl_send_auto, nl_recvmsgs_default, nl_wait_for_ack, nl_recvmsgs
-from libnl import nl80211
-from libnl.socket_ import (nl_socket_alloc, nl_socket_modify_cb, nl_socket_free, nl_socket_add_membership,
-                           nl_socket_drop_membership)
+from libnl.nl80211 import nl80211
+import libnl.handlers
+import libnl.socket_
 
 
 def match(expected, log, is_regex=False):
@@ -261,20 +259,20 @@ def test_cmd_get_interface(log, wlan0_info):
         assert wlan0_info['mac'] == ':'.join(format(x, '02x') for x in nla_data(tb[nl80211.NL80211_ATTR_MAC])[:6])
         assert wlan0_info['ifindex'] == nla_get_u32(tb[nl80211.NL80211_ATTR_IFINDEX])
         assert 2 == nla_get_u32(tb[nl80211.NL80211_ATTR_IFTYPE])
-        return NL_SKIP
+        return libnl.handlers.NL_SKIP
     if_index = socket.if_nametoindex('wlan0')
-    sk = nl_socket_alloc()
+    sk = libnl.socket_.nl_socket_alloc()
     msg_main = nlmsg_alloc()
     genl_connect(sk)
     driver_id = genl_ctrl_resolve(sk, b'nl80211')
     log.clear()
-    nl_socket_modify_cb(sk, NL_CB_VALID, NL_CB_CUSTOM, callback, None)
+    libnl.socket_.nl_socket_modify_cb(sk, libnl.handlers.NL_CB_VALID, libnl.handlers.NL_CB_CUSTOM, callback, None)
     genlmsg_put(msg_main, 0, 0, driver_id, 0, 0, nl80211.NL80211_CMD_GET_INTERFACE, 0)
     nla_put_u32(msg_main, nl80211.NL80211_ATTR_IFINDEX, if_index)
     assert 28 == nl_send_auto(sk, msg_main)
     assert 0 == nl_recvmsgs_default(sk)
     nl_wait_for_ack(sk)
-    nl_socket_free(sk)
+    libnl.socket_.nl_socket_free(sk)
 
     assert match('nlmsg_put: msg 0x[a-f0-9]+: Added netlink header type=\d{2}, flags=0, pid=0, seq=0', log, True)
     assert match('nlmsg_reserve: msg 0x[a-f0-9]+: Reserved 4 \(4\) bytes, pad=4, nlmsg_len=20', log, True)
@@ -916,16 +914,16 @@ def test_cmd_trigger_scan(log):
     def error_handler(_, err, arg):
         callbacks_called['error_not_called'] = False
         arg.value = err.error
-        return NL_STOP
+        return libnl.handlers.NL_STOP
 
     def ack_handler(_, arg):
         callbacks_called['ack'] = True
         arg.value = 0
-        return NL_STOP
+        return libnl.handlers.NL_STOP
 
     def no_seq_check(*_):
         callbacks_called['seq'] = True
-        return NL_OK
+        return libnl.handlers.NL_OK
 
     def callback_trigger(msg, arg):
         callbacks_called['trigger'] = True
@@ -934,32 +932,32 @@ def test_cmd_trigger_scan(log):
             arg.value = 1
         elif gnlh.cmd == nl80211.NL80211_CMD_NEW_SCAN_RESULTS:
             arg.value = 0
-        return NL_SKIP
+        return libnl.handlers.NL_SKIP
 
     def do_scan_trigger(sk, if_index, driver_id):
         err = ctypes.c_int(1)
         results = ctypes.c_int(-1)
         mcid = genl_ctrl_resolve_grp(sk, b'nl80211', b'scan')
         assert 0 < mcid
-        assert 0 == nl_socket_add_membership(sk, mcid)
+        assert 0 == libnl.socket_.nl_socket_add_membership(sk, mcid)
         msg = nlmsg_alloc()
         msg_ssids = nlmsg_alloc()
-        cb = nl_cb_alloc(NL_CB_DEFAULT)
+        cb = libnl.handlers.nl_cb_alloc(libnl.handlers.NL_CB_DEFAULT)
         genlmsg_put(msg, 0, 0, driver_id, 0, 0, nl80211.NL80211_CMD_TRIGGER_SCAN, 0)
         nla_put_u32(msg, nl80211.NL80211_ATTR_IFINDEX, if_index)
         nla_put(msg_ssids, 1, 0, b'')
         nla_put_nested(msg, nl80211.NL80211_ATTR_SCAN_SSIDS, msg_ssids)
-        nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, callback_trigger, results)
-        nl_cb_err(cb, NL_CB_CUSTOM, error_handler, err)
-        nl_cb_set(cb, NL_CB_ACK, NL_CB_CUSTOM, ack_handler, err)
-        nl_cb_set(cb, NL_CB_SEQ_CHECK, NL_CB_CUSTOM, no_seq_check, None)
+        libnl.handlers.nl_cb_set(cb, libnl.handlers.NL_CB_VALID, libnl.handlers.NL_CB_CUSTOM, callback_trigger, results)
+        libnl.handlers.nl_cb_err(cb, libnl.handlers.NL_CB_CUSTOM, error_handler, err)
+        libnl.handlers.nl_cb_set(cb, libnl.handlers.NL_CB_ACK, libnl.handlers.NL_CB_CUSTOM, ack_handler, err)
+        libnl.handlers.nl_cb_set(cb, libnl.handlers.NL_CB_SEQ_CHECK, libnl.handlers.NL_CB_CUSTOM, no_seq_check, None)
         36 == nl_send_auto(sk, msg)
         while err.value > 0:
             assert 0 == nl_recvmsgs(sk, cb)
         assert 0 == err.value
         while results.value < 0:
             assert 0 == nl_recvmsgs(sk, cb)
-        assert 0 == nl_socket_drop_membership(sk, mcid)
+        assert 0 == libnl.socket_.nl_socket_drop_membership(sk, mcid)
         assert 0 == results.value
         return results.value
 
@@ -968,10 +966,10 @@ def test_cmd_trigger_scan(log):
         tb = {i: None for i in range(nl80211.NL80211_ATTR_MAX + 1)}
         nla_parse(tb, nl80211.NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0), genlmsg_attrlen(gnlh, 0), None)
         assert 4 == len([i for i in tb.values() if i])
-        return NL_SKIP
+        return libnl.handlers.NL_SKIP
 
     if_index_main = socket.if_nametoindex('wlan0')
-    sk_main = nl_socket_alloc()
+    sk_main = libnl.socket_.nl_socket_alloc()
     genl_connect(sk_main)
     driver_id_main = genl_ctrl_resolve(sk_main, b'nl80211')
     log.clear()
@@ -979,11 +977,12 @@ def test_cmd_trigger_scan(log):
     msg_main = nlmsg_alloc()
     genlmsg_put(msg_main, 0, 0, driver_id_main, 0, NLM_F_DUMP, nl80211.NL80211_CMD_GET_SCAN, 0)
     nla_put_u32(msg_main, nl80211.NL80211_ATTR_IFINDEX, if_index_main)
-    nl_socket_modify_cb(sk_main, NL_CB_VALID, NL_CB_CUSTOM, callback_dump, None)
+    libnl.socket_.nl_socket_modify_cb(sk_main, libnl.handlers.NL_CB_VALID, libnl.handlers.NL_CB_CUSTOM, callback_dump,
+                                      None)
     assert 28 == nl_send_auto(sk_main, msg_main)
     assert 0 == nl_recvmsgs_default(sk_main)
     assert all(callbacks_called.values())
-    nl_socket_free(sk_main)
+    libnl.socket_.nl_socket_free(sk_main)
 
     assert match('nl_object_alloc: Allocated new object 0x[a-f0-9]+', log, True)
     assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message, maxlen=4096', log, True)

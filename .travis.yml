@@ -8,5 +8,7 @@ install:
 
 script:
   - python setup.py test
+  - python setup.py sdist
+  - pip install ./dist/*.tar.gz
 
 after_success: codecov

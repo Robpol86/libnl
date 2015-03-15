@@ -41,7 +41,7 @@ def test_scan_access_points_no_sudo():
     stdout = subprocess.check_output([sys.executable, path, '-n', 'wlan0'])
     if hasattr(stdout, 'decode'):
         stdout = stdout.decode('ascii')
-    assert 'results for previous scan' in stdout
+    assert 'results of previous scan' in stdout
 
 
 @pytest.mark.skipif('not os.path.exists("/sys/class/net/wlan0") or os.getuid() != 0')

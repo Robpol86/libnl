@@ -33,3 +33,21 @@ def test_show_wifi_interface_wlan0():
     if hasattr(stdout, 'decode'):
         stdout = stdout.decode('ascii')
     assert 'NL80211_ATTR_MAC' in stdout
+
+
+@pytest.mark.skipif('not os.path.exists("/sys/class/net/wlan0")')
+def test_scan_access_points_no_sudo():
+    path = os.path.join(os.path.dirname(__file__), '..', 'example_scan_access_points.py')
+    stdout = subprocess.check_output([sys.executable, path, '-n', 'wlan0'])
+    if hasattr(stdout, 'decode'):
+        stdout = stdout.decode('ascii')
+    assert 'results for previous scan' in stdout
+
+
+@pytest.mark.skipif('not os.path.exists("/sys/class/net/wlan0") or os.getuid() != 0')
+def test_scan_access_points():
+    path = os.path.join(os.path.dirname(__file__), '..', 'example_scan_access_points.py')
+    stdout = subprocess.check_output([sys.executable, path, 'wlan0'])
+    if hasattr(stdout, 'decode'):
+        stdout = stdout.decode('ascii')
+    assert 'Scanning for access points' in stdout

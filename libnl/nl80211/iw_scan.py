@@ -1,4 +1,4 @@
-"""http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n441
+"""http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17
 
 Copyright (c) 2015		Robert Pooley
 Copyright (c) 2007, 2008	Johannes Berg
@@ -20,11 +20,11 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 """
 
 import ctypes
-import unicodedata
 
 from libnl.attr import nla_policy, NLA_U32, NLA_U64, NLA_U16, NLA_U8
 from libnl.misc import SIZEOF_U8, SIZEOF_S8
 from libnl.nl80211 import nl80211
+from libnl.nl80211.iw_util import get_ssid, get_ht_capability, get_ht_mcs, ampdu_space
 
 WLAN_CAPABILITY_ESS = 1 << 0
 WLAN_CAPABILITY_IBSS = 1 << 1
@@ -63,6 +63,11 @@ ms_oui = b'\x00\x50\xf2'
 ieee80211_oui = b'\x00\x0f\xac'
 wfa_oui = b'\x50\x6f\x9a'
 
+country_env_str = lambda e: {'I': 'Indoor only', 'O': 'Outdoor only', ' ': 'Indoor/Outdoor'}.get(e, 'bogus')
+wifi_wps_dev_passwd_id = lambda e: {0: 'Default (PIN)', 1: 'User-specified', 2: 'Machine-specified', 3: 'Rekey',
+                                    4: 'PushButton', 5: 'Registrar-specified'}.get(e, '??')
+ht_secondary_offset = ('no secondary', 'above', '[reserved!]', 'below')
+
 
 class ieee80211_country_ie_triplet(object):
     """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n60"""
@@ -98,15 +103,14 @@ def get_supprates(_, data):
     return answer
 
 
-country_env_str = lambda e: {'I': 'Indoor only', 'O': 'Outdoor only', ' ': 'Indoor/Outdoor'}.get(e, 'bogus')
-
-
 def get_country(_, data):
     """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n267
 
     Positional arguments:
-    type_ -- corresponding `ieprinters` dictionary key for the instance.
     data -- bytearray data to read.
+
+    Returns:
+    Dict.
     """
     answers = {'Environment': country_env_str(chr(data[2]))}
     data = data[3:]
@@ -130,49 +134,14 @@ def get_country(_, data):
     return answers
 
 
-def get_powerconstraint(type_, data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n312
-
-    Positional arguments:
-    type_ -- corresponding `ieprinters` dictionary key for the instance.
-    data -- bytearray data to read.
-    """
-    raise NotImplementedError
-
-
-def get_ssid(_, data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/util.c?id=v3.17#n313
-    Positional arguments:
-    data -- bytearray data to read.
-    """
-    converted = list()
-    for i in range(len(data)):
-        c = chr(data[i])
-        if unicodedata.category(c) != 'Cc' and c not in (' ', '\\'):
-            converted.append(c)
-        elif c == ' ' and i not in (0, len(data)):
-            converted.append(' ')
-        else:
-            converted.append('\\{0:02x}'.format(data[i]))
-    return ''.join(converted)
-
-
-def get_tpcreport(type_, data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n317
-
-    Positional arguments:
-    type_ -- corresponding `ieprinters` dictionary key for the instance.
-    data -- bytearray data to read.
-    """
-    raise NotImplementedError
-
-
 def get_erp(_, data):
     """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n323
 
     Positional arguments:
-    type_ -- corresponding `ieprinters` dictionary key for the instance.
     data -- bytearray data to read.
+
+    Returns:
+    String.
     """
     if data[0] == 0x00:
         return '<no flags>'
@@ -200,7 +169,7 @@ def get_cipher(data):
         legend.update({6: 'AES-128-CMAC', 8: 'GCMP', })
     elif ms_oui != bytes(data[:3]):
         key = None
-    return legend.get(key, '{0:.02x}-{1:.02x}-{2:.02x}:{3}'.format(data[0], data[1], data[2], data[3]))
+    return legend.get(key, '{0:02x}-{1:02x}-{2:02x}:{3}'.format(data[0], data[1], data[2], data[3]))
 
 
 def get_auth(data):
@@ -218,11 +187,20 @@ def get_auth(data):
         legend.update({3: 'FT/IEEE 802.1X', 4: 'FT/PSK', 5: 'IEEE 802.1X/SHA-256', 6: 'PSK/SHA-256', 7: 'TDLS/TPK', })
     elif ms_oui != bytes(data[:3]):
         key = None
-    return legend.get(key, '{0:.02x}-{1:.02x}-{2:.02x}:{3}'.format(data[0], data[1], data[2], data[3]))
+    return legend.get(key, '{0:02x}-{1:02x}-{2:02x}:{3}'.format(data[0], data[1], data[2], data[3]))
 
 
 def get_rsn_ie(defcipher, defauth, data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n441"""
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n441
+
+    Positional arguments:
+    defcipher -- default cipher if not in data (string).
+    defauth -- default authentication suites if not in data (string).
+    data -- bytearray data to read.
+
+    Returns:
+    Dict.
+    """
     answers = dict()
     answers['version'] = data[0] + (data[1] << 8)
     data = data[2:]
@@ -298,14 +276,22 @@ def get_rsn_ie(defcipher, defauth, data):
     return answers
 
 
-def get_ht_capa(type_, data):
+def get_ht_capa(_, data):
     """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n602
 
     Positional arguments:
-    type_ -- corresponding `ieprinters` dictionary key for the instance.
     data -- bytearray data to read.
+
+    Returns:
+    Dict.
     """
-    raise NotImplementedError
+    answers = {
+        'Capabilities': get_ht_capability(data[0] | (data[1] << 8)),
+        'Minimum RX AMPDU time spacing': ampdu_space.get((data[2] >> 2) & 7, 'BUG (spacing more than 3 bits!)'),
+        'Maximum RX AMPDU length': {0: 8191, 1: 16383, 2: 32767, 3: 65535}.get(data[2] & 3, 0),
+    }
+    answers.update(get_ht_mcs(data[3:]))
+    return answers
 
 
 def get_interworking(type_, data):
@@ -318,14 +304,29 @@ def get_interworking(type_, data):
     raise NotImplementedError
 
 
-def get_11u_advert(type_, data):
+def get_11u_advert(_, data):
     """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n676
 
     Positional arguments:
-    type_ -- corresponding `ieprinters` dictionary key for the instance.
     data -- bytearray data to read.
+
+    Returns:
+    Dict.
     """
-    raise NotImplementedError
+    answers = dict()
+    idx = 0
+    while idx < len(data) - 1:
+        qri = data[idx]
+        proto_id = data[idx + 1]
+        answers['Query Response Info'] = qri
+        answers['Query Response Length Limit'] = qri & 0x7f
+        if qri & (1 << 7):
+            answers['PAME-BI'] = True
+        answers['proto_id'] = {0: 'ANQP', 1: 'MIH Information Service', 3: 'Emergency Alert System (EAS)',
+                               2: 'MIH Command and Event Services Capability Discovery',
+                               221: 'Vendor Specific'}.get(proto_id, 'Reserved: {0}'.format(proto_id))
+        idx += 2
+    return answers
 
 
 def get_11u_rcon(type_, data):
@@ -338,32 +339,112 @@ def get_11u_rcon(type_, data):
     raise NotImplementedError
 
 
-def get_ht_op(type_, data):
+def get_ht_op(_, data):
     """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n766
 
     Positional arguments:
-    type_ -- corresponding `ieprinters` dictionary key for the instance.
     data -- bytearray data to read.
+
+    Returns:
+    Dict.
     """
-    raise NotImplementedError
+    protection = ('no', 'nonmember', 20, 'non-HT mixed')
+    sta_chan_width = (20, 'any')
+    answers = {
+        'primary channel': data[0],
+        'secondary channel offset': ht_secondary_offset[data[1] & 0x3],
+        'STA channel width': sta_chan_width[(data[1] & 0x4) >> 2],
+        'RIFS': (data[1] & 0x8) >> 3,
+        'HT protection': protection[data[2] & 0x3],
+        'non-GF present': (data[2] & 0x4) >> 2,
+        'OBSS non-GF present': (data[2] & 0x10) >> 4,
+        'dual beacon': (data[4] & 0x40) >> 6,
+        'dual CTS protection': (data[4] & 0x80) >> 7,
+        'STBC beacon': data[5] & 0x1,
+        'L-SIG TXOP Prot': (data[5] & 0x2) >> 1,
+        'PCO active': (data[5] & 0x4) >> 2,
+        'PCO phase': (data[5] & 0x8) >> 3,
+    }
+    return answers
 
 
-def get_capabilities(type_, data):
+CAPA = {
+    0: 'HT Information Exchange Supported',
+    1: 'reserved (On-demand Beacon)',
+    2: 'Extended Channel Switching',
+    3: 'reserved (Wave Indication)',
+    4: 'PSMP Capability',
+    5: 'reserved (Service Interval Granularity)',
+    6: 'S-PSMP Capability',
+    7: 'Event',
+    8: 'Diagnostics',
+    9: 'Multicast Diagnostics',
+    10: 'Location Tracking',
+    11: 'FMS',
+    12: 'Proxy ARP Service',
+    13: 'Collocated Interference Reporting',
+    14: 'Civic Location',
+    15: 'Geospatial Location',
+    16: 'TFS',
+    17: 'WNM-Sleep Mode',
+    18: 'TIM Broadcast',
+    19: 'BSS Transition',
+    20: 'QoS Traffic Capability',
+    21: 'AC Station Count',
+    22: 'Multiple BSSID',
+    23: 'Timing Measurement',
+    24: 'Channel Usage',
+    25: 'SSID List',
+    26: 'DMS',
+    27: 'UTC TSF Offset',
+    28: 'TDLS Peer U-APSD Buffer STA Support',
+    29: 'TDLS Peer PSM Support',
+    30: 'TDLS channel switching',
+    31: 'Interworking',
+    32: 'QoS Map',
+    33: 'EBR',
+    34: 'SSPN Interface',
+    35: 'Reserved',
+    36: 'MSGCF Capability',
+    37: 'TDLS Support',
+    38: 'TDLS Prohibited',
+    39: 'TDLS Channel Switching Prohibited',
+    40: 'Reject Unadmitted Frame',
+    44: 'Identifier Location',
+    45: 'U-APSD Coexistence',
+    46: 'WNM-Notification',
+    47: 'Reserved',
+    48: 'UTF-8 SSID',
+}
+
+
+def get_capabilities(_, data):
     """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n796
 
     Positional arguments:
-    type_ -- corresponding `ieprinters` dictionary key for the instance.
     data -- bytearray data to read.
+
+    Returns:
+    List.
     """
-    raise NotImplementedError
+    answers = list()
+    for i in range(len(data)):
+        base = i * 8
+        for bit in range(8):
+            if not data[i] & (1 << bit):
+                continue
+            answers.append(CAPA.get(bit + base, bit))
+    return answers
 
 
 def get_tim(_, data):
     """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n874
 
     Positional arguments:
-    type_ -- corresponding `ieprinters` dictionary key for the instance.
     data -- bytearray data to read.
+
+    Returns:
+    Dict.
     """
     answers = {
         'DTIM Count': data[0],
@@ -396,14 +477,25 @@ def get_vht_oper(type_, data):
     raise NotImplementedError
 
 
-def get_obss_scan_params(type_, data):
+def get_obss_scan_params(_, data):
     """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n914
 
     Positional arguments:
-    type_ -- corresponding `ieprinters` dictionary key for the instance.
     data -- bytearray data to read.
+
+    Returns:
+    Dict.
     """
-    raise NotImplementedError
+    answers = {
+        'passive dwell': (data[1] << 8) | data[0],
+        'active dwell': (data[3] << 8) | data[2],
+        'channel width trigger scan interval': (data[5] << 8) | data[4],
+        'scan passive total per channel': (data[7] << 8) | data[6],
+        'scan active total per channel': (data[9] << 8) | data[8],
+        'BSS width channel transition delay factor': (data[11] << 8) | data[10],
+        'OBSS Scan Activity Threshold': ((data[13] << 8) | data[12]) / 100.0
+    }
+    return answers
 
 
 def get_secchan_offs(type_, data):
@@ -416,14 +508,21 @@ def get_secchan_offs(type_, data):
     raise NotImplementedError
 
 
-def get_bss_load(type_, data):
+def get_bss_load(_, data):
     """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n935
 
     Positional arguments:
-    type_ -- corresponding `ieprinters` dictionary key for the instance.
     data -- bytearray data to read.
+
+    Returns:
+    Dict.
     """
-    raise NotImplementedError
+    answers = {
+        'station count': (data[1] << 8) | data[0],
+        'channel utilisation': data[2] / 255.0,
+        'available admission capacity': (data[4] << 8) | data[3],
+    }
+    return answers
 
 
 def get_mesh_conf(type_, data):
@@ -483,8 +582,8 @@ ieprinters = {  # http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/
     6: ie_print('IBSS ATIM window', lambda _, d: '{0} TUs'.format((d[1] << 8) + d[0]), 2, 2, 1),
     7: ie_print('Country', get_country, 3, 255, 1),
     11: ie_print('BSS Load', get_bss_load, 5, 5, 1),
-    32: ie_print('Power constraint', get_powerconstraint, 1, 1, 1),
-    35: ie_print('TPC report', get_tpcreport, 2, 2, 1),
+    32: ie_print('Power constraint', lambda _, d: '{0} dB'.format(d[0]), 1, 1, 1),
+    35: ie_print('TPC report', lambda _, d: 'TX power: {0} dBm'.format(d[0]), 2, 2, 1),
     42: ie_print('ERP', get_erp, 1, 255, 1),
     45: ie_print('HT capabilities', get_ht_capa, 26, 26, 1),
     47: ie_print('ERP D4.0', get_erp, 1, 255, 1),
@@ -504,24 +603,134 @@ ieprinters = {  # http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/
 }
 
 
-def get_wifi_wmm(type_, data):
+def get_wifi_wmm_param(data):
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n1046
+
+    Positional arguments:
+    data -- bytearray data to read.
+
+    Returns:
+    Dict.
+    """
+    answers = dict()
+    aci_tbl = ('BE', 'BK', 'VI', 'VO')
+    if data[0] & 0x80:
+        answers['u-APSD'] = True
+    data = data[2:]
+
+    for i in range(4):
+        key = aci_tbl[(data[0] >> 5) & 3]
+        value = dict()
+        if data[0] & 0x10:
+            value['acm'] = True
+        value['CW'] = ((1 << (data[1] & 0xf)) - 1, (1 << (data[1] >> 4)) - 1)
+        value['AIFSN'] = data[0] & 0xf
+        if data[2] | data[3]:
+            value['TXOP'] = (data[2] + (data[3] << 8)) * 32
+        answers[key] = value
+        data = data[4:]
+
+    return {'Parameter version 1': answers}
+
+
+def get_wifi_wmm(_, data):
     """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n1088
 
     Positional arguments:
-    type_ -- corresponding `ieprinters` dictionary key for the instance.
     data -- bytearray data to read.
+
+    Returns:
+    Dict.
     """
-    raise NotImplementedError
+    answers = dict()
+    if data[0] == 0x01:
+        if len(data) < 20:
+            key = 'invalid'
+        elif data[1] != 1:
+            key = 'Parameter: not version 1'
+        else:
+            answers.update(get_wifi_wmm_param(data[2:]))
+            return answers
+    elif data[0] == 0x00:
+        key = 'information'
+    else:
+        key = 'type {0}'.format(data[0])
+    answers[key] = ' '.join(format(x, '02x') for x in data)
+    return answers
 
 
-def get_wifi_wps(type_, data):
+def get_wifi_wps(_, data):
     """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n1130
 
     Positional arguments:
-    type_ -- corresponding `ieprinters` dictionary key for the instance.
     data -- bytearray data to read.
+
+    Returns:
+    Dict.
     """
-    raise NotImplementedError
+    answers = dict()
+    while len(data) >= 4:
+        subtype = (data[0] << 8) + data[1]
+        sublen = (data[2] << 8) + data[3]
+        if sublen > len(data):
+            break
+        elif subtype == 0x104a:
+            answers['Version'] = data[4] >> 4, data[4] & 0xF
+        elif subtype == 0x1011:
+            answers['Device name'] = data[4:sublen + 4]
+        elif subtype == 0x1012:
+            if sublen != 2:
+                answers['Device Password ID'] = 'invalid length %d'.format(sublen)
+            else:
+                id_ = data[4] << 8 | data[5]
+                answers['Device Password ID'] = (id_, wifi_wps_dev_passwd_id(id_))
+        elif subtype == 0x1021:
+            answers['Manufacturer'] = data[4:sublen + 4]
+        elif subtype == 0x1023:
+            answers['Model'] = data[4:sublen + 4]
+        elif subtype == 0x1024:
+            answers['Model Number'] = data[4:sublen + 4]
+        elif subtype == 0x103b:
+            val = data[4]
+            answers['Response Type'] = (val, 'AP' if val == 3 else '')
+        elif subtype == 0x103c:
+            answers['RF Bands'] = data[4]
+        elif subtype == 0x1041:
+            answers['Selected Registrar'] = data[4]
+        elif subtype == 0x1042:
+            answers['Serial Number'] = data[4:sublen + 4]
+        elif subtype == 0x1044:
+            val = data[4]
+            answers['Wi-Fi Protected Setup State'] = (val, {1: 'Unconfigured', 2: 'Configured'}.get(val, ''))
+        elif subtype == 0x1047:
+            if sublen != 16:
+                answers['UUID'] = '(invalid, length={0})'.format(sublen)
+            else:
+                answers['UUID'] = bytearray(data[4:19])
+        elif subtype == 0x1054:
+            if sublen != 8:
+                answers['Primary Device Type'] = '(invalid, length={0})'.format(sublen)
+            else:
+                answers['Primary Device Type'] = '{0}-{1}-{2}'.format(
+                    data[4] << 8 | data[5],
+                    ''.join(format(x, '02x') for x in data[6:9]),
+                    data[10] << 8 | data[11]
+                )
+        elif subtype == 0x1057:
+            answers['AP setup locked'] = data[4]
+        elif subtype == 0x1008 or subtype == 0x1053:
+            meth = (data[4] << 8) + data[5]
+            key = 'Selected Registrar Config methods' if subtype == 0x1053 else 'Config methods'
+            values = [s for i, s in enumerate(('USB', 'Ethernet', 'Label', 'Display', 'Ext. NFC', 'Int. NFC',
+                                               'NFC Intf.', 'PBC', 'Keypad')) if meth & (1 << i)]
+            answers[key] = values
+        else:
+            value = ' '.join(format(x, '02x') for x in data[4:])
+            answers['Unknown TLV ({0:04x}, {1} bytes)'.format(subtype, sublen)] = value
+        data = data[4:]
+    if data:
+        answers['bogus tail data'] = ' '.join(format(x, '02x') for x in data)
+    return answers
 
 
 wifiprinters = {  # http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n1300

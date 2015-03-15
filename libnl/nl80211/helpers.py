@@ -20,7 +20,29 @@ def _get(out_parsed, in_bss, key, parser_func):
     key_integer = getattr(nl80211, key)
     if in_bss.get(key_integer) is None:
         return dict()
-    out_parsed[short_key] = parser_func(in_bss[key_integer])
+    data = parser_func(in_bss[key_integer])
+    if parser_func == libnl.attr.nla_data:
+        data = data[:libnl.attr.nla_len(in_bss[key_integer])]
+    out_parsed[short_key] = data
+
+
+def _fetch(in_parsed, *keys):
+    """Retrieves nested dict data from either information elements or beacon IES dicts.
+
+    Positional arguments:
+    in_parsed -- dictionary to read from.
+    keys -- one or more nested dict keys to lookup.
+
+    Returns:
+    Found value or None.
+    """
+    for ie in ('information_elements', 'beacon_ies'):
+        target = in_parsed.get(ie, {})
+        for key in keys:
+            target = target.get(key, {})
+        if target:
+            return target
+    return None
 
 
 def parse_bss(bss):
@@ -62,12 +84,9 @@ def parse_bss(bss):
     if 'signal_mbm' in intermediate:
         data_u32 = intermediate['signal_mbm']
         data_s32 = -(data_u32 & 0x80000000) + (data_u32 & 0x7fffffff)
-        parsed['signal_mbm'] = (data_s32 / 100) + (data_s32 % 100) / 100.0
-        parsed['signal'] = parsed['signal_mbm']
+        parsed['signal_mbm'] = data_s32 / 100.0
     if 'signal_unspec' in intermediate:
         parsed['signal_unspec'] = intermediate['signal_unspec'] / 100.0
-        if 'signal' not in parsed:
-            parsed['signal'] = parsed['signal_unspec']
     if 'seen_ms_ago' in intermediate:
         parsed['seen_ms_ago'] = timedelta(milliseconds=intermediate['seen_ms_ago'])
 
@@ -145,6 +164,12 @@ def parse_bss(bss):
         if k not in intermediate:
             continue
         parsed[k] = iw_scan.get_ies(intermediate[k])
-    raise NotImplementedError
 
+    # Make some data more human-readable.
+    parsed['signal'] = parsed.get('signal_mbm', parsed.get('signal_unspec'))
+    parsed['channel'] = _fetch(parsed, 'DS Parameter set')
+    parsed['ssid'] = _fetch(parsed, 'SSID') or _fetch(parsed, 'MESH ID') or ''
+    parsed['supported_rates'] = _fetch(parsed, 'Supported rates')
+    parsed['extended_supported_rates'] = _fetch(parsed, 'Extended supported rates')
+    parsed['channel_width'] = _fetch(parsed, 'HT operation', 'STA channel width')
     return parsed

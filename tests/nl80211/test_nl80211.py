@@ -265,7 +265,7 @@ def test_cmd_get_interface(log, wlan0_info):
     msg_main = nlmsg_alloc()
     genl_connect(sk)
     driver_id = genl_ctrl_resolve(sk, b'nl80211')
-    log.clear()
+    del log[:]
     libnl.socket_.nl_socket_modify_cb(sk, libnl.handlers.NL_CB_VALID, libnl.handlers.NL_CB_CUSTOM, callback, None)
     genlmsg_put(msg_main, 0, 0, driver_id, 0, 0, nl80211.NL80211_CMD_GET_INTERFACE, 0)
     nla_put_u32(msg_main, nl80211.NL80211_ATTR_IFINDEX, if_index)
@@ -972,7 +972,7 @@ def test_cmd_trigger_scan(log):
     sk_main = libnl.socket_.nl_socket_alloc()
     genl_connect(sk_main)
     driver_id_main = genl_ctrl_resolve(sk_main, b'nl80211')
-    log.clear()
+    del log[:]
     assert 0 == do_scan_trigger(sk_main, if_index_main, driver_id_main)
     msg_main = nlmsg_alloc()
     genlmsg_put(msg_main, 0, 0, driver_id_main, 0, NLM_F_DUMP, nl80211.NL80211_CMD_GET_SCAN, 0)

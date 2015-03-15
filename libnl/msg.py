@@ -438,7 +438,7 @@ def nl_nlmsg_flags2str(flags, buf, _=None):
     Returns:
     Reference to `buf`.
     """
-    buf.clear()
+    del buf[:]
     all_flags = (
         ('REQUEST', libnl.linux_private.netlink.NLM_F_REQUEST),
         ('MULTI', libnl.linux_private.netlink.NLM_F_MULTI),

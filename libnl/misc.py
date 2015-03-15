@@ -18,7 +18,7 @@ class _DynamicDict(dict):
     """A dict to be used in str.format() in Struct."""
 
     def __init__(self, instance):
-        super().__init__()
+        super(_DynamicDict, self).__init__()
         self._instance = instance
 
     def __missing__(self, key):
@@ -45,6 +45,10 @@ class Struct(object):
     def __bytes__(self):
         """Returns a bytes object."""
         return bytes(self.bytearray)
+
+    def __nonzero__(self):
+        """Python 2.x compatibility."""
+        return self.__bool__()
 
     def __repr__(self):
         """Returns a repr of the subclass instance with property values."""
@@ -89,7 +93,7 @@ class ucred(Struct):
     SIZEOF = sum(SIGNATURE)
 
     def __init__(self, pid=0, uid=0, gid=0):
-        super().__init__()
+        super(ucred, self).__init__()
         self.pid = pid
         self.uid = uid
         self.gid = gid

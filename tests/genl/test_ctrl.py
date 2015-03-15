@@ -238,7 +238,7 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
         dump_hex(logging.getLogger().debug, bytes(msg.nm_nlh), nlmsg_datalen(msg.nm_nlh), 0)
         return NL_OK
 
-    log.clear()
+    del log[:]
     sk_main = nl_socket_alloc()
     nl_cb_overwrite_send(sk_main.s_cb, callback_send)
     nl_cb_overwrite_recv(sk_main.s_cb, callback_recv)
@@ -547,7 +547,7 @@ def test_genl_ctrl_resolve(log):
     // 22 == driver_id
     // nl_cache_mngt_unregister: Unregistered cache operations genl/family
     """
-    log.clear()
+    del log[:]
 
     sk = nl_socket_alloc()
     assert 0 == genl_connect(sk)

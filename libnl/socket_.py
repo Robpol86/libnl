@@ -9,6 +9,7 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
+import contextlib
 import logging
 import os
 import socket
@@ -51,7 +52,7 @@ def generate_local_port():
     global _PREVIOUS_LOCAL_PORT
     if _PREVIOUS_LOCAL_PORT is None:
         try:
-            with socket.socket(getattr(socket, 'AF_NETLINK', -1), socket.SOCK_RAW) as s:
+            with contextlib.closing(socket.socket(getattr(socket, 'AF_NETLINK', -1), socket.SOCK_RAW)) as s:
                 s.bind((0, 0))
                 _PREVIOUS_LOCAL_PORT = int(s.getsockname()[0])
         except OSError:

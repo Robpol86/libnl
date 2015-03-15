@@ -20,7 +20,7 @@ def __type2str(type_, buf, _, tbl):
     Returns:
     Reference to `buf`.
     """
-    buf.clear()
+    del buf[:]
     if type_ in tbl:
         buf.extend(tbl[type_].encode('ascii'))
     else:

@@ -29,6 +29,7 @@ Options:
     -v --verbose    Print debug messages to stderr.
 """
 
+from __future__ import print_function
 import ctypes
 import logging
 import signal

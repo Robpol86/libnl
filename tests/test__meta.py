@@ -1,7 +1,11 @@
 import json
 import os
 import re
-import urllib.request
+
+try:
+    from urllib.request import urlopen
+except ImportError:
+    from urllib import urlopen
 
 from pygments import lex
 from pygments.lexers import get_lexer_by_name
@@ -31,7 +35,7 @@ def test_todo_issue_validator():
     # Get all open issues.
     repo_slug = os.environ['TRAVIS_REPO_SLUG']
     assert re.match(r'^[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+$', repo_slug)
-    response = urllib.request.urlopen('https://api.github.com/repos/{0}/issues'.format(repo_slug))
+    response = urlopen('https://api.github.com/repos/{0}/issues'.format(repo_slug))
     raw_data = response.read().decode('utf-8')
     parsed_data = json.loads(raw_data)
     open_issues = set(['issues/{0:d}'.format(int(i.get('number'))) for i in parsed_data if i.get('state') == 'open'])

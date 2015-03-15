@@ -32,7 +32,7 @@ class genlmsghdr(Struct):
     SIZEOF = sum(SIGNATURE)
 
     def __init__(self, ba=None, cmd=None, version=None, reserved=None):
-        super().__init__(ba)
+        super(genlmsghdr, self).__init__(ba)
         if cmd is not None:
             self.cmd = cmd
         if version is not None:

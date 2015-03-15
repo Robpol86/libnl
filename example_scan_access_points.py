@@ -34,6 +34,7 @@ Options:
     -v --verbose        Print debug messages to stderr. Specify twice for more.
 """
 
+from __future__ import print_function
 import ctypes
 import logging
 import math

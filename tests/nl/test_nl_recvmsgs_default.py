@@ -92,7 +92,7 @@ def test_error(log):
     // 0 == nl_recvmsgs_default(sk)
     // nl_cache_mngt_unregister: Unregistered cache operations genl/family
     """
-    log.clear()
+    del log[:]
     sk = nl_socket_alloc()
     nl_connect(sk, NETLINK_ROUTE)
     assert 16 == nl_send_simple(sk, 0, NLM_F_REQUEST, None)
@@ -267,7 +267,7 @@ def test_multipart(log, ifaces):
     // 0 == nl_recvmsgs_default(sk)
     // nl_cache_mngt_unregister: Unregistered cache operations genl/family
     """
-    log.clear()
+    del log[:]
     sk = nl_socket_alloc()
     nl_connect(sk, NETLINK_ROUTE)
     rt_hdr = rtgenmsg(rtgen_family=socket.AF_PACKET)
@@ -383,7 +383,7 @@ def test_multipart_verbose(log, ifaces):
     // 0 == nl_recvmsgs_default(sk)
     // nl_cache_mngt_unregister: Unregistered cache operations genl/family
     """
-    log.clear()
+    del log[:]
     sk = nl_socket_alloc()
     nl_connect(sk, NETLINK_ROUTE)
     rt_hdr = rtgenmsg(rtgen_family=socket.AF_PACKET)

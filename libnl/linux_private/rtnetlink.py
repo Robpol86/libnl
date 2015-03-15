@@ -79,7 +79,7 @@ class rtattr(Struct):
     SIZEOF = sum(SIGNATURE)
 
     def __init__(self, ba, rta_len=None, rta_type=None):
-        super().__init__(ba)
+        super(rtattr, self).__init__(ba)
         if rta_len is not None:
             self.rta_len = rta_len
         if rta_type is not None:
@@ -129,7 +129,7 @@ class rtgenmsg(Struct):
     SIZEOF = sum(SIGNATURE)
 
     def __init__(self, rtgen_family=None):
-        super().__init__()
+        super(rtgenmsg, self).__init__()
         if rtgen_family is not None:
             self.rtgen_family = rtgen_family
 
@@ -162,7 +162,7 @@ class ifinfomsg(Struct):
     SIZEOF = sum(SIGNATURE)
 
     def __init__(self, ba, ifi_family=None, ifi_type=None, ifi_index=None, ifi_flags=None, ifi_change=None):
-        super().__init__(ba)
+        super(ifinfomsg, self).__init__(ba)
         if ifi_family is not None:
             self.ifi_family = ifi_family
         if ifi_type is not None:

@@ -220,7 +220,7 @@ def test_nl_socket_modify_cb(log, ifaces):
         nl_msg_dump(msg)
         return NL_OK
 
-    log.clear()
+    del log[:]
     sk = nl_socket_alloc()
     nl_connect(sk, NETLINK_ROUTE)
     rt_hdr = rtgenmsg(rtgen_family=socket.AF_PACKET)
@@ -329,7 +329,7 @@ def test_nl_socket_modify_cb_error_verbose(log):
         arg.append(err.error)
         return NL_STOP
 
-    log.clear()
+    del log[:]
     sk = nl_socket_alloc()
     nl_connect(sk, NETLINK_ROUTE)
     rt_hdr = rtgenmsg(rtgen_family=socket.AF_PACKET)

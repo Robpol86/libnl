@@ -150,7 +150,7 @@ class genl_family(NLHDR_COMMON):
     SIZEOF = NLHDR_COMMON.SIZEOF + 48
 
     def __init__(self, nlo=None):
-        super().__init__()
+        super(genl_family, self).__init__()
         self.gf_id = 0
         self.gf_name = None
         self.gf_version = 0

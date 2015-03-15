@@ -1,12 +1,16 @@
 import fcntl
-import importlib
+import imp
 import logging
 import os
 import socket
-import socketserver
 import struct
 import threading
 import time
+
+try:
+    import socketserver
+except ImportError:
+    import SocketServer as socketserver
 
 import pytest
 
@@ -42,6 +46,10 @@ def tcp_server(request):
     def fin():
         server.socket.close()
         server.shutdown()
+        for _ in range(5):
+            if not thread.is_alive():
+                break
+            time.sleep(0.2)
         assert not thread.is_alive()
     request.addfinalizer(fin)
 
@@ -56,20 +64,12 @@ def log():
     class ListHandler(logging.StreamHandler):
         def emit(self, record):
             log_statements.append(self.format(record))
-    logging.basicConfig(format='%(funcName)s: %(message)s', level=logging.DEBUG, handlers=[ListHandler()])
+    handler = ListHandler()
+    handler.setFormatter(logging.Formatter('%(funcName)s: %(message)s'))
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
     return log_statements
-
-
-@pytest.fixture(scope='session')
-def ifaces():
-    """Returns tuple of network interfaces (by name)."""
-    return tuple(i[1] for i in socket.if_nameindex())
-
-
-@pytest.fixture(scope='session')
-def ifacesi():
-    """Returns tuple of tuples of network interfaces (by name) (second item) and their indexes (first item)."""
-    return tuple(socket.if_nameindex())
 
 
 @pytest.fixture(scope='function')
@@ -77,12 +77,12 @@ def nlcb_debug(request):
     """Sets the NLCB environment variable to 'debug' and reloads libnl.handlers to take effect."""
     os.environ['NLCB'] = 'debug'
     __import__('libnl').socket_.init_default_cb()
-    importlib.reload(__import__('libnl').handlers)
+    imp.reload(__import__('libnl').handlers)
 
     def fin():
         os.environ['NLCB'] = 'default'
         __import__('libnl').socket_.init_default_cb()
-        importlib.reload(__import__('libnl').handlers)
+        imp.reload(__import__('libnl').handlers)
     request.addfinalizer(fin)
 
 
@@ -91,13 +91,37 @@ def nlcb_verbose(request):
     """Sets the NLCB environment variable to 'verbose' and reloads libnl.handlers to take effect."""
     os.environ['NLCB'] = 'verbose'
     __import__('libnl').socket_.init_default_cb()
-    importlib.reload(__import__('libnl').handlers)
+    imp.reload(__import__('libnl').handlers)
 
     def fin():
         os.environ['NLCB'] = 'default'
         __import__('libnl').socket_.init_default_cb()
-        importlib.reload(__import__('libnl').handlers)
+        imp.reload(__import__('libnl').handlers)
     request.addfinalizer(fin)
+
+
+def all_indexes():
+    """Returns dictionary of network interface names (values) and their indexes (keys)."""
+    mapping = dict()
+    sk = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    for if_name in os.listdir('/sys/class/net'):
+        # From: http://pydrcom.googlecode.com/svn-history/r2/trunk/pydrcom.py
+        info = struct.unpack('16sI', fcntl.ioctl(sk.fileno(), 0x8933,  struct.pack('16sI', if_name.encode('ascii'), 0)))
+        mapping[int(info[1])] = if_name
+    sk.close()
+    return mapping
+
+
+@pytest.fixture(scope='session')
+def ifaces():
+    """Returns tuple of network interfaces (by name)."""
+    return tuple(i[1] for i in sorted(all_indexes().items()))
+
+
+@pytest.fixture(scope='session')
+def ifacesi():
+    """Returns tuple of tuples of network interfaces (by name) (second item) and their indexes (first item)."""
+    return tuple(sorted(all_indexes().items()))
 
 
 @pytest.fixture(scope='session')
@@ -105,13 +129,12 @@ def wlan0_info():
     """Returns a dict of data about the wlan0 interface, or an empty dict."""
     if not os.path.exists('/sys/class/net/wlan0'):
         return dict()
-    sk = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     data = dict()
     # Get MAC address, http://stackoverflow.com/a/4789267/1198943
+    sk = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     info = fcntl.ioctl(sk.fileno(), 0x8927,  struct.pack('256s', b'wlan0'))
-    data['mac'] = ':'.join(format(x, '02x') for x in info[18:24])
-    # Get ifindex, http://pydrcom.googlecode.com/svn-history/r2/trunk/pydrcom.py
-    info = struct.unpack('16sI', fcntl.ioctl(sk.fileno(), 0x8933,  struct.pack('16sI', b'wlan0', 0)))
-    data['ifindex'] = int(info[1])
     sk.close()
+    data['mac'] = ':'.join(format(x, '02x') for x in info[18:24])
+    # Get ifindex.
+    data['ifindex'] = [k for k, v in all_indexes().items() if v == 'wlan0'][0]
     return data

@@ -48,7 +48,7 @@ class sockaddr_nl(Struct):
     SIZEOF = sum(SIGNATURE)
 
     def __init__(self, nl_family=0, nl_pad=0, nl_pid=0, nl_groups=0):
-        super().__init__()
+        super(sockaddr_nl, self).__init__()
         self.nl_family = nl_family
         self.nl_pad = nl_pad
         self.nl_pid = nl_pid
@@ -120,7 +120,7 @@ class nlmsghdr(Struct):
     SIZEOF = sum(SIGNATURE)
 
     def __init__(self, ba=None, nlmsg_len=None, nlmsg_type=None, nlmsg_flags=None, nlmsg_seq=None, nlmsg_pid=None):
-        super().__init__(ba)
+        super(nlmsghdr, self).__init__(ba)
         if nlmsg_len is not None:
             self.nlmsg_len = nlmsg_len
         if nlmsg_type is not None:
@@ -250,7 +250,7 @@ class nlattr(Struct):
     SIZEOF = sum(SIGNATURE)
 
     def __init__(self, ba, nla_len=None, nla_type=None):
-        super().__init__(ba)
+        super(nlattr, self).__init__(ba)
         if nla_len is not None:
             self.nla_len = nla_len
         if nla_type is not None:

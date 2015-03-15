@@ -330,7 +330,11 @@ def nl_recv(sk, nla, buf, creds=None):
 
     while True:  # This is the `goto retry` implementation.
         try:
-            iov, _, msg_flags, address = sk.socket_instance.recvmsg(iov_len, 0, flags)
+            if hasattr(sk.socket_instance, 'recvmsg'):
+                iov, _, msg_flags, address = sk.socket_instance.recvmsg(iov_len, 0, flags)
+            else:
+                iov, address = sk.socket_instance.recvfrom(iov_len, flags)
+                msg_flags = 0
         except OSError as exc:
             if exc.errno == errno.EINTR:
                 continue  # recvmsg() returned EINTR, retrying.
@@ -595,7 +599,7 @@ def recvmsgs(sk, cb):
 
             hdr = nlmsg_next(hdr, n)
 
-        buf.clear()
+        del buf[:]
         creds = None
 
         if multipart:

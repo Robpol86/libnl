@@ -9,7 +9,7 @@ from libnl.socket_ import nl_socket_alloc, nl_socket_get_local_port
 
 
 @pytest.mark.usefixtures('nlcb_debug')
-def test_defaults(log):  # TODO test nlmsg_seq https://github.com/Robpol86/libnl/issues/5
+def test_defaults(log):
     """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && NLDBG=4 ./a.out
     #include <netlink/msg.h>
     struct ucred { __u32 pid; __u32 uid; __u32 gid; };
@@ -84,7 +84,7 @@ def test_defaults(log):  # TODO test nlmsg_seq https://github.com/Robpol86/libnl
     // 10083 == msg.nm_nlh.nlmsg_pid
     // nl_cache_mngt_unregister: Unregistered cache operations genl/family
     """
-    log.clear()
+    del log[:]
     sk = nl_socket_alloc()
     msg = nlmsg_alloc_simple(0, 0)
     assert re.match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message', log.pop(0))

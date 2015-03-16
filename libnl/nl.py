@@ -150,8 +150,7 @@ def nl_send_iovec(sk, msg, iov, _):
     Positional arguments:
     sk -- Netlink socket (nl_sock class instance).
     msg -- Netlink message (nl_msg class instance).
-    iov -- bytes() instance to be sent (data payload).
-    _ -- unused.
+    iov -- data payload to be sent (bytearray).
 
     Returns:
     Number of bytes sent on success or a negative error code.
@@ -203,7 +202,7 @@ def nl_send(sk, msg):
     if cb.cb_send_ow:
         return cb.cb_send_ow(sk, msg)
     hdr = nlmsg_hdr(msg)
-    iov = bytes(hdr.bytearray[:hdr.nlmsg_len])
+    iov = hdr.bytearray[:hdr.nlmsg_len]
     return nl_send_iovec(sk, msg, iov, 1)
 
 

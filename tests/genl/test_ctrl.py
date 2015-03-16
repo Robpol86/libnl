@@ -211,7 +211,7 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
         assert 100 < msg.nm_nlh.nlmsg_pid
         assert 1 == msg.nm_refcnt
         hdr = nlmsg_hdr(msg)
-        iov = bytes(hdr.bytearray[:hdr.nlmsg_len])
+        iov = hdr.bytearray[:hdr.nlmsg_len]
         dump_hex(logging.getLogger().debug, iov, len(iov), 0)
         return nl_send_iovec(sk, msg, iov, 1)
 
@@ -235,7 +235,7 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
         assert 100 < msg.nm_nlh.nlmsg_pid
         assert 1000 < msg.nm_size
         assert 1 == msg.nm_refcnt
-        dump_hex(logging.getLogger().debug, bytes(msg.nm_nlh), nlmsg_datalen(msg.nm_nlh), 0)
+        dump_hex(logging.getLogger().debug, msg.nm_nlh.bytearray, nlmsg_datalen(msg.nm_nlh), 0)
         return NL_OK
 
     del log[:]

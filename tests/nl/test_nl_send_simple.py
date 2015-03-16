@@ -102,7 +102,7 @@ def test_dissect(monkeypatch):
     assert 0 == nlh.nlmsg_seq
     assert 0 == nlh.nlmsg_pid
 
-    assert b'FAAAABIABQMAAAAAAAAAABEAAAA=' == base64.b64encode(bytes(nlh)[:nlh.nlmsg_len])
+    assert b'FAAAABIABQMAAAAAAAAAABEAAAA=' == base64.b64encode(nlh.bytearray[:nlh.nlmsg_len])
     nl_socket_free(sk)
 
 

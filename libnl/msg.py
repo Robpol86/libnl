@@ -321,7 +321,7 @@ def nlmsg_append(n, data, len_, pad):
     tmp = nlmsg_reserve(n, len_, pad)
     if tmp is None:
         return -NLE_NOMEM
-    tmp[:len_] = bytes(data)[:len_]
+    tmp[:len_] = data.bytearray[:len_]
     _LOGGER.debug('msg 0x%x: Appended %d bytes with padding %d', id(n), len_, pad)
     return 0
 
@@ -480,8 +480,13 @@ def dump_hex(ofd, start, len_, prefix=0):
     limit = 16 - (prefix * 2)
     start_ = start[:len_]
     for line in (start_[i:i+limit] for i in range(0, len(start_), limit)):  # http://stackoverflow.com/a/9475354/1198943
-        hex_line = ''.join('{0:02x} '.format(i) for i in line).ljust(limit * 3)
-        ascii_line = ''.join(c if c in string.printable[:95] else '.' for c in (chr(i) for i in line))
+        hex_lines, ascii_lines = list(), list()
+        for c in line:
+            hex_lines.append('{0:02x}'.format(c if hasattr(c, 'real') else ord(c)))
+            c2 = chr(c) if hasattr(c, 'real') else c
+            ascii_lines.append(c2 if c2 in string.printable[:95] else '.')
+        hex_line = ' '.join(hex_lines).ljust(limit * 3)
+        ascii_line = ''.join(ascii_lines)
         ofd('    %s%s%s', prefix_whitespaces, hex_line, ascii_line)
 
 

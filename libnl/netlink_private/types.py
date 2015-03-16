@@ -7,6 +7,8 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
+import socket
+
 from libnl.linux_private.netlink import sockaddr_nl
 from libnl.list_ import nl_list_head
 from libnl.netlink_private.object_api import NLHDR_COMMON
@@ -86,7 +88,10 @@ class nl_sock(object):
 
     @property
     def s_fd(self):
-        return -1 if self.socket_instance is None else self.socket_instance.fileno()
+        try:
+            return -1 if self.socket_instance is None else self.socket_instance.fileno()
+        except socket.error:
+            return -1
 
 
 class nl_msg(object):

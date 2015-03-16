@@ -196,7 +196,7 @@ class bytearray_ptr(object):
         self.slice = slice(start, stop)
 
     def __repr__(self):
-        return '{0}({1})'.format(self.__class__.__name__, bytes(self))
+        return "{0}(b'{1}')".format(self.__class__.__name__, ''.join(r'\x{0:02x}'.format(c) for c in bytearray(self)))
 
     def __delitem__(self, key):
         raise TypeError("'{0}' object doesn't support item deletion".format(self.__class__.__name__))

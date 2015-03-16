@@ -74,7 +74,7 @@ def test_socket(tcp_server):
     assert 0 == nlh.nlmsg_seq
     nlh.nlmsg_pid = 0  # sk.s_local.nl_pid is read-only in Python.
 
-    iov = bytes(nlh)[:nlh.nlmsg_len]
+    iov = nlh.bytearray[:nlh.nlmsg_len]
     hdr = msghdr(msg_iov=iov)
 
     assert 16 == nl_sendmsg(sk, msg, hdr)
@@ -103,7 +103,7 @@ def test_seq():
     assert 1423350947 == nlh.nlmsg_seq
     nlh.nlmsg_pid = 0  # sk.s_local.nl_pid is read-only in Python.
 
-    assert b'EAAAAAAABQCjnNZUAAAAAA==' == base64.b64encode(bytes(nlh)[:nlh.nlmsg_len])
+    assert b'EAAAAAAABQCjnNZUAAAAAA==' == base64.b64encode(nlh.bytearray[:nlh.nlmsg_len])
 
 
 def test_two_attrs():
@@ -127,4 +127,4 @@ def test_two_attrs():
     assert 0 == nlh.nlmsg_seq
     nlh.nlmsg_pid = 0  # sk.s_local.nl_pid is read-only in Python.
 
-    assert b'JAAAAAAABQAAAAAAAAAAAAgABAAIAAAADAAFABEAAAAAAAAA' == base64.b64encode(bytes(nlh)[:nlh.nlmsg_len])
+    assert b'JAAAAAAABQAAAAAAAAAAAAgABAAIAAAADAAFABEAAAAAAAAA' == base64.b64encode(nlh.bytearray[:nlh.nlmsg_len])

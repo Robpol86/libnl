@@ -1,6 +1,5 @@
 import ctypes
 import re
-import socket
 
 import pytest
 
@@ -28,7 +27,7 @@ def match(expected, log, is_regex=False):
 
 @pytest.mark.skipif('not os.path.exists("/sys/class/net/wlan0")')
 @pytest.mark.usefixtures('nlcb_debug')
-def test_cmd_get_interface(log, wlan0_info):
+def test_cmd_get_interface(log, wlan0_info, ifacesi):
     """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && NLDBG=4 NLCB=debug ./a.out
     #include <netlink/netlink.h>
     #include <netlink/genl/genl.h>
@@ -260,7 +259,7 @@ def test_cmd_get_interface(log, wlan0_info):
         assert wlan0_info['ifindex'] == nla_get_u32(tb[nl80211.NL80211_ATTR_IFINDEX])
         assert 2 == nla_get_u32(tb[nl80211.NL80211_ATTR_IFTYPE])
         return libnl.handlers.NL_SKIP
-    if_index = socket.if_nametoindex('wlan0')
+    if_index = {n: i for i, n in ifacesi}.get('wlan0')
     sk = libnl.socket_.nl_socket_alloc()
     msg_main = nlmsg_alloc()
     genl_connect(sk)
@@ -351,7 +350,7 @@ def test_cmd_get_interface(log, wlan0_info):
 
 @pytest.mark.skipif('not os.path.exists("/sys/class/net/wlan0") or os.getuid() != 0')
 @pytest.mark.usefixtures('nlcb_debug')
-def test_cmd_trigger_scan(log):
+def test_cmd_trigger_scan(log, ifacesi):
     """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && sudo NLDBG=4 NLCB=debug ./a.out
     #include <netlink/genl/genl.h>
     #include <linux/nl80211.h>
@@ -968,7 +967,7 @@ def test_cmd_trigger_scan(log):
         assert 4 == len([i for i in tb.values() if i])
         return libnl.handlers.NL_SKIP
 
-    if_index_main = socket.if_nametoindex('wlan0')
+    if_index_main = {n: i for i, n in ifacesi}.get('wlan0')
     sk_main = libnl.socket_.nl_socket_alloc()
     genl_connect(sk_main)
     driver_id_main = genl_ctrl_resolve(sk_main, b'nl80211')

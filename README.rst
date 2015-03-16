@@ -96,7 +96,7 @@ Here are some more examples with their C equivalents in order from "easy" to "ha
 Changelog
 ---------
 
-0.1.0
+0.1.1
 `````
 
 * Initial release.

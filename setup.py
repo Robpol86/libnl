@@ -19,6 +19,14 @@ NAME_FILE = NAME
 PACKAGE = True
 
 
+def packages_or_py_modules():
+    if not PACKAGE:
+        return dict(py_modules=[NAME_FILE])
+    packages = [NAME_FILE]
+    packages.extend([os.path.join(r, s) for r, d, _ in os.walk(NAME_FILE) for s in d if s != '__pycache__'])
+    return dict(packages=packages)
+
+
 def get_metadata(main_file):
     """Get metadata about the package/module.
 
@@ -50,7 +58,7 @@ def get_metadata(main_file):
     if not all(everything.values()):
         raise ValueError('Failed to obtain metadata from package/module.')
 
-    everything.update(dict(packages=[NAME_FILE]) if PACKAGE else dict(py_modules=[NAME_FILE]))
+    everything.update(packages_or_py_modules())
     everything.update(dict(install_requires=install_requires, tests_require=tests_require))
 
     return everything

@@ -33,7 +33,10 @@ def get_ssid(_, data):
     """
     converted = list()
     for i in range(len(data)):
-        c = chr(data[i])
+        try:
+            c = unichr(data[i])
+        except NameError:
+            c = chr(data[i])
         if unicodedata.category(c) != 'Cc' and c not in (' ', '\\'):
             converted.append(c)
         elif c == '\0':

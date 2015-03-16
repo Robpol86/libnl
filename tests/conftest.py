@@ -134,7 +134,7 @@ def wlan0_info():
     sk = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     info = fcntl.ioctl(sk.fileno(), 0x8927,  struct.pack('256s', b'wlan0'))
     sk.close()
-    data['mac'] = ':'.join(format(x, '02x') for x in info[18:24])
+    data['mac'] = ':'.join(format(x if hasattr(x, 'real') else ord(x), '02x') for x in info[18:24])
     # Get ifindex.
     data['ifindex'] = [k for k, v in all_indexes().items() if v == 'wlan0'][0]
     return data

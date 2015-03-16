@@ -30,9 +30,11 @@ Options:
 """
 
 from __future__ import print_function
+import fcntl
 import logging
 import signal
 import socket
+import struct
 import sys
 
 from docopt import docopt
@@ -109,18 +111,28 @@ def callback(msg, has_printed):
 
 def main():
     """Main function called upon script execution."""
-    # First open a socket to the kernel. Same one used for sending and receiving.
+    # First get the wireless interface index.
+    if OPTIONS['<interface>']:
+        pack = struct.pack('16sI', OPTIONS['<interface>'].encode('ascii'), 0)
+        sk = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            info = struct.unpack('16sI', fcntl.ioctl(sk.fileno(), 0x8933, pack))
+        except OSError:
+            return error('Wireless interface {0} does not exist.'.format(OPTIONS['<interface>']))
+        finally:
+            sk.close()
+        if_index = int(info[1])
+    else:
+        if_index = -1
+
+    # Then open a socket to the kernel. Same one used for sending and receiving.
     sk = nl_socket_alloc()  # Creates an `nl_sock` instance.
     ret = genl_connect(sk)  # Create file descriptor and bind socket.
     if ret < 0:
         reason = errmsg[abs(ret)]
         return error('genl_connect() returned {0} ({1})'.format(ret, reason))
 
-    # Now get the nl80211 driver ID and the wireless interface index. Handle errors here.
-    try:
-        if_index = socket.if_nametoindex(OPTIONS['<interface>']) if OPTIONS['<interface>'] else -1
-    except OSError:
-        return error('Wireless interface {0} does not exist.'.format(OPTIONS['<interface>']))
+    # Now get the nl80211 driver ID. Handle errors here.
     driver_id = genl_ctrl_resolve(sk, b'nl80211')  # Find the nl80211 driver ID.
     if driver_id < 0:
         reason = errmsg[abs(driver_id)]

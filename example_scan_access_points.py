@@ -36,11 +36,13 @@ Options:
 
 from __future__ import print_function
 import ctypes
+import fcntl
 import logging
 import math
 import os
 import signal
 import socket
+import struct
 import sys
 import time
 
@@ -318,10 +320,15 @@ def print_table(data):
 def main():
     """Main function called upon script execution."""
     # First get the wireless interface index.
+    pack = struct.pack('16sI', OPTIONS['<interface>'].encode('ascii'), 0)
+    sk = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
-        if_index = socket.if_nametoindex(OPTIONS['<interface>'])
+        info = struct.unpack('16sI', fcntl.ioctl(sk.fileno(), 0x8933, pack))
     except OSError:
         return error('Wireless interface {0} does not exist.'.format(OPTIONS['<interface>']))
+    finally:
+        sk.close()
+    if_index = int(info[1])
 
     # Next open a socket to the kernel and bind to it. Same one used for sending and receiving.
     sk = nl_socket_alloc()  # Creates an `nl_sock` instance.

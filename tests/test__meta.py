@@ -17,7 +17,9 @@ def test_todo_issue_validator():
     """Verifies that each T.O.D.O is associated with an open GitHub issue."""
     root_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     assert 'tests' in os.listdir(root_directory)
-    generator = (os.path.join(r, s) for r, d, f in os.walk(root_directory) for s in f
+    generator = (os.path.join(r, s) for r, d, f in os.walk(root_directory)
+                 if '.tox' not in r
+                 for s in f
                  if s.endswith('.py') and not s.startswith('example_'))
     regex_todo = re.compile(r'^(.*)(?<!\w)(TODO|FIXME)(?!\w)(.*)$', re.IGNORECASE | re.MULTILINE)
 

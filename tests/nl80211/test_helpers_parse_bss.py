@@ -77,7 +77,7 @@ def test_no_security():
         b'gAFACEEAAAIAAIAbAkAAAgADAAAAAAACAAKAGwgAAAIAAcAOOb//w=='
     ))
     gnlh = genlmsghdr(data)
-    tb = {i: None for i in range(NL80211_ATTR_MAX + 1)}
+    tb = dict((i, None) for i in range(NL80211_ATTR_MAX + 1))
     nla_parse(tb, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0), genlmsg_attrlen(gnlh, 0), None)
     bss = dict()
     nla_parse_nested(bss, NL80211_BSS_MAX, tb[NL80211_ATTR_BSS], bss_policy)

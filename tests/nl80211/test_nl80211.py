@@ -252,14 +252,14 @@ def test_cmd_get_interface(log, wlan0_info, ifacesi):
     """
     def callback(msg, _):
         gnlh = genlmsghdr(nlmsg_data(nlmsg_hdr(msg)))
-        tb = {i: None for i in range(nl80211.NL80211_ATTR_MAX + 1)}
+        tb = dict((i, None) for i in range(nl80211.NL80211_ATTR_MAX + 1))
         nla_parse(tb, nl80211.NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0), genlmsg_attrlen(gnlh, 0), None)
         assert b'wlan0' == nla_get_string(tb[nl80211.NL80211_ATTR_IFNAME])
         assert wlan0_info['mac'] == ':'.join(format(x, '02x') for x in nla_data(tb[nl80211.NL80211_ATTR_MAC])[:6])
         assert wlan0_info['ifindex'] == nla_get_u32(tb[nl80211.NL80211_ATTR_IFINDEX])
         assert 2 == nla_get_u32(tb[nl80211.NL80211_ATTR_IFTYPE])
         return libnl.handlers.NL_SKIP
-    if_index = {n: i for i, n in ifacesi}.get('wlan0')
+    if_index = dict((n, i) for i, n in ifacesi).get('wlan0')
     sk = libnl.socket_.nl_socket_alloc()
     msg_main = nlmsg_alloc()
     genl_connect(sk)
@@ -962,12 +962,12 @@ def test_cmd_trigger_scan(log, ifacesi):
 
     def callback_dump(msg, _):
         gnlh = genlmsghdr(nlmsg_data(nlmsg_hdr(msg)))
-        tb = {i: None for i in range(nl80211.NL80211_ATTR_MAX + 1)}
+        tb = dict((i, None) for i in range(nl80211.NL80211_ATTR_MAX + 1))
         nla_parse(tb, nl80211.NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0), genlmsg_attrlen(gnlh, 0), None)
         assert 4 == len([i for i in tb.values() if i])
         return libnl.handlers.NL_SKIP
 
-    if_index_main = {n: i for i, n in ifacesi}.get('wlan0')
+    if_index_main = dict((n, i) for i, n in ifacesi).get('wlan0')
     sk_main = libnl.socket_.nl_socket_alloc()
     genl_connect(sk_main)
     driver_id_main = genl_ctrl_resolve(sk_main, b'nl80211')

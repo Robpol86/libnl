@@ -38,7 +38,7 @@ from libnl.socket_ import nl_socket_get_cb
 CTRL_VERSION = 0x0001
 
 
-ctrl_policy = {i: 0 for i in range(CTRL_ATTR_MAX + 1)}
+ctrl_policy = dict((i, None) for i in range(CTRL_ATTR_MAX + 1))
 ctrl_policy.update({  # https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L43
     CTRL_ATTR_FAMILY_ID: nla_policy(type_=NLA_U16),
     CTRL_ATTR_FAMILY_NAME: nla_policy(type_=NLA_STRING, maxlen=GENL_NAMSIZ),
@@ -50,14 +50,14 @@ ctrl_policy.update({  # https://github.com/thom311/libnl/blob/libnl3_2_25/lib/ge
 })
 
 
-family_op_policy = {i: 0 for i in range(CTRL_ATTR_OP_MAX + 1)}
+family_op_policy = dict((i, None) for i in range(CTRL_ATTR_OP_MAX + 1))
 family_op_policy.update({  # https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L54
     CTRL_ATTR_OP_ID: nla_policy(type_=NLA_U32),
     CTRL_ATTR_OP_FLAGS: nla_policy(type_=NLA_U32),
 })
 
 
-family_grp_policy = {i: 0 for i in range(CTRL_ATTR_MCAST_GRP_MAX + 1)}
+family_grp_policy = dict((i, None) for i in range(CTRL_ATTR_MCAST_GRP_MAX + 1))
 family_grp_policy.update({  # https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L59
     CTRL_ATTR_MCAST_GRP_NAME: nla_policy(type_=NLA_STRING),
     CTRL_ATTR_MCAST_GRP_ID: nla_policy(type_=NLA_U32),
@@ -135,7 +135,7 @@ def probe_response(msg, arg):
     Returns:
     Indicator to keep processing frames or not (NL_SKIP or NL_STOP).
     """
-    tb = {i: None for i in range(CTRL_ATTR_MAX + 1)}
+    tb = dict((i, None) for i in range(CTRL_ATTR_MAX + 1))
     nlh = nlmsg_hdr(msg)
     ret = arg
     if genlmsg_parse(nlh, 0, tb, CTRL_ATTR_MAX, ctrl_policy):

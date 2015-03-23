@@ -81,7 +81,7 @@ def cmd_msg_parser(who, nlh, ops, cache_ops, arg):
     if cmd.c_msg_parser is None:
         return -NLE_OPNOTSUPP
 
-    tb = {i: None for i in range(cmd.c_maxattr + 1)}
+    tb = dict((i, None) for i in range(cmd.c_maxattr + 1))
     info = genl_info(who=who, nlh=nlh, genlhdr=ghdr, userhdr=genlmsg_user_hdr(ghdr), attrs=tb)
     err = nlmsg_parse(nlh, GENL_HDRSIZE(ops.o_hdrsize), tb, cmd.c_maxattr, cmd.c_attr_policy)
     if err < 0:

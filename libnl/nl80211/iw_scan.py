@@ -776,18 +776,18 @@ def get_vendor(data):
     Dictionary of parsed data with string keys.
     """
     if len(data) < 3:
-        return {'Vendor specific: <too short> data': ' '.join(format(x, '02x') for x in data)}
+        return dict(('Vendor specific: <too short> data', ' '.join(format(x, '02x'))) for x in data)
     key = data[3]
 
     if bytes(data[:3]) == ms_oui:
         if key in wifiprinters and wifiprinters[key].flags & 1:
             return get_ie(wifiprinters[key], key, data[4:])
-        return {'MS/WiFi {0:02x}, data'.format(key): ' '.join(format(x, '02x') for x in data[4:])}
+        return dict(('MS/WiFi {0:02x}, data'.format(key), ' '.join(format(x, '02x'))) for x in data[4:])
 
     if bytes(data[:3]) == wfa_oui:
         if key in wfa_printers and wfa_printers[key].flags & 1:
             return get_ie(wfa_printers[key], key, data[4:])
-        return {'WFA {0:02x}, data'.format(key): ' '.join(format(x, '02x') for x in data[4:])}
+        return dict(('WFA {0:02x}, data'.format(key), ' '.join(format(x, '02x'))) for x in data[4:])
 
     unknown_key = 'Vendor specific: OUI {0:02x}:{1:02x}:{2:02x}, data'.format(data[0], data[1], data[2])
     unknown_value = ' '.join(format(x, '02x') for x in data[3:])
@@ -819,7 +819,7 @@ def get_ies(ie):
     return answers
 
 
-bss_policy = {i: 0 for i in range(nl80211.NL80211_BSS_MAX + 1)}
+bss_policy = dict((i, None) for i in range(nl80211.NL80211_BSS_MAX + 1))
 bss_policy.update({  # http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n1549
     nl80211.NL80211_BSS_BSSID: nla_policy(),
     nl80211.NL80211_BSS_FREQUENCY: nla_policy(type_=NLA_U32),

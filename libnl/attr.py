@@ -188,7 +188,7 @@ def nla_next(nla, remaining):
     return nlattr(bytearray_ptr(nla.bytearray, totlen))
 
 
-nla_attr_minlen = {i: 0 for i in range(NLA_TYPE_MAX + 1)}
+nla_attr_minlen = dict((i, 0) for i in range(NLA_TYPE_MAX + 1))
 nla_attr_minlen.update({  # https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L179
     NLA_U8: SIZEOF_U8,
     NLA_U16: SIZEOF_U16,

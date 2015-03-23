@@ -133,7 +133,7 @@ def nl_ack_handler_debug(msg, arg):
     return NL_STOP
 
 
-cb_def = {a: {b: None for b in range(NL_CB_KIND_MAX + 1)} for a in range(NL_CB_TYPE_MAX + 1)}
+cb_def = dict((a, dict((b, None) for b in range(NL_CB_KIND_MAX + 1))) for a in range(NL_CB_TYPE_MAX + 1))
 cb_def[NL_CB_VALID].update({NL_CB_VERBOSE: nl_valid_handler_verbose, NL_CB_DEBUG: nl_valid_handler_debug})
 cb_def[NL_CB_FINISH].update({NL_CB_DEBUG: nl_finish_handler_debug})
 cb_def[NL_CB_INVALID].update({NL_CB_VERBOSE: nl_invalid_handler_verbose, NL_CB_DEBUG: nl_invalid_handler_verbose})
@@ -142,7 +142,7 @@ cb_def[NL_CB_MSG_OUT].update({NL_CB_DEBUG: nl_msg_out_handler_debug})
 cb_def[NL_CB_OVERRUN].update({NL_CB_VERBOSE: nl_overrun_handler_verbose, NL_CB_DEBUG: nl_overrun_handler_verbose})
 cb_def[NL_CB_SKIPPED].update({NL_CB_DEBUG: nl_skipped_handler_debug})
 cb_def[NL_CB_ACK].update({NL_CB_DEBUG: nl_ack_handler_debug})
-cb_err_def = {a: None for a in range(NL_CB_KIND_MAX + 1)}
+cb_err_def = dict((a, None) for a in range(NL_CB_KIND_MAX + 1))
 cb_err_def.update({NL_CB_VERBOSE: nl_error_handler_verbose, NL_CB_DEBUG: nl_error_handler_verbose})
 
 

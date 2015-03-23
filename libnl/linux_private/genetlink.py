@@ -7,10 +7,8 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-import ctypes
-
 from libnl.linux_private.netlink import NLMSG_MIN_TYPE, NLMSG_ALIGN
-from libnl.misc import Struct, SIZEOF_U8, SIZEOF_U16, bytearray_ptr
+from libnl.misc import Struct, SIZEOF_U8, SIZEOF_U16, bytearray_ptr, c_uint16, c_uint8
 
 GENL_NAMSIZ = 16  # Length of family name.
 GENL_MIN_ID = NLMSG_MIN_TYPE
@@ -42,27 +40,27 @@ class genlmsghdr(Struct):
 
     @property
     def cmd(self):
-        return ctypes.c_uint8.from_buffer(self.bytearray[self._get_slicers(0)]).value
+        return c_uint8.from_buffer(self.bytearray[self._get_slicers(0)]).value
 
     @cmd.setter
     def cmd(self, value):
-        self.bytearray[self._get_slicers(0)] = bytearray(ctypes.c_uint8(value or 0))
+        self.bytearray[self._get_slicers(0)] = bytearray(c_uint8(value or 0))
 
     @property
     def version(self):
-        return ctypes.c_uint8.from_buffer(self.bytearray[self._get_slicers(1)]).value
+        return c_uint8.from_buffer(self.bytearray[self._get_slicers(1)]).value
 
     @version.setter
     def version(self, value):
-        self.bytearray[self._get_slicers(1)] = bytearray(ctypes.c_uint8(value or 0))
+        self.bytearray[self._get_slicers(1)] = bytearray(c_uint8(value or 0))
 
     @property
     def reserved(self):
-        return ctypes.c_uint16.from_buffer(self.bytearray[self._get_slicers(2)]).value
+        return c_uint16.from_buffer(self.bytearray[self._get_slicers(2)]).value
 
     @reserved.setter
     def reserved(self, value):
-        self.bytearray[self._get_slicers(2)] = bytearray(ctypes.c_uint16(value or 0))
+        self.bytearray[self._get_slicers(2)] = bytearray(c_uint16(value or 0))
 
     @property
     def payload(self):

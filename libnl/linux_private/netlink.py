@@ -7,9 +7,8 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-import ctypes
-
-from libnl.misc import Struct, SIZEOF_UINT, SIZEOF_USHORT, SIZEOF_U32, SIZEOF_U16, SIZEOF_INT, bytearray_ptr
+from libnl.misc import (Struct, SIZEOF_UINT, SIZEOF_USHORT, SIZEOF_U32, SIZEOF_U16, SIZEOF_INT, bytearray_ptr, c_uint16,
+                        c_uint32, c_uint, c_int, c_ushort)
 
 NETLINK_ROUTE = 0  # Routing/device hook.
 NETLINK_GENERIC = 16
@@ -61,38 +60,38 @@ class sockaddr_nl(Struct):
     @property
     def nl_family(self):
         """AF_NETLINK."""
-        return ctypes.c_uint.from_buffer(self.bytearray[self._get_slicers(0)]).value
+        return c_uint.from_buffer(self.bytearray[self._get_slicers(0)]).value
 
     @nl_family.setter
     def nl_family(self, value):
-        self.bytearray[self._get_slicers(0)] = bytearray(ctypes.c_uint(value or 0))
+        self.bytearray[self._get_slicers(0)] = bytearray(c_uint(value or 0))
 
     @property
     def nl_pad(self):
         """Zero."""
-        return ctypes.c_ushort.from_buffer(self.bytearray[self._get_slicers(1)]).value
+        return c_ushort.from_buffer(self.bytearray[self._get_slicers(1)]).value
 
     @nl_pad.setter
     def nl_pad(self, value):
-        self.bytearray[self._get_slicers(1)] = bytearray(ctypes.c_ushort(value or 0))
+        self.bytearray[self._get_slicers(1)] = bytearray(c_ushort(value or 0))
 
     @property
     def nl_pid(self):
         """Port ID."""
-        return ctypes.c_uint32.from_buffer(self.bytearray[self._get_slicers(2)]).value
+        return c_uint32.from_buffer(self.bytearray[self._get_slicers(2)]).value
 
     @nl_pid.setter
     def nl_pid(self, value):
-        self.bytearray[self._get_slicers(2)] = bytearray(ctypes.c_uint32(value or 0))
+        self.bytearray[self._get_slicers(2)] = bytearray(c_uint32(value or 0))
 
     @property
     def nl_groups(self):
         """Port ID."""
-        return ctypes.c_uint32.from_buffer(self.bytearray[self._get_slicers(3)]).value
+        return c_uint32.from_buffer(self.bytearray[self._get_slicers(3)]).value
 
     @nl_groups.setter
     def nl_groups(self, value):
-        self.bytearray[self._get_slicers(3)] = bytearray(ctypes.c_uint32(value or 0))
+        self.bytearray[self._get_slicers(3)] = bytearray(c_uint32(value or 0))
 
 
 class nlmsghdr(Struct):
@@ -135,47 +134,47 @@ class nlmsghdr(Struct):
     @property
     def nlmsg_len(self):
         """Length of message including header."""
-        return ctypes.c_uint32.from_buffer(self.bytearray[self._get_slicers(0)]).value
+        return c_uint32.from_buffer(self.bytearray[self._get_slicers(0)]).value
 
     @nlmsg_len.setter
     def nlmsg_len(self, value):
-        self.bytearray[self._get_slicers(0)] = bytearray(ctypes.c_uint32(value or 0))
+        self.bytearray[self._get_slicers(0)] = bytearray(c_uint32(value or 0))
 
     @property
     def nlmsg_type(self):
         """Message content."""
-        return ctypes.c_uint16.from_buffer(self.bytearray[self._get_slicers(1)]).value
+        return c_uint16.from_buffer(self.bytearray[self._get_slicers(1)]).value
 
     @nlmsg_type.setter
     def nlmsg_type(self, value):
-        self.bytearray[self._get_slicers(1)] = bytearray(ctypes.c_uint16(value or 0))
+        self.bytearray[self._get_slicers(1)] = bytearray(c_uint16(value or 0))
 
     @property
     def nlmsg_flags(self):
         """Additional flags."""
-        return ctypes.c_uint16.from_buffer(self.bytearray[self._get_slicers(2)]).value
+        return c_uint16.from_buffer(self.bytearray[self._get_slicers(2)]).value
 
     @nlmsg_flags.setter
     def nlmsg_flags(self, value):
-        self.bytearray[self._get_slicers(2)] = bytearray(ctypes.c_uint16(value or 0))
+        self.bytearray[self._get_slicers(2)] = bytearray(c_uint16(value or 0))
 
     @property
     def nlmsg_seq(self):
         """Sequence number."""
-        return ctypes.c_uint32.from_buffer(self.bytearray[self._get_slicers(3)]).value
+        return c_uint32.from_buffer(self.bytearray[self._get_slicers(3)]).value
 
     @nlmsg_seq.setter
     def nlmsg_seq(self, value):
-        self.bytearray[self._get_slicers(3)] = bytearray(ctypes.c_uint32(value or 0))
+        self.bytearray[self._get_slicers(3)] = bytearray(c_uint32(value or 0))
 
     @property
     def nlmsg_pid(self):
         """Sending process port ID."""
-        return ctypes.c_uint32.from_buffer(self.bytearray[self._get_slicers(4)]).value
+        return c_uint32.from_buffer(self.bytearray[self._get_slicers(4)]).value
 
     @nlmsg_pid.setter
     def nlmsg_pid(self, value):
-        self.bytearray[self._get_slicers(4)] = bytearray(ctypes.c_uint32(value or 0))
+        self.bytearray[self._get_slicers(4)] = bytearray(c_uint32(value or 0))
 
     @property
     def payload(self):
@@ -183,7 +182,7 @@ class nlmsghdr(Struct):
         return bytearray_ptr(self.bytearray, self._get_slicers(4).stop)
 
 
-NLMSG_ALIGNTO = ctypes.c_uint(4).value
+NLMSG_ALIGNTO = c_uint(4).value
 NLMSG_ALIGN = lambda len_: (len_ + NLMSG_ALIGNTO - 1) & ~(NLMSG_ALIGNTO - 1)
 NLMSG_HDRLEN = NLMSG_ALIGN(nlmsghdr.SIZEOF)
 NLMSG_LENGTH = lambda len_: len_ + NLMSG_ALIGN(NLMSG_HDRLEN)
@@ -208,7 +207,7 @@ class nlmsgerr(Struct):
 
     @property
     def error(self):
-        return ctypes.c_int.from_buffer(self.bytearray[self._get_slicers(0)]).value
+        return c_int.from_buffer(self.bytearray[self._get_slicers(0)]).value
 
     @property
     def msg(self):
@@ -258,19 +257,19 @@ class nlattr(Struct):
 
     @property
     def nla_len(self):
-        return ctypes.c_uint16.from_buffer(self.bytearray[self._get_slicers(0)]).value
+        return c_uint16.from_buffer(self.bytearray[self._get_slicers(0)]).value
 
     @nla_len.setter
     def nla_len(self, value):
-        self.bytearray[self._get_slicers(0)] = bytearray(ctypes.c_uint16(value or 0))
+        self.bytearray[self._get_slicers(0)] = bytearray(c_uint16(value or 0))
 
     @property
     def nla_type(self):
-        return ctypes.c_uint16.from_buffer(self.bytearray[self._get_slicers(1)]).value
+        return c_uint16.from_buffer(self.bytearray[self._get_slicers(1)]).value
 
     @nla_type.setter
     def nla_type(self, value):
-        self.bytearray[self._get_slicers(1)] = bytearray(ctypes.c_uint16(value or 0))
+        self.bytearray[self._get_slicers(1)] = bytearray(c_uint16(value or 0))
 
     @property
     def payload(self):

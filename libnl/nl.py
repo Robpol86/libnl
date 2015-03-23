@@ -13,7 +13,6 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-import ctypes
 import errno
 import logging
 import socket
@@ -28,7 +27,7 @@ from libnl.handlers import (NL_OK, NL_CB_MSG_OUT, NL_CB_MSG_IN, NL_CB_SEQ_CHECK,
 from libnl.linux_private.netlink import (NLM_F_REQUEST, NLM_F_ACK, sockaddr_nl, nlmsghdr, NLMSG_DONE, NLMSG_ERROR,
                                          NLMSG_NOOP, NLMSG_OVERRUN, NLM_F_MULTI, NLM_F_DUMP_INTR, nlmsgerr,
                                          NLMSG_ALIGNTO)
-from libnl.misc import msghdr, ucred, bytearray_ptr
+from libnl.misc import msghdr, ucred, bytearray_ptr, c_int
 from libnl.msg import (nlmsg_alloc_simple, nlmsg_append, NL_AUTO_PORT, nlmsg_get_dst, nlmsg_get_creds, nlmsg_set_src,
                        nlmsg_hdr, NL_AUTO_SEQ, nlmsg_convert, nlmsg_set_proto, nlmsg_data, nlmsg_size, nlmsg_ok,
                        nlmsg_next)
@@ -392,7 +391,7 @@ def recvmsgs(sk, cb):
 
     while True:  # This is the `goto continue_reading` implementation.
         _LOGGER.debug('Attempting to read from 0x%x', id(sk))
-        n = ctypes.c_int(cb.cb_recv_ow(sk, nla, buf, creds) if cb.cb_recv_ow else nl_recv(sk, nla, buf, creds))
+        n = c_int(cb.cb_recv_ow(sk, nla, buf, creds) if cb.cb_recv_ow else nl_recv(sk, nla, buf, creds))
         if n.value <= 0:
             return n.value
 

@@ -1,17 +1,19 @@
 """Misc code not defined in Netlink but used by it."""
 
-import ctypes
+from ctypes import (c_uint16, c_uint, c_uint32, c_ubyte, c_int, c_int8, c_uint64, sizeof, c_ushort, c_int32, c_void_p,
+                    c_uint8, c_ulong)
 
-SIZEOF_INT = ctypes.sizeof(ctypes.c_int)
-SIZEOF_POINTER = ctypes.sizeof(ctypes.c_void_p)  # Platform dependant.
-SIZEOF_S8 = ctypes.sizeof(ctypes.c_int8)
-SIZEOF_U16 = ctypes.sizeof(ctypes.c_uint16)
-SIZEOF_U32 = ctypes.sizeof(ctypes.c_uint32)
-SIZEOF_U64 = ctypes.sizeof(ctypes.c_uint64)
-SIZEOF_U8 = ctypes.sizeof(ctypes.c_uint8)
-SIZEOF_UBYTE = ctypes.sizeof(ctypes.c_ubyte)
-SIZEOF_UINT = ctypes.sizeof(ctypes.c_uint)
-SIZEOF_USHORT = ctypes.sizeof(ctypes.c_ushort)
+SIZEOF_INT = sizeof(c_int)
+SIZEOF_POINTER = sizeof(c_void_p)  # Platform dependant.
+SIZEOF_S8 = sizeof(c_int8)
+SIZEOF_U16 = sizeof(c_uint16)
+SIZEOF_U32 = sizeof(c_uint32)
+SIZEOF_U64 = sizeof(c_uint64)
+SIZEOF_U8 = sizeof(c_uint8)
+SIZEOF_UBYTE = sizeof(c_ubyte)
+SIZEOF_UINT = sizeof(c_uint)
+SIZEOF_USHORT = sizeof(c_ushort)
+SIZEOF_ULONG = sizeof(c_ulong)
 
 
 class _DynamicDict(dict):
@@ -101,29 +103,29 @@ class ucred(Struct):
     @property
     def pid(self):
         """Process ID of the sending process."""
-        return ctypes.c_uint32.from_buffer(self.bytearray[self._get_slicers(0)]).value
+        return c_uint32.from_buffer(self.bytearray[self._get_slicers(0)]).value
 
     @pid.setter
     def pid(self, value):
-        self.bytearray[self._get_slicers(0)] = bytearray(ctypes.c_int32(value or 0))
+        self.bytearray[self._get_slicers(0)] = bytearray(c_int32(value or 0))
 
     @property
     def uid(self):
         """User ID of the sending process."""
-        return ctypes.c_uint32.from_buffer(self.bytearray[self._get_slicers(1)]).value
+        return c_uint32.from_buffer(self.bytearray[self._get_slicers(1)]).value
 
     @uid.setter
     def uid(self, value):
-        self.bytearray[self._get_slicers(1)] = bytearray(ctypes.c_int32(value or 0))
+        self.bytearray[self._get_slicers(1)] = bytearray(c_int32(value or 0))
 
     @property
     def gid(self):
         """Group ID of the sending process."""
-        return ctypes.c_uint32.from_buffer(self.bytearray[self._get_slicers(2)]).value
+        return c_uint32.from_buffer(self.bytearray[self._get_slicers(2)]).value
 
     @gid.setter
     def gid(self, value):
-        self.bytearray[self._get_slicers(2)] = bytearray(ctypes.c_int32(value or 0))
+        self.bytearray[self._get_slicers(2)] = bytearray(c_int32(value or 0))
 
 
 class msghdr(object):

@@ -1,11 +1,10 @@
 import base64
-import ctypes
 import socket
 import string
 
 import libnl.attr
 from libnl.linux_private.netlink import NETLINK_ROUTE
-from libnl.misc import msghdr
+from libnl.misc import msghdr, c_int
 from libnl.msg import nlmsg_alloc, nlmsg_hdr, nlmsg_find_attr, nlmsg_for_each_attr, nlmsg_total_size
 from libnl.msg_ import nlmsg_datalen
 from libnl.nl import nl_sendmsg, nl_connect, nl_complete_msg
@@ -33,7 +32,7 @@ def test_nla_put_get_u32():
     // type: 4; nla_get_u32: 20
     // type: 5; nla_get_u32: 50
     """
-    rem = ctypes.c_int()
+    rem = c_int()
     range_ = (0, 1, 2, 19, 20, 50)
     msg = nlmsg_alloc()
     nlh = nlmsg_hdr(msg)
@@ -291,7 +290,7 @@ def test_nested():
     // type: 7 len: 21; nla_get_string: Blame my upbringing!
     // t: 9 l:2; get_u16: 666
     """
-    rem1, rem2 = ctypes.c_int(), ctypes.c_int()
+    rem1, rem2 = c_int(), c_int()
     msg = nlmsg_alloc()
     sub = nlmsg_alloc()
     nlh = nlmsg_hdr(sub)

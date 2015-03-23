@@ -7,9 +7,8 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-import ctypes
-
-from libnl.misc import Struct, SIZEOF_UBYTE, SIZEOF_USHORT, SIZEOF_INT, SIZEOF_UINT, bytearray_ptr
+from libnl.misc import (Struct, SIZEOF_UBYTE, SIZEOF_USHORT, SIZEOF_INT, SIZEOF_UINT, bytearray_ptr, c_uint, c_int,
+                        c_ubyte, c_ushort)
 
 RTNL_FAMILY_IPMR = 128
 RTNL_FAMILY_IP6MR = 129
@@ -87,19 +86,19 @@ class rtattr(Struct):
 
     @property
     def rta_len(self):
-        return ctypes.c_ushort.from_buffer(self.bytearray[self._get_slicers(0)]).value
+        return c_ushort.from_buffer(self.bytearray[self._get_slicers(0)]).value
 
     @rta_len.setter
     def rta_len(self, value):
-        self.bytearray[self._get_slicers(0)] = bytearray(ctypes.c_ushort(value or 0))
+        self.bytearray[self._get_slicers(0)] = bytearray(c_ushort(value or 0))
 
     @property
     def rta_type(self):
-        return ctypes.c_ushort.from_buffer(self.bytearray[self._get_slicers(1)]).value
+        return c_ushort.from_buffer(self.bytearray[self._get_slicers(1)]).value
 
     @rta_type.setter
     def rta_type(self, value):
-        self.bytearray[self._get_slicers(1)] = bytearray(ctypes.c_ushort(value or 0))
+        self.bytearray[self._get_slicers(1)] = bytearray(c_ushort(value or 0))
 
     @property
     def payload(self):
@@ -136,11 +135,11 @@ class rtgenmsg(Struct):
     @property
     def rtgen_family(self):
         """rtgen family."""
-        return ctypes.c_ubyte.from_buffer(self.bytearray[self._get_slicers(0)]).value
+        return c_ubyte.from_buffer(self.bytearray[self._get_slicers(0)]).value
 
     @rtgen_family.setter
     def rtgen_family(self, value):
-        self.bytearray[self._get_slicers(0)] = bytearray(ctypes.c_ubyte(value or 0))
+        self.bytearray[self._get_slicers(0)] = bytearray(c_ubyte(value or 0))
 
 
 class ifinfomsg(Struct):
@@ -176,43 +175,43 @@ class ifinfomsg(Struct):
 
     @property
     def ifi_family(self):
-        return ctypes.c_ubyte.from_buffer(self.bytearray[self._get_slicers(0)]).value
+        return c_ubyte.from_buffer(self.bytearray[self._get_slicers(0)]).value
 
     @ifi_family.setter
     def ifi_family(self, value):
-        self.bytearray[self._get_slicers(0)] = bytearray(ctypes.c_ubyte(value or 0))
+        self.bytearray[self._get_slicers(0)] = bytearray(c_ubyte(value or 0))
 
     @property
     def ifi_type(self):
-        return ctypes.c_ushort.from_buffer(self.bytearray[self._get_slicers(2)]).value
+        return c_ushort.from_buffer(self.bytearray[self._get_slicers(2)]).value
 
     @ifi_type.setter
     def ifi_type(self, value):
-        self.bytearray[self._get_slicers(2)] = bytearray(ctypes.c_ushort(value or 0))
+        self.bytearray[self._get_slicers(2)] = bytearray(c_ushort(value or 0))
 
     @property
     def ifi_index(self):
-        return ctypes.c_int.from_buffer(self.bytearray[self._get_slicers(3)]).value
+        return c_int.from_buffer(self.bytearray[self._get_slicers(3)]).value
 
     @ifi_index.setter
     def ifi_index(self, value):
-        self.bytearray[self._get_slicers(3)] = bytearray(ctypes.c_int(value or 0))
+        self.bytearray[self._get_slicers(3)] = bytearray(c_int(value or 0))
 
     @property
     def ifi_flags(self):
-        return ctypes.c_uint.from_buffer(self.bytearray[self._get_slicers(4)]).value
+        return c_uint.from_buffer(self.bytearray[self._get_slicers(4)]).value
 
     @ifi_flags.setter
     def ifi_flags(self, value):
-        self.bytearray[self._get_slicers(4)] = bytearray(ctypes.c_uint(value or 0))
+        self.bytearray[self._get_slicers(4)] = bytearray(c_uint(value or 0))
 
     @property
     def ifi_change(self):
-        return ctypes.c_uint.from_buffer(self.bytearray[self._get_slicers(5)]).value
+        return c_uint.from_buffer(self.bytearray[self._get_slicers(5)]).value
 
     @ifi_change.setter
     def ifi_change(self, value):
-        self.bytearray[self._get_slicers(5)] = bytearray(ctypes.c_uint(value or 0))
+        self.bytearray[self._get_slicers(5)] = bytearray(c_uint(value or 0))
 
     @property
     def payload(self):

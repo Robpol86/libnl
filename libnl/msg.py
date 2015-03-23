@@ -10,7 +10,6 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-import ctypes
 import logging
 import os
 import resource
@@ -21,7 +20,7 @@ from libnl.attr import nla_for_each_attr, nla_find, nla_is_nested, nla_len, nla_
 from libnl.cache_mngt import nl_msgtype_lookup, nl_cache_ops_associate_safe
 from libnl.errno_ import NLE_NOMEM, NLE_MSG_TOOSHORT
 from libnl.linux_private.genetlink import GENL_HDRLEN, genlmsghdr
-from libnl.misc import bytearray_ptr
+from libnl.misc import bytearray_ptr, c_int
 from libnl.msg_ import nlmsg_data, nlmsg_len
 from libnl.netlink_private.netlink import BUG
 from libnl.netlink_private.types import nl_msg, NL_MSG_CRED_PRESENT
@@ -590,7 +589,7 @@ def dump_attrs(ofd, attrs, attrlen, prefix=0):
     prefix -- additional number of whitespace pairs to prefix each log statement with.
     """
     prefix_whitespaces = '  ' * prefix
-    rem = ctypes.c_int()
+    rem = c_int()
     for nla in nla_for_each_attr(attrs, attrlen, rem):
         alen = nla_len(nla)
         if nla.nla_type == 0:
@@ -642,7 +641,7 @@ def print_msg(msg, ofd, hdr):
     ofd -- function to call with arguments similar to `logging.debug`.
     hdr -- Netlink message header (nlmsghdr class instance).
     """
-    payloadlen = ctypes.c_int(nlmsg_len(hdr))
+    payloadlen = c_int(nlmsg_len(hdr))
     attrlen = 0
     data = nlmsg_data(hdr)
     ops = nl_cache_ops_associate_safe(msg.nm_protocol, hdr.nlmsg_type)

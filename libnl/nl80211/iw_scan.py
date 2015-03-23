@@ -19,10 +19,8 @@ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 """
 
-import ctypes
-
 from libnl.attr import nla_policy, NLA_U32, NLA_U64, NLA_U16, NLA_U8
-from libnl.misc import SIZEOF_U8, SIZEOF_S8
+from libnl.misc import SIZEOF_U8, SIZEOF_S8, c_int8, c_uint8
 from libnl.nl80211 import nl80211
 from libnl.nl80211.iw_util import get_ssid, get_ht_capability, get_ht_mcs, ampdu_space
 
@@ -73,14 +71,14 @@ class ieee80211_country_ie_triplet(object):
     """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n60"""
 
     def __init__(self, data):
-        self.first_channel = ctypes.c_uint8.from_buffer(data[:SIZEOF_U8]).value
+        self.first_channel = c_uint8.from_buffer(data[:SIZEOF_U8]).value
         self.reg_extension_id = self.first_channel
         data = data[SIZEOF_U8:]
-        self.num_channels = ctypes.c_uint8.from_buffer(data[:SIZEOF_U8]).value
+        self.num_channels = c_uint8.from_buffer(data[:SIZEOF_U8]).value
         self.reg_class = self.num_channels
         data = data[SIZEOF_U8:]
-        self.max_power = ctypes.c_int8.from_buffer(data[:SIZEOF_S8]).value
-        self.coverage_class = ctypes.c_uint8.from_buffer(data[:SIZEOF_U8]).value
+        self.max_power = c_int8.from_buffer(data[:SIZEOF_S8]).value
+        self.coverage_class = c_uint8.from_buffer(data[:SIZEOF_U8]).value
         self.chans = self.ext = self
 
 

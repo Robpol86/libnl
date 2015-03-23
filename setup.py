@@ -58,9 +58,10 @@ class PyTest(test):
 
 
 class PyTestPdb(PyTest):
-    description = 'Run all tests, drops to ipdb upon unhandled exception.'
+    ipdb = 'ipdb' if sys.version_info[:2] > (2, 6) else 'pdb'
+    description = 'Run all tests, drops to {0} upon unhandled exception.'.format(ipdb)
     CMD = 'testpdb'
-    TEST_ARGS = ['--ipdb', 'tests']
+    TEST_ARGS = ['--{0}'.format(ipdb), 'tests']
 
 
 class PyTestCovWeb(PyTest):

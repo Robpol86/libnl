@@ -8,12 +8,12 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-import ctypes
 import logging
 
 from libnl.errno_ import NLE_RANGE, NLE_INVAL, NLE_NOMEM
 from libnl.linux_private.netlink import nlattr, NLA_ALIGN, NLA_TYPE_MASK, NLA_HDRLEN, NLA_F_NESTED, NLMSG_ALIGN
-from libnl.misc import SIZEOF_U8, SIZEOF_U16, SIZEOF_U32, SIZEOF_U64, bytearray_ptr, get_string
+from libnl.misc import (SIZEOF_U8, SIZEOF_U16, SIZEOF_U32, SIZEOF_U64, bytearray_ptr, get_string, c_ulong, c_uint16,
+                        c_uint32, c_int, c_uint64, sizeof, c_uint8)
 from libnl.msg_ import nlmsg_tail, nlmsg_data, nlmsg_datalen
 from libnl.netlink_private.netlink import BUG
 
@@ -257,7 +257,7 @@ def nla_parse(tb, maxtype, head, len_, policy):
     Returns:
     0 on success or a negative error code.
     """
-    rem = ctypes.c_int()
+    rem = c_int()
     for nla in nla_for_each_attr(head, len_, rem):
         type_ = nla_type(nla)
         if type_ > maxtype:
@@ -331,7 +331,7 @@ def nla_find(head, len_, attrtype):
     Returns:
     Attribute found (nlattr class instance) or None.
     """
-    rem = ctypes.c_int()
+    rem = c_int()
     for nla in nla_for_each_attr(head, len_, rem):
         if nla_type(nla) == attrtype:
             return nla
@@ -432,7 +432,7 @@ def nla_put_u8(msg, attrtype, value):
     Returns:
     0 on success or a negative error code.
     """
-    data = bytearray(value if isinstance(value, ctypes.c_uint8) else ctypes.c_uint8(value))
+    data = bytearray(value if isinstance(value, c_uint8) else c_uint8(value))
     return nla_put(msg, attrtype, SIZEOF_U8, data)
 
 
@@ -446,7 +446,7 @@ def nla_get_u8(nla):
     Returns:
     Payload as an int().
     """
-    return int(ctypes.c_uint8.from_buffer(nla_data(nla)[:SIZEOF_U8]).value)
+    return int(c_uint8.from_buffer(nla_data(nla)[:SIZEOF_U8]).value)
 
 
 def nla_put_u16(msg, attrtype, value):
@@ -461,7 +461,7 @@ def nla_put_u16(msg, attrtype, value):
     Returns:
     0 on success or a negative error code.
     """
-    data = bytearray(value if isinstance(value, ctypes.c_uint16) else ctypes.c_uint16(value))
+    data = bytearray(value if isinstance(value, c_uint16) else c_uint16(value))
     return nla_put(msg, attrtype, SIZEOF_U16, data)
 
 
@@ -475,7 +475,7 @@ def nla_get_u16(nla):
     Returns:
     Payload as an int().
     """
-    return int(ctypes.c_uint16.from_buffer(nla_data(nla)[:SIZEOF_U16]).value)
+    return int(c_uint16.from_buffer(nla_data(nla)[:SIZEOF_U16]).value)
 
 
 def nla_put_u32(msg, attrtype, value):
@@ -490,7 +490,7 @@ def nla_put_u32(msg, attrtype, value):
     Returns:
     0 on success or a negative error code.
     """
-    data = bytearray(value if isinstance(value, ctypes.c_uint32) else ctypes.c_uint32(value))
+    data = bytearray(value if isinstance(value, c_uint32) else c_uint32(value))
     return nla_put(msg, attrtype, SIZEOF_U32, data)
 
 
@@ -504,7 +504,7 @@ def nla_get_u32(nla):
     Returns:
     Payload as an int().
     """
-    return int(ctypes.c_uint32.from_buffer(nla_data(nla)[:SIZEOF_U32]).value)
+    return int(c_uint32.from_buffer(nla_data(nla)[:SIZEOF_U32]).value)
 
 
 def nla_put_u64(msg, attrtype, value):
@@ -519,7 +519,7 @@ def nla_put_u64(msg, attrtype, value):
     Returns:
     0 on success or a negative error code.
     """
-    data = bytearray(value if isinstance(value, ctypes.c_uint64) else ctypes.c_uint64(value))
+    data = bytearray(value if isinstance(value, c_uint64) else c_uint64(value))
     return nla_put(msg, attrtype, SIZEOF_U64, data)
 
 
@@ -533,9 +533,9 @@ def nla_get_u64(nla):
     Returns:
     Payload as an int().
     """
-    tmp = ctypes.c_uint64(0)
-    if nla and nla_len(nla) >= ctypes.sizeof(tmp):
-        tmp = ctypes.c_uint64.from_buffer(nla_data(nla)[:SIZEOF_U64])
+    tmp = c_uint64(0)
+    if nla and nla_len(nla) >= sizeof(tmp):
+        tmp = c_uint64.from_buffer(nla_data(nla)[:SIZEOF_U64])
     return int(tmp.value)
 
 
@@ -607,12 +607,12 @@ def nla_put_msecs(msg, attrtype, msecs):
     Returns:
     0 on success or a negative error code.
     """
-    if isinstance(msecs, ctypes.c_uint64):
+    if isinstance(msecs, c_uint64):
         pass
-    elif isinstance(msecs, ctypes.c_ulong):
-        msecs = ctypes.c_uint64(msecs.value)
+    elif isinstance(msecs, c_ulong):
+        msecs = c_uint64(msecs.value)
     else:
-        msecs = ctypes.c_uint64(msecs)
+        msecs = c_uint64(msecs)
     return nla_put_u64(msg, attrtype, msecs)
 
 

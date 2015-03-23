@@ -7,8 +7,6 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-import ctypes
-
 from libnl.attr import (nla_get_u16, nla_put_string, NLA_U16, NLA_STRING, NLA_U32, NLA_NESTED, nla_policy,
                         nla_for_each_nested, nla_get_u32, nla_get_string, nla_parse_nested)
 from libnl.cache import NL_ACT_UNSPEC
@@ -27,7 +25,7 @@ from libnl.linux_private.genetlink import (CTRL_CMD_GETFAMILY, GENL_ID_CTRL, CTR
                                            CTRL_ATTR_OP_FLAGS)
 from libnl.linux_private.netlink import NETLINK_GENERIC, NLM_F_DUMP
 from libnl.list_ import nl_list_for_each_entry
-from libnl.misc import __init
+from libnl.misc import __init, c_int
 from libnl.msg import NL_AUTO_SEQ, NL_AUTO_PORT, nlmsg_alloc, nlmsg_hdr
 from libnl.netlink_private.cache_api import nl_cache_ops, nl_msgtype
 from libnl.netlink_private.netlink import BUG
@@ -86,7 +84,7 @@ def parse_mcast_grps(family, grp_attr):
     Returns:
     0 on success or a negative error code.
     """
-    remaining = ctypes.c_int()
+    remaining = c_int()
     if not grp_attr:
         raise BUG
 

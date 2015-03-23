@@ -1,4 +1,3 @@
-import ctypes
 import re
 
 import pytest
@@ -8,6 +7,7 @@ from libnl.genl.ctrl import genl_ctrl_resolve, genl_ctrl_resolve_grp
 from libnl.genl.genl import genl_connect, genlmsg_put, genlmsg_attrdata, genlmsg_attrlen
 from libnl.linux_private.genetlink import genlmsghdr
 from libnl.linux_private.netlink import NLM_F_DUMP
+from libnl.misc import c_int
 from libnl.msg import nlmsg_alloc, nlmsg_hdr
 from libnl.msg_ import nlmsg_data
 from libnl.nl import nl_send_auto, nl_recvmsgs_default, nl_wait_for_ack, nl_recvmsgs
@@ -934,8 +934,8 @@ def test_cmd_trigger_scan(log, ifacesi):
         return libnl.handlers.NL_SKIP
 
     def do_scan_trigger(sk, if_index, driver_id):
-        err = ctypes.c_int(1)
-        results = ctypes.c_int(-1)
+        err = c_int(1)
+        results = c_int(-1)
         mcid = genl_ctrl_resolve_grp(sk, b'nl80211', b'scan')
         assert 0 < mcid
         assert 0 == libnl.socket_.nl_socket_add_membership(sk, mcid)

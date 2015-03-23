@@ -4,15 +4,15 @@ import re
 import pytest
 
 from libnl.attr import nla_put_string
-from libnl.genl.ctrl import genl_ctrl_resolve, genl_ctrl_probe_by_name
-from libnl.genl.family import genl_family_set_name, genl_family_alloc
+from libnl.genl.ctrl import genl_ctrl_probe_by_name, genl_ctrl_resolve
+from libnl.genl.family import genl_family_alloc, genl_family_set_name
 from libnl.genl.genl import genl_connect, genlmsg_put
-from libnl.handlers import NL_CB_VALID, NL_CB_CUSTOM, NL_OK, nl_cb_overwrite_send, nl_cb_overwrite_recv
-from libnl.linux_private.genetlink import GENL_ID_CTRL, CTRL_CMD_GETFAMILY, CTRL_ATTR_FAMILY_NAME
-from libnl.msg import nlmsg_alloc, NL_AUTO_PORT, NL_AUTO_SEQ, dump_hex, nlmsg_hdr
+from libnl.handlers import NL_CB_CUSTOM, nl_cb_overwrite_recv, nl_cb_overwrite_send, NL_CB_VALID, NL_OK
+from libnl.linux_private.genetlink import CTRL_ATTR_FAMILY_NAME, CTRL_CMD_GETFAMILY, GENL_ID_CTRL
+from libnl.msg import dump_hex, NL_AUTO_PORT, NL_AUTO_SEQ, nlmsg_alloc, nlmsg_hdr
 from libnl.msg_ import nlmsg_datalen
-from libnl.nl import nl_send_auto, nl_recvmsgs_default, nl_send_iovec, nl_recv
-from libnl.socket_ import nl_socket_alloc, nl_socket_modify_cb, nl_socket_free
+from libnl.nl import nl_recv, nl_recvmsgs_default, nl_send_auto, nl_send_iovec
+from libnl.socket_ import nl_socket_alloc, nl_socket_free, nl_socket_modify_cb
 
 
 def match(expected, log, is_regex=False):

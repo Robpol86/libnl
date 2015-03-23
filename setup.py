@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
 import atexit
-from codecs import open
-from distutils.spawn import find_executable
 import os
 import re
-import sys
 import subprocess
+import sys
+from codecs import open
+from distutils.spawn import find_executable
 
 import setuptools.command.sdist
 from setuptools.command.test import test

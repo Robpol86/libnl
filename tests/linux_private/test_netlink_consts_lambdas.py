@@ -1,4 +1,4 @@
-from libnl.linux_private.netlink import NLMSG_ALIGN, NLA_ALIGN, NLA_HDRLEN, NLMSG_HDRLEN, NLMSG_LENGTH, NLMSG_SPACE
+from libnl.linux_private.netlink import NLA_ALIGN, NLA_HDRLEN, NLMSG_ALIGN, NLMSG_HDRLEN, NLMSG_LENGTH, NLMSG_SPACE
 
 
 def test_nlmsg_align():

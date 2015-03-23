@@ -16,9 +16,9 @@ import resource
 import string
 
 import libnl.linux_private.netlink
-from libnl.attr import nla_for_each_attr, nla_find, nla_is_nested, nla_len, nla_padlen, nla_data, nla_parse
-from libnl.cache_mngt import nl_msgtype_lookup, nl_cache_ops_associate_safe
-from libnl.errno_ import NLE_NOMEM, NLE_MSG_TOOSHORT
+from libnl.attr import nla_data, nla_find, nla_for_each_attr, nla_is_nested, nla_len, nla_padlen, nla_parse
+from libnl.cache_mngt import nl_cache_ops_associate_safe, nl_msgtype_lookup
+from libnl.errno_ import NLE_MSG_TOOSHORT, NLE_NOMEM
 from libnl.linux_private.genetlink import GENL_HDRLEN, genlmsghdr
 from libnl.misc import bytearray_ptr, c_int
 from libnl.msg_ import nlmsg_data, nlmsg_len

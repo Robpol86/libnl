@@ -14,7 +14,7 @@ from os import strerror
 
 from libnl.errno_ import NLE_RANGE
 from libnl.error import nl_syserr2nlerr
-from libnl.msg import nl_msg_dump, nlmsg_hdr, nl_nlmsgtype2str, nl_nlmsg_flags2str
+from libnl.msg import nl_msg_dump, nl_nlmsg_flags2str, nl_nlmsgtype2str, nlmsg_hdr
 from libnl.netlink_private.types import nl_cb
 
 _LOGGER = logging.getLogger(__name__)

@@ -1,7 +1,7 @@
 """Misc code not defined in Netlink but used by it."""
 
-from ctypes import (c_uint16, c_uint, c_uint32, c_ubyte, c_int, c_int8, c_uint64, sizeof, c_ushort, c_int32, c_void_p,
-                    c_uint8, c_ulong)
+from ctypes import (c_int, c_int32, c_int8, c_ubyte, c_uint, c_uint16, c_uint32, c_uint64, c_uint8, c_ulong, c_ushort,
+                    c_void_p, sizeof)
 
 SIZEOF_INT = sizeof(c_int)
 SIZEOF_POINTER = sizeof(c_void_p)  # Platform dependant.

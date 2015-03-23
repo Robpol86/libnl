@@ -3,7 +3,7 @@ import socket
 from libnl.linux_private.netlink import NETLINK_ROUTE
 from libnl.misc import msghdr
 from libnl.msg import nlmsg_alloc_simple
-from libnl.nl import nl_connect, nl_complete_msg, nl_sendmsg
+from libnl.nl import nl_complete_msg, nl_connect, nl_sendmsg
 from libnl.socket_ import nl_socket_alloc, nl_socket_free
 
 

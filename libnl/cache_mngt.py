@@ -10,7 +10,7 @@ of the License.
 import logging
 import threading
 
-from libnl.errno_ import NLE_INVAL, NLE_EXIST
+from libnl.errno_ import NLE_EXIST, NLE_INVAL
 from libnl.netlink_private.cache_api import nl_cache_ops
 
 _LOGGER = logging.getLogger(__name__)

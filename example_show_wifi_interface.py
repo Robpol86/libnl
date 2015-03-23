@@ -30,6 +30,7 @@ Options:
 """
 
 from __future__ import print_function
+
 import fcntl
 import logging
 import signal
@@ -38,7 +39,8 @@ import struct
 import sys
 
 from docopt import docopt
-from libnl.nl80211 import nl80211
+from terminaltables import AsciiTable
+
 from libnl.attr import nla_data, nla_get_string, nla_get_u32, nla_parse, nla_put_u32
 from libnl.error import errmsg
 from libnl.genl.ctrl import genl_ctrl_resolve
@@ -48,8 +50,8 @@ from libnl.linux_private.genetlink import genlmsghdr
 from libnl.linux_private.netlink import NLM_F_DUMP
 from libnl.msg import nlmsg_alloc, nlmsg_data, nlmsg_hdr
 from libnl.nl import nl_recvmsgs_default, nl_send_auto
+from libnl.nl80211 import nl80211
 from libnl.socket_ import nl_socket_alloc, nl_socket_modify_cb
-from terminaltables import AsciiTable
 
 OPTIONS = docopt(__doc__) if __name__ == '__main__' else dict()
 

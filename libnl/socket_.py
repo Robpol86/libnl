@@ -17,11 +17,11 @@ import time
 
 from libnl.errno_ import NLE_BAD_SOCK, NLE_INVAL
 from libnl.error import nl_syserr2nlerr
-from libnl.handlers import NL_CB_DEFAULT, nl_cb_alloc, NL_CB_VERBOSE, NL_CB_DEBUG, nl_cb_set, nl_cb_err
+from libnl.handlers import nl_cb_alloc, NL_CB_DEBUG, NL_CB_DEFAULT, nl_cb_err, nl_cb_set, NL_CB_VERBOSE
 from libnl.linux_private.netlink import NETLINK_ADD_MEMBERSHIP, NETLINK_DROP_MEMBERSHIP
 from libnl.misc import __init
 from libnl.netlink_private.netlink import BUG
-from libnl.netlink_private.types import nl_sock, NL_OWN_PORT, NL_SOCK_BUFSIZE_SET
+from libnl.netlink_private.types import NL_OWN_PORT, nl_sock, NL_SOCK_BUFSIZE_SET
 
 _LOGGER = logging.getLogger(__name__)
 _PREVIOUS_LOCAL_PORT = None

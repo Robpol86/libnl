@@ -3,11 +3,11 @@ import socket
 
 import pytest
 
-from libnl.handlers import nl_cb_alloc, NL_CB_VERBOSE, NL_CB_VALID, NL_CB_CUSTOM, NL_OK, NL_STOP
-from libnl.linux_private.netlink import NETLINK_ROUTE, NLM_F_REQUEST, NLM_F_DUMP
+from libnl.handlers import nl_cb_alloc, NL_CB_CUSTOM, NL_CB_VALID, NL_CB_VERBOSE, NL_OK, NL_STOP
+from libnl.linux_private.netlink import NETLINK_ROUTE, NLM_F_DUMP, NLM_F_REQUEST
 from libnl.linux_private.rtnetlink import rtgenmsg, RTM_GETLINK
 from libnl.msg import nl_msg_dump
-from libnl.nl import nl_connect, nl_send_simple, nl_recvmsgs_default
+from libnl.nl import nl_connect, nl_recvmsgs_default, nl_send_simple
 from libnl.socket_ import nl_socket_alloc, nl_socket_free, nl_socket_modify_cb, nl_socket_modify_err_cb
 
 

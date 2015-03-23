@@ -12,7 +12,7 @@ import logging
 from libnl.attr import nla_parse
 from libnl.errno_ import NLE_MSG_TOOSHORT
 from libnl.linux_private.genetlink import GENL_HDRLEN, genlmsghdr
-from libnl.linux_private.netlink import NETLINK_GENERIC, NLMSG_ALIGN, NLMSG_HDRLEN, nlattr, nlmsghdr
+from libnl.linux_private.netlink import NETLINK_GENERIC, nlattr, NLMSG_ALIGN, NLMSG_HDRLEN, nlmsghdr
 from libnl.misc import bytearray_ptr
 from libnl.msg import nlmsg_data, nlmsg_put, nlmsg_valid_hdr
 from libnl.nl import nl_connect, nl_send_simple

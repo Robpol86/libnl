@@ -1,11 +1,11 @@
 import base64
 import socket
 
-from libnl.linux_private.netlink import NLM_F_REQUEST, NLM_F_DUMP, NETLINK_ROUTE, NLMSG_ALIGNTO
+import libnl.socket_
+from libnl.linux_private.netlink import NETLINK_ROUTE, NLM_F_DUMP, NLM_F_REQUEST, NLMSG_ALIGNTO
 from libnl.linux_private.rtnetlink import rtgenmsg, RTM_GETLINK
 from libnl.msg import nlmsg_alloc_simple, nlmsg_append, nlmsg_hdr
-from libnl.nl import nl_connect, nl_send_simple, nl_complete_msg
-import libnl.socket_
+from libnl.nl import nl_complete_msg, nl_connect, nl_send_simple
 from libnl.socket_ import nl_socket_alloc, nl_socket_free
 
 

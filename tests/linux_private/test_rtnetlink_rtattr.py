@@ -1,11 +1,11 @@
 import socket
 
-from libnl.handlers import NL_OK, NL_CB_VALID, NL_CB_CUSTOM
+from libnl.handlers import NL_CB_CUSTOM, NL_CB_VALID, NL_OK
 from libnl.linux_private.if_link import IFLA_IFNAME, IFLA_RTA
-from libnl.linux_private.netlink import NETLINK_ROUTE, NLM_F_REQUEST, NLM_F_DUMP, NLMSG_LENGTH
-from libnl.linux_private.rtnetlink import rtgenmsg, RTM_GETLINK, ifinfomsg, RTA_NEXT, RTA_DATA, RTA_OK
-from libnl.misc import get_string, c_int
-from libnl.msg import nlmsg_hdr, nlmsg_data
+from libnl.linux_private.netlink import NETLINK_ROUTE, NLM_F_DUMP, NLM_F_REQUEST, NLMSG_LENGTH
+from libnl.linux_private.rtnetlink import ifinfomsg, RTA_DATA, RTA_NEXT, RTA_OK, rtgenmsg, RTM_GETLINK
+from libnl.misc import c_int, get_string
+from libnl.msg import nlmsg_data, nlmsg_hdr
 from libnl.nl import nl_connect, nl_recvmsgs_default, nl_send_simple
 from libnl.socket_ import nl_socket_alloc, nl_socket_free, nl_socket_modify_cb
 

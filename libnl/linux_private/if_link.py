@@ -8,7 +8,7 @@ of the License.
 """
 
 from libnl.linux_private.netlink import NLMSG_ALIGN
-from libnl.linux_private.rtnetlink import rtattr, ifinfomsg
+from libnl.linux_private.rtnetlink import ifinfomsg, rtattr
 from libnl.misc import bytearray_ptr
 
 

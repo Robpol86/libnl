@@ -15,25 +15,25 @@ of the License.
 
 import errno
 import logging
-import socket
 import resource
+import socket
 
-from libnl.errno_ import (NLE_BAD_SOCK, NLE_AF_NOSUPPORT, NLE_SEQ_MISMATCH, NLE_DUMP_INTR, NLE_MSG_OVERFLOW,
-                          NLE_MSG_TRUNC)
+from libnl.errno_ import (NLE_AF_NOSUPPORT, NLE_BAD_SOCK, NLE_DUMP_INTR, NLE_MSG_OVERFLOW, NLE_MSG_TRUNC,
+                          NLE_SEQ_MISMATCH)
 from libnl.error import nl_syserr2nlerr
-from libnl.handlers import (NL_OK, NL_CB_MSG_OUT, NL_CB_MSG_IN, NL_CB_SEQ_CHECK, NL_CB_INVALID, NL_SKIP,
-                            NL_CB_DUMP_INTR, NL_CB_SEND_ACK, NL_CB_OVERRUN, NL_CB_SKIPPED, NL_CB_FINISH, NL_CB_ACK,
-                            NL_STOP, NL_CB_VALID, nl_cb_clone, nl_cb_set, NL_CB_CUSTOM)
-from libnl.linux_private.netlink import (NLM_F_REQUEST, NLM_F_ACK, sockaddr_nl, nlmsghdr, NLMSG_DONE, NLMSG_ERROR,
-                                         NLMSG_NOOP, NLMSG_OVERRUN, NLM_F_MULTI, NLM_F_DUMP_INTR, nlmsgerr,
-                                         NLMSG_ALIGNTO)
-from libnl.misc import msghdr, ucred, bytearray_ptr, c_int
-from libnl.msg import (nlmsg_alloc_simple, nlmsg_append, NL_AUTO_PORT, nlmsg_get_dst, nlmsg_get_creds, nlmsg_set_src,
-                       nlmsg_hdr, NL_AUTO_SEQ, nlmsg_convert, nlmsg_set_proto, nlmsg_data, nlmsg_size, nlmsg_ok,
-                       nlmsg_next)
+from libnl.handlers import (NL_CB_ACK, nl_cb_clone, NL_CB_CUSTOM, NL_CB_DUMP_INTR, NL_CB_FINISH, NL_CB_INVALID,
+                            NL_CB_MSG_IN, NL_CB_MSG_OUT, NL_CB_OVERRUN, NL_CB_SEND_ACK, NL_CB_SEQ_CHECK, nl_cb_set,
+                            NL_CB_SKIPPED, NL_CB_VALID, NL_OK, NL_SKIP, NL_STOP)
+from libnl.linux_private.netlink import (NLM_F_ACK, NLM_F_DUMP_INTR, NLM_F_MULTI, NLM_F_REQUEST, NLMSG_ALIGNTO,
+                                         NLMSG_DONE, NLMSG_ERROR, NLMSG_NOOP, NLMSG_OVERRUN, nlmsgerr, nlmsghdr,
+                                         sockaddr_nl)
+from libnl.misc import bytearray_ptr, c_int, msghdr, ucred
+from libnl.msg import (NL_AUTO_PORT, NL_AUTO_SEQ, nlmsg_alloc_simple, nlmsg_append, nlmsg_convert, nlmsg_data,
+                       nlmsg_get_creds, nlmsg_get_dst, nlmsg_hdr, nlmsg_next, nlmsg_ok, nlmsg_set_proto, nlmsg_set_src,
+                       nlmsg_size)
 from libnl.netlink_private.netlink import nl_cb_call
-from libnl.netlink_private.types import NL_NO_AUTO_ACK, NL_SOCK_BUFSIZE_SET, NL_MSG_PEEK, NL_SOCK_PASSCRED
-from libnl.socket_ import nl_socket_set_buffer_size, nl_socket_get_local_port
+from libnl.netlink_private.types import NL_MSG_PEEK, NL_NO_AUTO_ACK, NL_SOCK_BUFSIZE_SET, NL_SOCK_PASSCRED
+from libnl.socket_ import nl_socket_get_local_port, nl_socket_set_buffer_size
 
 _LOGGER = logging.getLogger(__name__)
 

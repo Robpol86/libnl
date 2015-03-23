@@ -7,9 +7,9 @@ try:
 except ImportError:
     from urllib import urlopen
 
+import pytest
 from pygments import lex
 from pygments.lexers import get_lexer_by_name
-import pytest
 
 
 @pytest.mark.skipif('"TRAVIS_REPO_SLUG" not in os.environ')

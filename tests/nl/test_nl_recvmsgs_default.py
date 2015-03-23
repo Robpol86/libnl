@@ -3,9 +3,9 @@ import socket
 
 import pytest
 
-from libnl.linux_private.netlink import NLM_F_REQUEST, NETLINK_ROUTE, NLM_F_DUMP
-from libnl.linux_private.rtnetlink import RTM_GETLINK, rtgenmsg
-from libnl.nl import nl_connect, nl_send_simple, nl_recvmsgs_default
+from libnl.linux_private.netlink import NETLINK_ROUTE, NLM_F_DUMP, NLM_F_REQUEST
+from libnl.linux_private.rtnetlink import rtgenmsg, RTM_GETLINK
+from libnl.nl import nl_connect, nl_recvmsgs_default, nl_send_simple
 from libnl.socket_ import nl_socket_alloc, nl_socket_free
 
 

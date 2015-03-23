@@ -9,11 +9,11 @@ of the License.
 """
 
 from libnl.cache_mngt import nl_cache_mngt_register
-from libnl.errno_ import NLE_PROTO_MISMATCH, NLE_INVAL, NLE_EXIST, NLE_MSGTYPE_NOSUPPORT, NLE_OPNOTSUPP
+from libnl.errno_ import NLE_EXIST, NLE_INVAL, NLE_MSGTYPE_NOSUPPORT, NLE_OPNOTSUPP, NLE_PROTO_MISMATCH
 from libnl.genl.genl import genlmsg_hdr, genlmsg_user_hdr
-from libnl.linux_private.genetlink import GENL_HDRSIZE, GENL_HDRLEN
+from libnl.linux_private.genetlink import GENL_HDRLEN, GENL_HDRSIZE
 from libnl.linux_private.netlink import NETLINK_GENERIC
-from libnl.list_ import nl_list_head, nl_list_for_each_entry, nl_list_add_tail
+from libnl.list_ import nl_list_add_tail, nl_list_for_each_entry, nl_list_head
 from libnl.msg import nlmsg_parse
 from libnl.netlink_private.netlink import BUG
 

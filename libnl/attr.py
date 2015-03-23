@@ -10,11 +10,11 @@ of the License.
 
 import logging
 
-from libnl.errno_ import NLE_RANGE, NLE_INVAL, NLE_NOMEM
-from libnl.linux_private.netlink import nlattr, NLA_ALIGN, NLA_TYPE_MASK, NLA_HDRLEN, NLA_F_NESTED, NLMSG_ALIGN
-from libnl.misc import (SIZEOF_U8, SIZEOF_U16, SIZEOF_U32, SIZEOF_U64, bytearray_ptr, get_string, c_ulong, c_uint16,
-                        c_uint32, c_int, c_uint64, sizeof, c_uint8)
-from libnl.msg_ import nlmsg_tail, nlmsg_data, nlmsg_datalen
+from libnl.errno_ import NLE_INVAL, NLE_NOMEM, NLE_RANGE
+from libnl.linux_private.netlink import NLA_ALIGN, NLA_F_NESTED, NLA_HDRLEN, NLA_TYPE_MASK, nlattr, NLMSG_ALIGN
+from libnl.misc import (bytearray_ptr, c_int, c_uint16, c_uint32, c_uint64, c_uint8, c_ulong, get_string, sizeof,
+                        SIZEOF_U16, SIZEOF_U32, SIZEOF_U64, SIZEOF_U8)
+from libnl.msg_ import nlmsg_data, nlmsg_datalen, nlmsg_tail
 from libnl.netlink_private.netlink import BUG
 
 _LOGGER = logging.getLogger(__name__)

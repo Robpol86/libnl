@@ -19,10 +19,10 @@ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 """
 
-from libnl.attr import nla_policy, NLA_U32, NLA_U64, NLA_U16, NLA_U8
-from libnl.misc import SIZEOF_U8, SIZEOF_S8, c_int8, c_uint8
+from libnl.attr import nla_policy, NLA_U16, NLA_U32, NLA_U64, NLA_U8
+from libnl.misc import c_int8, c_uint8, SIZEOF_S8, SIZEOF_U8
 from libnl.nl80211 import nl80211
-from libnl.nl80211.iw_util import get_ssid, get_ht_capability, get_ht_mcs, ampdu_space
+from libnl.nl80211.iw_util import ampdu_space, get_ht_capability, get_ht_mcs, get_ssid
 
 WLAN_CAPABILITY_ESS = 1 << 0
 WLAN_CAPABILITY_IBSS = 1 << 1

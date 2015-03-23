@@ -1,12 +1,12 @@
-from datetime import timedelta
 import base64
+from datetime import timedelta
 
 from libnl.attr import nla_parse, nla_parse_nested
 from libnl.genl.genl import genlmsg_attrdata, genlmsg_attrlen
 from libnl.linux_private.genetlink import genlmsghdr
 from libnl.nl80211.helpers import parse_bss
 from libnl.nl80211.iw_scan import bss_policy
-from libnl.nl80211.nl80211 import NL80211_ATTR_MAX, NL80211_BSS_MAX, NL80211_ATTR_BSS
+from libnl.nl80211.nl80211 import NL80211_ATTR_BSS, NL80211_ATTR_MAX, NL80211_BSS_MAX
 
 
 def test_no_security():

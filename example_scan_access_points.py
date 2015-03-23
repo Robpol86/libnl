@@ -35,6 +35,7 @@ Options:
 """
 
 from __future__ import print_function
+
 import ctypes
 import fcntl
 import logging
@@ -47,20 +48,21 @@ import sys
 import time
 
 from docopt import docopt
-from libnl.attr import nla_parse, nla_put_u32, nla_put, nla_put_nested, nla_parse_nested
+from terminaltables import AsciiTable
+
+import libnl.handlers
+from libnl.attr import nla_parse, nla_parse_nested, nla_put, nla_put_nested, nla_put_u32
 from libnl.error import errmsg
-from libnl.nl80211 import nl80211
 from libnl.genl.ctrl import genl_ctrl_resolve, genl_ctrl_resolve_grp
 from libnl.genl.genl import genl_connect, genlmsg_attrdata, genlmsg_attrlen, genlmsg_put
 from libnl.linux_private.genetlink import genlmsghdr
 from libnl.linux_private.netlink import NLM_F_DUMP
 from libnl.msg import nlmsg_alloc, nlmsg_data, nlmsg_hdr
-from libnl.nl import nl_send_auto, nl_recvmsgs
+from libnl.nl import nl_recvmsgs, nl_send_auto
+from libnl.nl80211 import nl80211
 from libnl.nl80211.helpers import parse_bss
 from libnl.nl80211.iw_scan import bss_policy
-from libnl.socket_ import nl_socket_alloc, nl_socket_add_membership, nl_socket_drop_membership
-import libnl.handlers
-from terminaltables import AsciiTable
+from libnl.socket_ import nl_socket_add_membership, nl_socket_alloc, nl_socket_drop_membership
 
 _LOGGER = logging.getLogger(__name__)
 COLUMNS = ['SSID', 'Security', 'Channel', 'Frequency', 'Signal', 'BSSID']

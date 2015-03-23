@@ -2,18 +2,18 @@ import re
 
 import pytest
 
-from libnl.attr import nla_put_u32, nla_get_u32, nla_parse, nla_get_string, nla_data, nla_put, nla_put_nested
+import libnl.handlers
+import libnl.socket_
+from libnl.attr import nla_data, nla_get_string, nla_get_u32, nla_parse, nla_put, nla_put_nested, nla_put_u32
 from libnl.genl.ctrl import genl_ctrl_resolve, genl_ctrl_resolve_grp
-from libnl.genl.genl import genl_connect, genlmsg_put, genlmsg_attrdata, genlmsg_attrlen
+from libnl.genl.genl import genl_connect, genlmsg_attrdata, genlmsg_attrlen, genlmsg_put
 from libnl.linux_private.genetlink import genlmsghdr
 from libnl.linux_private.netlink import NLM_F_DUMP
 from libnl.misc import c_int
 from libnl.msg import nlmsg_alloc, nlmsg_hdr
 from libnl.msg_ import nlmsg_data
-from libnl.nl import nl_send_auto, nl_recvmsgs_default, nl_wait_for_ack, nl_recvmsgs
+from libnl.nl import nl_recvmsgs, nl_recvmsgs_default, nl_send_auto, nl_wait_for_ack
 from libnl.nl80211 import nl80211
-import libnl.handlers
-import libnl.socket_
 
 
 def match(expected, log, is_regex=False):

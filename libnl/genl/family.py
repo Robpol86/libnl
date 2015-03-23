@@ -8,7 +8,7 @@ of the License.
 """
 
 from libnl.linux_private.genetlink import GENL_ID_GENERATE
-from libnl.list_ import nl_list_add_tail, nl_init_list_head, nl_list_for_each_entry_safe, nl_list_del, nl_list_head
+from libnl.list_ import nl_init_list_head, nl_list_add_tail, nl_list_del, nl_list_for_each_entry_safe, nl_list_head
 from libnl.netlink_private.object_api import nl_object_ops
 from libnl.netlink_private.types import genl_family, genl_family_grp, genl_family_op
 from libnl.object import nl_object_alloc

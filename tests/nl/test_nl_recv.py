@@ -2,7 +2,7 @@ import binascii
 import re
 
 from libnl.linux_private.netlink import NETLINK_ROUTE, NLM_F_REQUEST, sockaddr_nl
-from libnl.nl import nl_connect, nl_send_simple, nl_recv
+from libnl.nl import nl_connect, nl_recv, nl_send_simple
 from libnl.socket_ import nl_socket_alloc, nl_socket_free
 
 

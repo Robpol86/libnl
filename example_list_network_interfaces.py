@@ -30,6 +30,7 @@ Options:
 """
 
 from __future__ import print_function
+
 import ctypes
 import logging
 import signal
@@ -37,11 +38,12 @@ import socket
 import sys
 
 from docopt import docopt
+
 from libnl.error import errmsg
 from libnl.handlers import NL_CB_CUSTOM, NL_CB_VALID, NL_OK
 from libnl.linux_private.if_link import IFLA_IFNAME, IFLA_RTA
-from libnl.linux_private.netlink import NETLINK_ROUTE, NLMSG_LENGTH, NLM_F_DUMP, NLM_F_REQUEST
-from libnl.linux_private.rtnetlink import RTA_DATA, RTA_NEXT, RTA_OK, RTM_GETLINK, ifinfomsg, rtgenmsg
+from libnl.linux_private.netlink import NETLINK_ROUTE, NLM_F_DUMP, NLM_F_REQUEST, NLMSG_LENGTH
+from libnl.linux_private.rtnetlink import ifinfomsg, RTA_DATA, RTA_NEXT, RTA_OK, rtgenmsg, RTM_GETLINK
 from libnl.misc import get_string
 from libnl.msg import nlmsg_data, nlmsg_hdr
 from libnl.nl import nl_connect, nl_recvmsgs_default, nl_send_simple

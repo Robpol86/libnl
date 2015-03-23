@@ -12,7 +12,7 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-from libnl.linux_private.netlink import NLMSG_HDRLEN, NLMSG_ALIGN
+from libnl.linux_private.netlink import NLMSG_ALIGN, NLMSG_HDRLEN
 from libnl.misc import bytearray_ptr
 
 

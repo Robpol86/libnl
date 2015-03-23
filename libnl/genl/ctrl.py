@@ -7,26 +7,25 @@ License as published by the Free Software Foundation version 2.1
 of the License.
 """
 
-from libnl.attr import (nla_get_u16, nla_put_string, NLA_U16, NLA_STRING, NLA_U32, NLA_NESTED, nla_policy,
-                        nla_for_each_nested, nla_get_u32, nla_get_string, nla_parse_nested)
+from libnl.attr import (nla_for_each_nested, nla_get_string, nla_get_u16, nla_get_u32, NLA_NESTED, nla_parse_nested,
+                        nla_policy, nla_put_string, NLA_STRING, NLA_U16, NLA_U32)
 from libnl.cache import NL_ACT_UNSPEC
-from libnl.errno_ import NLE_OBJ_NOTFOUND, NLE_MISSING_ATTR
-from libnl.genl.family import (genl_family_get_id, genl_family_alloc, genl_family_set_id, genl_family_set_name,
-                               genl_family_ops, genl_family_add_grp)
-from libnl.genl.genl import genlmsg_parse, genlmsg_put, genl_send_simple
+from libnl.errno_ import NLE_MISSING_ATTR, NLE_OBJ_NOTFOUND
+from libnl.genl.family import (genl_family_add_grp, genl_family_alloc, genl_family_get_id, genl_family_ops,
+                               genl_family_set_id, genl_family_set_name)
+from libnl.genl.genl import genl_send_simple, genlmsg_parse, genlmsg_put
 from libnl.genl.mngt import genl_cmd, genl_ops, genl_register
-from libnl.handlers import NL_CB_VALID, nl_cb_set, NL_CB_CUSTOM, NL_SKIP, NL_STOP, nl_cb_clone
-from libnl.linux_private.genetlink import (CTRL_CMD_GETFAMILY, GENL_ID_CTRL, CTRL_ATTR_FAMILY_NAME, CTRL_ATTR_MAX,
-                                           CTRL_ATTR_FAMILY_ID, CTRL_ATTR_MCAST_GROUPS, GENL_HDRSIZE,
-                                           CTRL_CMD_NEWFAMILY, CTRL_CMD_DELFAMILY, CTRL_CMD_NEWOPS, CTRL_CMD_DELOPS,
-                                           GENL_NAMSIZ, CTRL_ATTR_VERSION, CTRL_ATTR_HDRSIZE, CTRL_ATTR_MAXATTR,
-                                           CTRL_ATTR_OPS, CTRL_ATTR_MCAST_GRP_MAX, CTRL_ATTR_MCAST_GRP_ID,
-                                           CTRL_ATTR_MCAST_GRP_NAME, CTRL_ATTR_OP_MAX, CTRL_ATTR_OP_ID,
-                                           CTRL_ATTR_OP_FLAGS)
+from libnl.handlers import nl_cb_clone, NL_CB_CUSTOM, nl_cb_set, NL_CB_VALID, NL_SKIP, NL_STOP
+from libnl.linux_private.genetlink import (CTRL_ATTR_FAMILY_ID, CTRL_ATTR_FAMILY_NAME, CTRL_ATTR_HDRSIZE, CTRL_ATTR_MAX,
+                                           CTRL_ATTR_MAXATTR, CTRL_ATTR_MCAST_GROUPS, CTRL_ATTR_MCAST_GRP_ID,
+                                           CTRL_ATTR_MCAST_GRP_MAX, CTRL_ATTR_MCAST_GRP_NAME, CTRL_ATTR_OP_FLAGS,
+                                           CTRL_ATTR_OP_ID, CTRL_ATTR_OP_MAX, CTRL_ATTR_OPS, CTRL_ATTR_VERSION,
+                                           CTRL_CMD_DELFAMILY, CTRL_CMD_DELOPS, CTRL_CMD_GETFAMILY, CTRL_CMD_NEWFAMILY,
+                                           CTRL_CMD_NEWOPS, GENL_HDRSIZE, GENL_ID_CTRL, GENL_NAMSIZ)
 from libnl.linux_private.netlink import NETLINK_GENERIC, NLM_F_DUMP
 from libnl.list_ import nl_list_for_each_entry
 from libnl.misc import __init, c_int
-from libnl.msg import NL_AUTO_SEQ, NL_AUTO_PORT, nlmsg_alloc, nlmsg_hdr
+from libnl.msg import NL_AUTO_PORT, NL_AUTO_SEQ, nlmsg_alloc, nlmsg_hdr
 from libnl.netlink_private.cache_api import nl_cache_ops, nl_msgtype
 from libnl.netlink_private.netlink import BUG
 from libnl.netlink_private.types import genl_family_grp

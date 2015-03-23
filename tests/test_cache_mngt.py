@@ -2,9 +2,9 @@ from libnl.cache_mngt import nl_cache_ops_associate_safe, nl_msgtype_lookup
 from libnl.genl.family import genl_family_alloc, genl_family_set_name
 from libnl.genl.genl import genlmsg_put
 from libnl.handlers import nl_cb_overwrite_send, NL_STOP
-from libnl.linux_private.genetlink import GENL_ID_CTRL, CTRL_CMD_GETFAMILY
+from libnl.linux_private.genetlink import CTRL_CMD_GETFAMILY, GENL_ID_CTRL
 from libnl.linux_private.netlink import NETLINK_GENERIC
-from libnl.msg import nlmsg_hdr, nlmsg_alloc, NL_AUTO_PORT, NL_AUTO_SEQ, nlmsg_attrlen
+from libnl.msg import NL_AUTO_PORT, NL_AUTO_SEQ, nlmsg_alloc, nlmsg_attrlen, nlmsg_hdr
 from libnl.nl import nl_send_auto
 from libnl.socket_ import nl_socket_alloc
 

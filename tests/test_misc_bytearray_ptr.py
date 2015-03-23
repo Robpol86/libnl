@@ -1,6 +1,6 @@
-from libnl.misc import bytearray_ptr
-
 import pytest
+
+from libnl.misc import bytearray_ptr
 
 
 @pytest.mark.parametrize('bytearray_obj', (bytearray, bytearray_ptr))

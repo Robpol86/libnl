@@ -4,10 +4,10 @@ import string
 
 import libnl.attr
 from libnl.linux_private.netlink import NETLINK_ROUTE
-from libnl.misc import msghdr, c_int
-from libnl.msg import nlmsg_alloc, nlmsg_hdr, nlmsg_find_attr, nlmsg_for_each_attr, nlmsg_total_size
+from libnl.misc import c_int, msghdr
+from libnl.msg import nlmsg_alloc, nlmsg_find_attr, nlmsg_for_each_attr, nlmsg_hdr, nlmsg_total_size
 from libnl.msg_ import nlmsg_datalen
-from libnl.nl import nl_sendmsg, nl_connect, nl_complete_msg
+from libnl.nl import nl_complete_msg, nl_connect, nl_sendmsg
 from libnl.socket_ import nl_socket_alloc, nl_socket_free
 
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Setup script for the project."""
 
 import atexit
 import os
@@ -39,18 +40,22 @@ VERSION_FILE = os.path.join(NAME_FILE, '__init__.py') if PACKAGE else '{0}.py'.f
 
 
 class PyTest(test):
+    """Run tests with pytest."""
+
     description = 'Run all tests.'
     user_options = []
     CMD = 'test'
     TEST_ARGS = ['--cov-report', 'term-missing', '--cov', NAME_FILE, 'tests']
 
     def finalize_options(self):
+        """Finalize options."""
         overflow_args = sys.argv[sys.argv.index(self.CMD) + 1:]
         test.finalize_options(self)
         setattr(self, 'test_args', self.TEST_ARGS + overflow_args)
         setattr(self, 'test_suite', True)
 
     def run_tests(self):
+        """Run the tests."""
         # Import here, cause outside the eggs aren't loaded.
         pytest = __import__('pytest')
         err_no = pytest.main(self.test_args)
@@ -58,6 +63,8 @@ class PyTest(test):
 
 
 class PyTestPdb(PyTest):
+    """Run tests with pytest and drop to debugger on test failure/errors."""
+
     ipdb = 'ipdb' if sys.version_info[:2] > (2, 6) else 'pdb'
     description = 'Run all tests, drops to {0} upon unhandled exception.'.format(ipdb)
     CMD = 'testpdb'
@@ -65,11 +72,14 @@ class PyTestPdb(PyTest):
 
 
 class PyTestCovWeb(PyTest):
+    """Run the tests and open a web browser (OS X only) showing coverage information."""
+
     description = 'Generates HTML report on test coverage.'
     CMD = 'testcovweb'
     TEST_ARGS = ['--cov-report', 'html', '--cov', NAME_FILE, 'tests']
 
     def run_tests(self):
+        """Run the tests and then open."""
         if find_executable('open'):
             atexit.register(lambda: subprocess.call(['open', _JOIN('htmlcov', 'index.html')]))
         PyTest.run_tests(self)

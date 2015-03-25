@@ -53,7 +53,7 @@ OPTIONS = docopt(__doc__) if __name__ == '__main__' else dict()
 
 
 def error(message, code=1):
-    """Prints an error message to stderr and exits with a status of 1 by default."""
+    """Print error message to stderr and exits with a status of 1 by default."""
     if message:
         print('ERROR: {0}'.format(message), file=sys.stderr)
     else:

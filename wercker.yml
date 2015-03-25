@@ -25,5 +25,6 @@ build:
     - script:
         name: YAML - Coverage
         code: |
+            mv tests/.coverage* .
             coverage combine
             codecov

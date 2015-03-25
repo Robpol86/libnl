@@ -1,9 +1,12 @@
 """Misc code not defined in Netlink but used by it."""
 
-from ctypes import (c_int, c_int32, c_int8, c_ubyte, c_uint, c_uint16, c_uint32, c_uint64, c_uint8, c_ulong, c_ushort,
-                    sizeof)
+from ctypes import (c_byte, c_int, c_int32, c_int8, c_long, c_longlong, c_ubyte, c_uint, c_uint16, c_uint32, c_uint64,
+                    c_uint8, c_ulong, c_ulonglong, c_ushort, sizeof)
 
+SIZEOF_BYTE = sizeof(c_byte)
 SIZEOF_INT = sizeof(c_int)
+SIZEOF_LONG = sizeof(c_long)  # Platform dependant.
+SIZEOF_LONGLONG = sizeof(c_longlong)
 SIZEOF_S8 = sizeof(c_int8)
 SIZEOF_U16 = sizeof(c_uint16)
 SIZEOF_U32 = sizeof(c_uint32)
@@ -12,6 +15,7 @@ SIZEOF_U8 = sizeof(c_uint8)
 SIZEOF_UBYTE = sizeof(c_ubyte)
 SIZEOF_UINT = sizeof(c_uint)
 SIZEOF_ULONG = SIZEOF_POINTER = sizeof(c_ulong)  # Platform dependant.
+SIZEOF_ULONGLONG = sizeof(c_ulonglong)
 SIZEOF_USHORT = sizeof(c_ushort)
 
 

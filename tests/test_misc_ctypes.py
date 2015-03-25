@@ -197,7 +197,7 @@ def test_repr():
         assert 'c_longlong(1234567890123456789)' == repr(c_longlong(1234567890123456789)).replace('L)', ')')
     assert 'c_ushort(12345)' == repr(c_uint16(12345))
     if sys.maxsize > 2**32:  # 64-bit.
-        assert 'c_uint(1234567890)' == repr(c_uint32(1234567890))
+        assert 'c_uint(1234567890)' == repr(c_uint32(1234567890)).replace('L)', ')')
     else:
         assert 'c_ulong(1234567890)' == repr(c_uint32(1234567890)).replace('L)', ')')
     if sys.maxsize > 2**32:  # 64-bit.
@@ -207,11 +207,14 @@ def test_repr():
     assert 'c_ubyte(123)' == repr(c_uint8(123))
     assert 'c_ubyte(123)' == repr(c_ubyte(123))
     if sys.maxsize > 2**32:  # 64-bit.
-        assert 'c_uint(1234567890)' == repr(c_uint(1234567890))
+        assert 'c_uint(1234567890)' == repr(c_uint(1234567890)).replace('L)', ')')
     else:
         assert 'c_ulong(1234567890)' == repr(c_uint(1234567890)).replace('L)', ')')
     assert 'c_ulong(1234567890)' == repr(c_ulong(1234567890)).replace('L)', ')')
-    assert 'c_ulonglong(12345678901234567890)' == repr(c_ulonglong(12345678901234567890)).replace('L)', ')')
+    if sys.maxsize > 2**32:  # 64-bit.
+        assert 'c_ulong(12345678901234567890)' == repr(c_ulonglong(12345678901234567890)).replace('L)', ')')
+    else:
+        assert 'c_ulonglong(12345678901234567890)' == repr(c_ulonglong(12345678901234567890)).replace('L)', ')')
     assert 'c_ushort(12345)' == repr(c_ushort(12345))
 
 

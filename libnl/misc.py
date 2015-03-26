@@ -1,7 +1,48 @@
 """Misc code not defined in Netlink but used by it."""
 
-from ctypes import (c_byte, c_int, c_int32, c_int8, c_long, c_longlong, c_ubyte, c_uint, c_uint16, c_uint32, c_uint64,
-                    c_uint8, c_ulong, c_ulonglong, c_ushort, sizeof)
+import ctypes
+import struct
+import sys
+
+
+def _class_factory(base):
+    """Create subclasses of ctypes.
+
+    Positional arguments:
+    base -- base class to subclass.
+
+    Returns:
+    New class definition.
+    """
+    if sys.version_info[:2] >= (2, 7):
+        return base
+
+    class Cls(base):
+        def __repr__(self):
+            return repr(base(super(Cls, self).value))
+
+        def __iter__(self):
+            return iter(struct.pack(getattr(super(Cls, self), '_type_'), super(Cls, self).value))
+
+    return Cls
+
+
+c_byte = _class_factory(ctypes.c_byte)
+c_int = _class_factory(ctypes.c_int)
+c_int32 = _class_factory(ctypes.c_int32)
+c_int8 = _class_factory(ctypes.c_int8)
+c_long = _class_factory(ctypes.c_long)
+c_longlong = _class_factory(ctypes.c_longlong)
+c_ubyte = _class_factory(ctypes.c_ubyte)
+c_uint = _class_factory(ctypes.c_uint)
+c_uint16 = _class_factory(ctypes.c_uint16)
+c_uint32 = _class_factory(ctypes.c_uint32)
+c_uint64 = _class_factory(ctypes.c_uint64)
+c_uint8 = _class_factory(ctypes.c_uint8)
+c_ulong = _class_factory(ctypes.c_ulong)
+c_ulonglong = _class_factory(ctypes.c_ulonglong)
+c_ushort = _class_factory(ctypes.c_ushort)
+sizeof = ctypes.sizeof
 
 SIZEOF_BYTE = sizeof(c_byte)
 SIZEOF_INT = sizeof(c_int)
@@ -36,6 +77,7 @@ class _DynamicDict(dict):
 
 class Struct(object):
     """A base class equivalent to a C struct of a fixed size, holding no pointers in the struct definition."""
+
     _REPR = '<{0}.{1}>'
     SIGNATURE = ()
     SIZEOF = 0
@@ -93,6 +135,7 @@ class ucred(Struct):
     uid -- user ID of the sending process (c_uint32).
     gid -- group ID of the sending process (c_uint32).
     """
+
     _REPR = '<{0}.{1} pid={2[pid]} uid={2[uid]} gid={2[uid]}>'
     SIGNATURE = (SIZEOF_U32, SIZEOF_U32, SIZEOF_U32)
     SIZEOF = sum(SIGNATURE)

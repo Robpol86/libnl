@@ -131,7 +131,7 @@ def callback_dump(msg, results):
 
     # First we must parse incoming data into manageable chunks and check for errors.
     gnlh = genlmsghdr(nlmsg_data(nlmsg_hdr(msg)))
-    tb = {i: None for i in range(nl80211.NL80211_ATTR_MAX + 1)}
+    tb = dict((i, None) for i in range(nl80211.NL80211_ATTR_MAX + 1))
     nla_parse(tb, nl80211.NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0), genlmsg_attrlen(gnlh, 0), None)
     if not tb[nl80211.NL80211_ATTR_BSS]:
         print('WARNING: BSS info missing for an access point.')

@@ -1,6 +1,7 @@
 import base64
 import socket
 import string
+import sys
 
 import libnl.attr
 from libnl.linux_private.netlink import NETLINK_ROUTE
@@ -9,6 +10,10 @@ from libnl.msg import nlmsg_alloc, nlmsg_find_attr, nlmsg_for_each_attr, nlmsg_h
 from libnl.msg_ import nlmsg_datalen
 from libnl.nl import nl_complete_msg, nl_connect, nl_sendmsg
 from libnl.socket_ import nl_socket_alloc, nl_socket_free
+
+
+if sys.version_info[:2] >= (2, 7):
+    buffer = bytearray
 
 
 def test_nla_put_get_u32():
@@ -108,8 +113,8 @@ def test_socket(tcp_server):
 
     assert 8 == nl_sendmsg(sk, msg, hdr)
     assert 1 == len(tcp_server.data)
-    assert b'CAAEAAgAAAA=' == base64.b64encode(iov)
-    assert b'CAAEAAgAAAA=' == base64.b64encode(tcp_server.data[0])
+    assert b'CAAEAAgAAAA=' == base64.b64encode(buffer(iov))
+    assert b'CAAEAAgAAAA=' == base64.b64encode(buffer(tcp_server.data[0]))
     nl_socket_free(sk)
 
 
@@ -124,25 +129,25 @@ def test_ints():
     assert 2 == libnl.attr.nla_type(attr)
     assert 10 == libnl.attr.nla_get_u8(attr)
     assert 5 == attr.nla_len
-    assert b'BQACAAo=' == base64.b64encode(attr.bytearray[:attr.nla_len])
+    assert b'BQACAAo=' == base64.b64encode(buffer(attr.bytearray[:attr.nla_len]))
 
     attr = nlmsg_find_attr(nlmsg_hdr(msg), 0, 3)
     assert 3 == libnl.attr.nla_type(attr)
     assert 11 == libnl.attr.nla_get_u16(attr)
     assert 6 == attr.nla_len
-    assert b'BgADAAsA' == base64.b64encode(attr.bytearray[:attr.nla_len])
+    assert b'BgADAAsA' == base64.b64encode(buffer(attr.bytearray[:attr.nla_len]))
 
     attr = nlmsg_find_attr(nlmsg_hdr(msg), 0, 4)
     assert 4 == libnl.attr.nla_type(attr)
     assert 12 == libnl.attr.nla_get_u32(attr)
     assert 8 == attr.nla_len
-    assert b'CAAEAAwAAAA=' == base64.b64encode(attr.bytearray[:attr.nla_len])
+    assert b'CAAEAAwAAAA=' == base64.b64encode(buffer(attr.bytearray[:attr.nla_len]))
 
     attr = nlmsg_find_attr(nlmsg_hdr(msg), 0, 5)
     assert 5 == libnl.attr.nla_type(attr)
     assert 13195 == libnl.attr.nla_get_u64(attr)  # printf("%llu\n", nla_get_u64(attr));
     assert 12 == attr.nla_len
-    assert b'DAAFAIszAAAAAAAA' == base64.b64encode(attr.bytearray[:attr.nla_len])
+    assert b'DAAFAIszAAAAAAAA' == base64.b64encode(buffer(attr.bytearray[:attr.nla_len]))
 
 
 def test_flag():
@@ -153,7 +158,7 @@ def test_flag():
     assert 7 == libnl.attr.nla_type(attr)
     assert libnl.attr.nla_get_flag(attr) is True  # printf("%s\n", nla_get_flag(attr) ? "True" : "False");
     assert 4 == attr.nla_len
-    assert b'BAAHAA==' == base64.b64encode(attr.bytearray[:attr.nla_len])
+    assert b'BAAHAA==' == base64.b64encode(buffer(attr.bytearray[:attr.nla_len]))
 
 
 def test_msecs():
@@ -164,7 +169,7 @@ def test_msecs():
     assert 12 == libnl.attr.nla_type(attr)
     assert 99 == libnl.attr.nla_get_msecs(attr)
     assert 12 == attr.nla_len
-    assert b'DAAMAGMAAAAAAAAA' == base64.b64encode(attr.bytearray[:attr.nla_len])
+    assert b'DAAMAGMAAAAAAAAA' == base64.b64encode(buffer(attr.bytearray[:attr.nla_len]))
 
 
 def test_string_short():
@@ -176,7 +181,7 @@ def test_string_short():
     assert 6 == libnl.attr.nla_type(attr)
     assert payload == libnl.attr.nla_get_string(attr)
     assert 9 == attr.nla_len
-    assert b'CQAGAHRlc3QA' == base64.b64encode(attr.bytearray[:attr.nla_len])
+    assert b'CQAGAHRlc3QA' == base64.b64encode(buffer(attr.bytearray[:attr.nla_len]))
 
 
 def test_string_medium():
@@ -189,7 +194,7 @@ def test_string_medium():
     assert payload == libnl.attr.nla_get_string(attr)
     assert 50 == attr.nla_len
     expected = b'MgAGAFRoZSBxdWljayBicigpd24gZjB4IGp1bXBzIG92ZXIgdGhlIGxAenkgZG9nIQA='
-    assert expected == base64.b64encode(attr.bytearray[:attr.nla_len])
+    assert expected == base64.b64encode(buffer(attr.bytearray[:attr.nla_len]))
 
 
 def test_string_long():
@@ -203,7 +208,7 @@ def test_string_long():
     assert 103 == attr.nla_len
     expected = (b'ZwAGADAxMjM0NTY3ODlhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ekFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaISIjJCUmJygp'
                 b'KissLS4vOjs8PT4/QFtcXV5fYHt8fX4gCQoNAA==')
-    assert expected == base64.b64encode(attr.bytearray[:attr.nla_len])
+    assert expected == base64.b64encode(buffer(attr.bytearray[:attr.nla_len]))
 
 
 def test_nested():

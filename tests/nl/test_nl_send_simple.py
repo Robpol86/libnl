@@ -1,5 +1,6 @@
 import base64
 import socket
+import sys
 
 import libnl.socket_
 from libnl.linux_private.netlink import NETLINK_ROUTE, NLM_F_DUMP, NLM_F_REQUEST, NLMSG_ALIGNTO
@@ -7,6 +8,10 @@ from libnl.linux_private.rtnetlink import rtgenmsg, RTM_GETLINK
 from libnl.msg import nlmsg_alloc_simple, nlmsg_append, nlmsg_hdr
 from libnl.nl import nl_complete_msg, nl_connect, nl_send_simple
 from libnl.socket_ import nl_socket_alloc, nl_socket_free
+
+
+if sys.version_info[:2] >= (2, 7):
+    buffer = bytearray
 
 
 def test_bare(tcp_server, monkeypatch):
@@ -49,7 +54,7 @@ def test_bare(tcp_server, monkeypatch):
 
     assert 16 == nl_send_simple(sk, RTM_GETLINK, 0, None)
     assert 1 == len(tcp_server.data)
-    assert b'EAAAABIABQAAAAAAAAAAAA==' == base64.b64encode(tcp_server.data[0])
+    assert b'EAAAABIABQAAAAAAAAAAAA==' == base64.b64encode(buffer(tcp_server.data[0]))
     nl_socket_free(sk)
 
 
@@ -102,7 +107,7 @@ def test_dissect(monkeypatch):
     assert 0 == nlh.nlmsg_seq
     assert 0 == nlh.nlmsg_pid
 
-    assert b'FAAAABIABQMAAAAAAAAAABEAAAA=' == base64.b64encode(nlh.bytearray[:nlh.nlmsg_len])
+    assert b'FAAAABIABQMAAAAAAAAAABEAAAA=' == base64.b64encode(buffer(nlh.bytearray[:nlh.nlmsg_len]))
     nl_socket_free(sk)
 
 
@@ -139,5 +144,5 @@ def test_full(tcp_server, monkeypatch):
 
     assert 20 == nl_send_simple(sk, RTM_GETLINK, NLM_F_REQUEST | NLM_F_DUMP, rt_hdr, rt_hdr.SIZEOF)
     assert 1 == len(tcp_server.data)
-    assert b'FAAAABIABQMKAAAA0gQAABEAAAA=' == base64.b64encode(tcp_server.data[0])
+    assert b'FAAAABIABQMKAAAA0gQAABEAAAA=' == base64.b64encode(buffer(tcp_server.data[0]))
     nl_socket_free(sk)

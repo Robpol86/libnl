@@ -81,7 +81,7 @@ def callback(msg, has_printed):
     gnlh = genlmsghdr(nlmsg_data(nlmsg_hdr(msg)))
 
     # Partially parse the raw binary data and place them in the `tb` dictionary.
-    tb = {i: None for i in range(nl80211.NL80211_ATTR_MAX + 1)}  # Need to populate dict with all possible keys.
+    tb = dict((i, None) for i in range(nl80211.NL80211_ATTR_MAX + 1))  # Need to populate dict with all possible keys.
     nla_parse(tb, nl80211.NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0), genlmsg_attrlen(gnlh, 0), None)
 
     # Now it's time to grab the juicy data!

@@ -1,5 +1,6 @@
 import base64
 import socket
+import sys
 
 from libnl.attr import nla_put_u32, nla_put_u64
 from libnl.linux_private.netlink import NETLINK_ROUTE
@@ -7,6 +8,10 @@ from libnl.misc import msghdr
 from libnl.msg import nlmsg_alloc, nlmsg_hdr
 from libnl.nl import nl_complete_msg, nl_connect, nl_sendmsg
 from libnl.socket_ import nl_socket_alloc, nl_socket_free
+
+
+if sys.version_info[:2] >= (2, 7):
+    buffer = bytearray
 
 
 def test_socket(tcp_server):
@@ -79,8 +84,8 @@ def test_socket(tcp_server):
 
     assert 16 == nl_sendmsg(sk, msg, hdr)
     assert 1 == len(tcp_server.data)
-    assert b'EAAAAAAABQAAAAAAAAAAAA==' == base64.b64encode(iov)
-    assert b'EAAAAAAABQAAAAAAAAAAAA==' == base64.b64encode(tcp_server.data[0])
+    assert b'EAAAAAAABQAAAAAAAAAAAA==' == base64.b64encode(buffer(iov))
+    assert b'EAAAAAAABQAAAAAAAAAAAA==' == base64.b64encode(buffer(tcp_server.data[0]))
     nl_socket_free(sk)
 
 
@@ -103,7 +108,7 @@ def test_seq():
     assert 1423350947 == nlh.nlmsg_seq
     nlh.nlmsg_pid = 0  # sk.s_local.nl_pid is read-only in Python.
 
-    assert b'EAAAAAAABQCjnNZUAAAAAA==' == base64.b64encode(nlh.bytearray[:nlh.nlmsg_len])
+    assert b'EAAAAAAABQCjnNZUAAAAAA==' == base64.b64encode(buffer(nlh.bytearray[:nlh.nlmsg_len]))
 
 
 def test_two_attrs():
@@ -127,4 +132,5 @@ def test_two_attrs():
     assert 0 == nlh.nlmsg_seq
     nlh.nlmsg_pid = 0  # sk.s_local.nl_pid is read-only in Python.
 
-    assert b'JAAAAAAABQAAAAAAAAAAAAgABAAIAAAADAAFABEAAAAAAAAA' == base64.b64encode(nlh.bytearray[:nlh.nlmsg_len])
+    expected = b'JAAAAAAABQAAAAAAAAAAAAgABAAIAAAADAAFABEAAAAAAAAA'
+    assert expected == base64.b64encode(buffer(nlh.bytearray[:nlh.nlmsg_len]))

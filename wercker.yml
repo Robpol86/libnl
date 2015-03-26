@@ -13,14 +13,14 @@ build:
         code: |
             sudo add-apt-repository -y ppa:fkrull/deadsnakes
             sudo apt-get update -y
-            sudo apt-get install -y python-pip python3.4
+            sudo apt-get install -y python-pip python3.4 python2.6
             sudo pip install codecov tox
 
     - script:
         name: YAML - Test
         code: |
             sudo tox
-            (cd ./tests && ls .coverage.py34 .coverage.py33 .coverage.py27)
+            (cd ./tests && ls .coverage.py34 .coverage.py33 .coverage.py27 .coverage.py26)
 
     - script:
         name: YAML - Coverage

@@ -252,3 +252,32 @@ def test_from_buffer_error():
             ctype.from_buffer(0)
         with pytest.raises(TypeError):
             ctype('')
+
+
+def test_set_from_value():
+    all_types = (c_byte, c_int, c_int8, c_long, c_longlong, c_uint16, c_uint32, c_uint64, c_uint8, c_ubyte, c_uint,
+                 c_ulong, c_ulonglong, c_ushort)
+    instances = list()
+    for ctype in all_types:
+        inst = ctype(9223372036854775908)
+        for i in range(77591):
+            inst.value += 1
+        instances.append(repr(inst).replace('L)', ')'))
+
+    expected = [
+        'c_byte(123)',
+        'c_int(77691)' if sys.maxsize > 2**32 else 'c_long(77691)',
+        'c_byte(123)',
+        'c_long(-9223372036854698117)' if sys.maxsize > 2**32 else 'c_long(77691)',
+        'c_long(-9223372036854698117)' if sys.maxsize > 2**32 else 'c_longlong(-9223372036854698117)',
+        'c_ushort(12155)',
+        'c_uint(77691)' if sys.maxsize > 2**32 else 'c_ulong(77691)',
+        'c_ulong(9223372036854853499)' if sys.maxsize > 2**32 else 'c_ulonglong(9223372036854853499)',
+        'c_ubyte(123)',
+        'c_ubyte(123)',
+        'c_uint(77691)' if sys.maxsize > 2**32 else 'c_ulong(77691)',
+        'c_ulong(9223372036854853499)' if sys.maxsize > 2**32 else 'c_ulong(77691)',
+        'c_ulong(9223372036854853499)' if sys.maxsize > 2**32 else 'c_ulonglong(9223372036854853499)',
+        'c_ushort(12155)',
+    ]
+    assert expected == instances

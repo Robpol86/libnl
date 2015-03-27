@@ -260,24 +260,24 @@ def test_set_from_value():
     instances = list()
     for ctype in all_types:
         inst = ctype(9223372036854775908)
-        for i in range(77591):
+        for i in range(7759):
             inst.value += 1
         instances.append(repr(inst).replace('L)', ')'))
 
     expected = [
-        'c_byte(123)',
-        'c_int(77691)' if sys.maxsize > 2**32 else 'c_long(77691)',
-        'c_byte(123)',
-        'c_long(-9223372036854698117)' if sys.maxsize > 2**32 else 'c_long(77691)',
-        'c_long(-9223372036854698117)' if sys.maxsize > 2**32 else 'c_longlong(-9223372036854698117)',
-        'c_ushort(12155)',
-        'c_uint(77691)' if sys.maxsize > 2**32 else 'c_ulong(77691)',
-        'c_ulong(9223372036854853499)' if sys.maxsize > 2**32 else 'c_ulonglong(9223372036854853499)',
-        'c_ubyte(123)',
-        'c_ubyte(123)',
-        'c_uint(77691)' if sys.maxsize > 2**32 else 'c_ulong(77691)',
-        'c_ulong(9223372036854853499)' if sys.maxsize > 2**32 else 'c_ulong(77691)',
-        'c_ulong(9223372036854853499)' if sys.maxsize > 2**32 else 'c_ulonglong(9223372036854853499)',
-        'c_ushort(12155)',
+        'c_byte(-77)',
+        'c_int(7859)' if sys.maxsize > 2**32 else 'c_long(7859)',
+        'c_byte(-77)',
+        'c_long(-9223372036854767949)' if sys.maxsize > 2**32 else 'c_long(7859)',
+        'c_long(-9223372036854767949)' if sys.maxsize > 2**32 else 'c_longlong(-9223372036854767949)',
+        'c_ushort(7859)',
+        'c_uint(7859)' if sys.maxsize > 2**32 else 'c_ulong(7859)',
+        'c_ulong(9223372036854783667)' if sys.maxsize > 2**32 else 'c_ulonglong(9223372036854783667)',
+        'c_ubyte(179)',
+        'c_ubyte(179)',
+        'c_uint(7859)' if sys.maxsize > 2**32 else 'c_ulong(7859)',
+        'c_ulong(9223372036854783667)' if sys.maxsize > 2**32 else 'c_ulong(7859)',
+        'c_ulong(9223372036854783667)' if sys.maxsize > 2**32 else 'c_ulonglong(9223372036854783667)',
+        'c_ushort(7859)',
     ]
     assert expected == instances

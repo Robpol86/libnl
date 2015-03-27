@@ -5,7 +5,7 @@ install:
 
 script:
   - tox
-  - (cd ./tests && ls .coverage.py34 .coverage.py33 .coverage.py27 .coverage.py26)
+  - (cd ./tests && ls .coverage.py34 .coverage.py33 .coverage.pypy3 .coverage.pypy .coverage.py27 .coverage.py26)
 
 after_success:
   - mv tests/.coverage* .

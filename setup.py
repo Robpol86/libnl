@@ -2,20 +2,17 @@
 """Setup script for the project."""
 
 import atexit
+import codecs
 import os
 import re
 import subprocess
 import sys
-from codecs import open
 from distutils.spawn import find_executable
 
 import setuptools.command.sdist
 from setuptools.command.test import test
 
-_JOIN = lambda *p: os.path.join(HERE, *p)
 _PACKAGES = lambda: [os.path.join(r, s) for r, d, _ in os.walk(NAME_FILE) for s in d if s != '__pycache__']
-_REQUIRES = lambda p: [i for i in open(_JOIN(p), encoding='utf-8') if i[0] != '-'] if os.path.exists(_JOIN(p)) else []
-_SAFE_READ = lambda f, l: open(_JOIN(f), encoding='utf-8').read(l) if os.path.exists(_JOIN(f)) else ''
 _VERSION_RE = re.compile(r"^__(version|author|license)__ = '([\w\.@]+)'$", re.MULTILINE)
 
 CLASSIFIERS = (
@@ -23,9 +20,11 @@ CLASSIFIERS = (
     'Intended Audience :: Developers',
     'License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)',
     'Operating System :: POSIX :: Linux',
+    'Programming Language :: Python :: 2.6',
     'Programming Language :: Python :: 2.7',
     'Programming Language :: Python :: 3.3',
     'Programming Language :: Python :: 3.4',
+    'Programming Language :: Python :: Implementation :: PyPy',
     'Topic :: Software Development :: Libraries',
     'Topic :: System :: Networking',
     'Topic :: System :: Operating System Kernels :: Linux',
@@ -37,6 +36,26 @@ NAME = 'libnl'
 NAME_FILE = NAME
 PACKAGE = True
 VERSION_FILE = os.path.join(NAME_FILE, '__init__.py') if PACKAGE else '{0}.py'.format(NAME_FILE)
+
+
+def _requires(path):
+    """Read requirements file."""
+    if not os.path.exists(os.path.join(HERE, path)):
+        return list()
+    file_handle = codecs.open(os.path.join(HERE, path), encoding='utf-8')
+    requirements = [i for i in file_handle if i[0] != '-']
+    file_handle.close()
+    return requirements
+
+
+def _safe_read(path, length):
+    """Read file contents."""
+    if not os.path.exists(os.path.join(HERE, path)):
+        return ''
+    file_handle = codecs.open(os.path.join(HERE, path), encoding='utf-8')
+    contents = file_handle.read(length)
+    file_handle.close()
+    return contents
 
 
 class PyTest(test):
@@ -65,10 +84,10 @@ class PyTest(test):
 class PyTestPdb(PyTest):
     """Run tests with pytest and drop to debugger on test failure/errors."""
 
-    ipdb = 'ipdb' if sys.version_info[:2] > (2, 6) else 'pdb'
-    description = 'Run all tests, drops to {0} upon unhandled exception.'.format(ipdb)
+    _ipdb = 'ipdb' if sys.version_info[:2] > (2, 6) else 'pdb'
+    description = 'Run all tests, drops to {0} upon unhandled exception.'.format(_ipdb)
     CMD = 'testpdb'
-    TEST_ARGS = ['--{0}'.format(ipdb), 'tests']
+    TEST_ARGS = ['--{0}'.format(_ipdb), 'tests']
 
 
 class PyTestCovWeb(PyTest):
@@ -81,7 +100,7 @@ class PyTestCovWeb(PyTest):
     def run_tests(self):
         """Run the tests and then open."""
         if find_executable('open'):
-            atexit.register(lambda: subprocess.call(['open', _JOIN('htmlcov', 'index.html')]))
+            atexit.register(lambda: subprocess.call(['open', os.path.join(HERE, 'htmlcov', 'index.html')]))
         PyTest.run_tests(self)
 
 
@@ -90,18 +109,18 @@ ALL_DATA = dict(
     classifiers=CLASSIFIERS,
     cmdclass={PyTest.CMD: PyTest, PyTestPdb.CMD: PyTestPdb, PyTestCovWeb.CMD: PyTestCovWeb},
     description=DESCRIPTION,
-    install_requires=_REQUIRES('requirements.txt'),
+    install_requires=_requires('requirements.txt'),
     keywords=KEYWORDS,
-    long_description=_SAFE_READ('README.rst', 15000),
+    long_description=_safe_read('README.rst', 15000),
     name=NAME,
-    tests_require=_REQUIRES('requirements-test.txt'),
+    tests_require=_requires('requirements-test.txt'),
     url='https://github.com/Robpol86/{0}'.format(NAME),
     zip_safe=True,
 )
 
 
 # noinspection PyTypeChecker
-ALL_DATA.update(dict(_VERSION_RE.findall(_SAFE_READ(VERSION_FILE, 1500).replace('\r\n', '\n'))))
+ALL_DATA.update(dict(_VERSION_RE.findall(_safe_read(VERSION_FILE, 1500).replace('\r\n', '\n'))))
 ALL_DATA.update(dict(py_modules=[NAME_FILE]) if not PACKAGE else dict(packages=[NAME_FILE] + _PACKAGES()))
 
 

@@ -10,7 +10,7 @@ sockets between the Python process and the Linux kernel. The main driver for por
 `nl80211 <https://wireless.wiki.kernel.org/en/developers/documentation/nl80211>`_ in Python to scan for wireless access
 points natively, without having to run an external program and parse its output.
 
-* Python 2.6, 2.7, 3.3, and 3.4 supported on Linux
+* Python 2.6, 2.7, PyPy, PyPy3, 3.3, and 3.4 supported on Linux
 
 .. |buildWercker| image:: https://img.shields.io/wercker/ci/54f908261d0e8d4b221bfc9d.svg?style=flat-square
    :target: https://app.wercker.com/#applications/54f908261d0e8d4b221bfc9d

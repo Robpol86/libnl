@@ -5,7 +5,7 @@ import pytest
 from libnl.linux_private.netlink import NETLINK_ROUTE
 from libnl.msg import nlmsg_alloc_simple
 from libnl.nl import nl_complete_msg, nl_connect
-from libnl.socket_ import nl_socket_alloc, nl_socket_get_local_port
+from libnl.socket_ import nl_socket_alloc, nl_socket_free, nl_socket_get_local_port
 
 
 @pytest.mark.usefixtures('nlcb_debug')
@@ -121,6 +121,7 @@ def test_defaults(log):
     assert local_port == msg.nm_nlh.nlmsg_pid
 
     assert not log
+    nl_socket_free(sk)
 
 
 def test_nlmsg_pid():
@@ -131,6 +132,7 @@ def test_nlmsg_pid():
     msg.nm_nlh.nlmsg_pid = 10
     nl_complete_msg(sk, msg)
     assert 10 == msg.nm_nlh.nlmsg_pid
+    nl_socket_free(sk)
 
 
 def test_nm_protocol():
@@ -141,6 +143,7 @@ def test_nm_protocol():
     msg.nm_protocol = 10
     nl_complete_msg(sk, msg)
     assert 10 == msg.nm_protocol
+    nl_socket_free(sk)
 
 
 def test_s_proto():
@@ -151,3 +154,4 @@ def test_s_proto():
 
     nl_complete_msg(sk, msg)
     assert NETLINK_ROUTE == msg.nm_protocol
+    nl_socket_free(sk)

@@ -553,6 +553,7 @@ def test_genl_ctrl_resolve(log):
     assert 0 == genl_connect(sk)
     assert not log
     assert 20 <= genl_ctrl_resolve(sk, b'nl80211')
+    nl_socket_free(sk)
 
     assert match('nl_object_alloc: Allocated new object 0x[a-f0-9]+', log, True)
     assert match('nlmsg_alloc: msg 0x[a-f0-9]+: Allocated new message, maxlen=4096', log, True)

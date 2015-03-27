@@ -1,5 +1,6 @@
-libnl
-=====
+=======
+ libnl
+=======
 
 A port of `libnl <http://www.infradead.org/~tgr/libnl/>`_, a collection of libraries providing APIs to the Netlink
 protocol based Linux kernel interfaces. This library is API-equivalent to the original C library, and should make it
@@ -38,8 +39,8 @@ WiFi           Linux            Coverage      Latest          Downloads
 |buildWercker| |buildTravis|    |coverage|    |latestVersion| |downloads|
 ============== ================ ============= =============== ===========
 
-Quickstart
-----------
+`Quickstart`_
+=============
 
 Install:
 
@@ -47,8 +48,8 @@ Install:
 
     pip install libnl
 
-Example Implementations
------------------------
+`Example Implementations`_
+==========================
 
 A simple Python program that merely lists network adapters on the host:
 
@@ -99,10 +100,18 @@ Here are some more examples with their C equivalents in order from "easy" to "ha
 * `example_show_wifi_interface.py <https://github.com/Robpol86/libnl/blob/master/example_show_wifi_interface.py>`_ (`show_wifi_interface.c <https://github.com/Robpol86/libnl/blob/master/example_c/show_wifi_interface.c>`_)
 * `example_scan_access_points.py <https://github.com/Robpol86/libnl/blob/master/example_scan_access_points.py>`_ (`scan_access_points.c <https://github.com/Robpol86/libnl/blob/master/example_c/scan_access_points.c>`_)
 
-Changelog
----------
+`Changelog`_
+============
 
-0.1.1
-`````
+This project adheres to `Semantic Versioning <http://semver.org/>`_.
+
+`0.2.0 - 2015-03-26`_
+---------------------
+
+Added
+    * Python2.6, PyPy, and PyPy3 support.
+
+`0.1.1 - 2015-03-15`_
+---------------------
 
 * Initial release.

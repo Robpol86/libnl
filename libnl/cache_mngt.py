@@ -19,7 +19,7 @@ cache_ops_lock = threading.Lock()
 
 
 def _nl_cache_ops_lookup(name):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/cache_mngt.c#L41
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/cache_mngt.c#L41.
 
     Positional arguments:
     name -- string.
@@ -36,7 +36,7 @@ def _nl_cache_ops_lookup(name):
 
 
 def _cache_ops_associate(protocol, msgtype):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/cache_mngt.c#L111
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/cache_mngt.c#L111.
 
     Positional arguments:
     protocol -- Netlink protocol (integer).
@@ -57,6 +57,7 @@ def _cache_ops_associate(protocol, msgtype):
 
 def nl_cache_ops_associate_safe(protocol, msgtype):
     """Associate protocol and message type to cache operations.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/cache_mngt.c#L164
 
     Searches the registered cache operations for a matching protocol and message type.
@@ -74,6 +75,7 @@ def nl_cache_ops_associate_safe(protocol, msgtype):
 
 def nl_msgtype_lookup(ops, msgtype):
     """Lookup message type cache association.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/cache_mngt.c#L189
 
     Searches for a matching message type association ing the specified cache operations.
@@ -93,6 +95,7 @@ def nl_msgtype_lookup(ops, msgtype):
 
 def nl_cache_mngt_register(ops):
     """Register a set of cache operations.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/cache_mngt.c#L252
 
     Called by users of caches to announce the availability of a certain cache type.

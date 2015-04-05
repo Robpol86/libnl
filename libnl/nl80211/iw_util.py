@@ -23,7 +23,7 @@ import unicodedata
 
 
 def get_ssid(_, data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/util.c?id=v3.17#n313
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/util.c?id=v3.17#n313.
 
     Positional arguments:
     data -- bytearray data to read.
@@ -54,7 +54,7 @@ ampdu_space = {  # http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree
 
 
 def get_mcs_index(mcs):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/util.c?id=v3.17#n453
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/util.c?id=v3.17#n453.
 
     Positional arguments:
     mcs -- bytearray
@@ -74,7 +74,7 @@ def get_mcs_index(mcs):
 
 
 def get_ht_capability(cap):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/util.c?id=v3.17#n541
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/util.c?id=v3.17#n541.
 
     Positional arguments:
     cap -- c_uint16
@@ -129,7 +129,7 @@ def get_ht_capability(cap):
 
 
 def get_ht_mcs(mcs):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/util.c?id=v3.17#n591
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/util.c?id=v3.17#n591.
 
     Positional arguments:
     mcs -- bytearray.

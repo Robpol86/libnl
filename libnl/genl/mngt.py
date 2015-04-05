@@ -22,7 +22,7 @@ genl_ops_list.next_ = genl_ops_list.prev = genl_ops_list
 
 
 def lookup_cmd(ops, cmd_id):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/mngt.c#L33
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/mngt.c#L33.
 
     Positional arguments:
     ops -- genl_ops class instance.
@@ -40,6 +40,7 @@ def lookup_cmd(ops, cmd_id):
 
 class genl_info(object):
     """Informative class passed on to message parser callbacks.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/genl/mngt.h#L37
 
     This class is passed on to all message parser callbacks and contains information about the sender of the message as
@@ -62,7 +63,7 @@ class genl_info(object):
 
 
 def cmd_msg_parser(who, nlh, ops, cache_ops, arg):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/mngt.c#L47
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/mngt.c#L47.
 
     Positional arguments:
     who -- sockaddr_nl class instance.
@@ -90,7 +91,7 @@ def cmd_msg_parser(who, nlh, ops, cache_ops, arg):
 
 
 def genl_msg_parser(ops, who, nlh, pp):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/mngt.c#L85
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/mngt.c#L85.
 
     Positional arguments:
     ops -- nl_cache_ops class instance.
@@ -108,6 +109,7 @@ def genl_msg_parser(ops, who, nlh, pp):
 
 class genl_cmd(object):
     """Definition of a Generic Netlink command.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/genl/mngt.h#L87
 
     This structure is used to define the list of available commands on the receiving side.
@@ -129,7 +131,7 @@ class genl_cmd(object):
 
 
 def lookup_family(family):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/mngt.c#L94
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/mngt.c#L94.
 
     Positional arguments:
     family -- integer.
@@ -144,7 +146,7 @@ def lookup_family(family):
 
 
 def lookup_family_by_name(name):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/mngt.c#L106
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/mngt.c#L106.
 
     Positional arguments:
     name -- string.
@@ -160,6 +162,7 @@ def lookup_family_by_name(name):
 
 class genl_ops(object):
     """Definition of a Generic Netlink family.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/genl/mngt.h#L132
 
     Instance variables:
@@ -197,6 +200,7 @@ class genl_ops(object):
 
 def genl_register_family(ops):
     """Register Generic Netlink family and associated commands.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/mngt.c#L164
 
     Registers the specified Generic Netlink family definition together with all associated commands. After registration,
@@ -225,6 +229,7 @@ def genl_register_family(ops):
 
 def genl_register(ops):
     """Register Generic Netlink family backed cache.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/mngt.c#L241
 
     Same as genl_register_family() but additionally registers the specified cache operations using

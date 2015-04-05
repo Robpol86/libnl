@@ -51,7 +51,7 @@ errmsg.update({  # https://github.com/thom311/libnl/blob/libnl3_2_25/lib/error.c
 
 
 def nl_syserr2nlerr(error_):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/error.c#L84"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/error.c#L84."""
     error_ = abs(error_)
     legend = {
         errno.EBADF: libnl.errno_.NLE_BAD_SOCK,

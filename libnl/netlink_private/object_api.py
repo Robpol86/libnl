@@ -38,12 +38,13 @@ class NLHDR_COMMON(object):
 
 
 class nl_object(NLHDR_COMMON):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/object-api.h#L194"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/object-api.h#L194."""
     pass
 
 
 class nl_object_ops(object):
     """Object operations.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/object-api.h#L269
 
     Instance variables:

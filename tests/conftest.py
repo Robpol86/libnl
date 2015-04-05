@@ -106,7 +106,7 @@ def all_indexes():
     sk = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     for if_name in os.listdir('/sys/class/net'):
         # From: http://pydrcom.googlecode.com/svn-history/r2/trunk/pydrcom.py
-        info = struct.unpack('16sI', fcntl.ioctl(sk.fileno(), 0x8933,  struct.pack('16sI', if_name.encode('ascii'), 0)))
+        info = struct.unpack('16sI', fcntl.ioctl(sk.fileno(), 0x8933, struct.pack('16sI', if_name.encode('ascii'), 0)))
         mapping[int(info[1])] = if_name
     sk.close()
     return mapping
@@ -132,7 +132,7 @@ def wlan0_info():
     data = dict()
     # Get MAC address, http://stackoverflow.com/a/4789267/1198943
     sk = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    info = fcntl.ioctl(sk.fileno(), 0x8927,  struct.pack('256s', b'wlan0'))
+    info = fcntl.ioctl(sk.fileno(), 0x8927, struct.pack('256s', b'wlan0'))
     sk.close()
     data['mac'] = ':'.join(format(x if hasattr(x, 'real') else ord(x), '02x') for x in info[18:24])
     # Get ifindex.

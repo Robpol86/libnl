@@ -1,4 +1,5 @@
 """Netlink Attributes (netlink/attr.h) (lib/attr.c).
+
 https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/attr.h
 https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c
 
@@ -32,6 +33,7 @@ NLA_TYPE_MAX = NLA_NESTED
 
 def nla_attr_size(payload):
     """Return size of attribute without padding.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L55
 
      <-------- nla_attr_size(payload) --------->
@@ -49,7 +51,8 @@ def nla_attr_size(payload):
 
 
 class nla_policy(object):
-    """Attribute validation policy
+    """Attribute validation policy.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/attr.h#L60
 
     Instance variables:
@@ -74,6 +77,7 @@ class nla_policy(object):
 
 def nla_total_size(payload):
     """Return size of attribute including padding.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L73
 
      <----------- nla_total_size(payload) ----------->
@@ -92,6 +96,7 @@ def nla_total_size(payload):
 
 def nla_padlen(payload):
     """Return length of padding at the tail of the attribute.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L91
 
     +------------------+- - -+- - - - - - - - - +- - -+
@@ -110,6 +115,7 @@ def nla_padlen(payload):
 
 def nla_type(nla):
     """Return type of the attribute.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L109
 
     Positional arguments:
@@ -123,6 +129,7 @@ def nla_type(nla):
 
 def nla_data(nla):
     """Return bytearray_ptr of the payload data.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L120
 
     Positional arguments:
@@ -136,6 +143,7 @@ def nla_data(nla):
 
 def nla_len(nla):
     """Return length of the payload.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L131
 
     Positional arguments:
@@ -149,6 +157,7 @@ def nla_len(nla):
 
 def nla_ok(nla, remaining):
     """Check if the attribute header and payload can be accessed safely.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L148
 
     Verifies that the header and payload do not exceed the number of bytes left in the attribute stream. This function
@@ -167,6 +176,7 @@ def nla_ok(nla, remaining):
 
 def nla_next(nla, remaining):
     """Return next attribute in a stream of attributes.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L171
 
     Calculates the offset to the next attribute based on the attribute given. The attribute provided is assumed to be
@@ -200,7 +210,7 @@ nla_attr_minlen.update({  # https://github.com/thom311/libnl/blob/libnl3_2_25/li
 
 
 def validate_nla(nla, maxtype, policy):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L188
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L188.
 
     Positional arguments:
     nla -- nlattr class instance.
@@ -240,6 +250,7 @@ def validate_nla(nla, maxtype, policy):
 
 def nla_parse(tb, maxtype, head, len_, policy):
     """Create attribute index based on a stream of attributes.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L242
 
     Iterates over the stream of attributes and stores a pointer to each attribute in the index array using the attribute
@@ -281,6 +292,7 @@ def nla_parse(tb, maxtype, head, len_, policy):
 
 def nla_for_each_attr(head, len_, rem):
     """Iterate over a stream of attributes.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/attr.h#L262
 
     Positional arguments:
@@ -300,6 +312,7 @@ def nla_for_each_attr(head, len_, rem):
 
 def nla_for_each_nested(nla, rem):
     """Iterate over a stream of nested attributes.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/attr.h#L274
 
     Positional arguments:
@@ -318,6 +331,7 @@ def nla_for_each_nested(nla, rem):
 
 def nla_find(head, len_, attrtype):
     """Find a single attribute in a stream of attributes.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L323
 
     Iterates over the stream of attributes and compares each type with the type specified. Returns the first attribute
@@ -340,6 +354,7 @@ def nla_find(head, len_, attrtype):
 
 def nla_reserve(msg, attrtype, attrlen):
     """Reserve space for an attribute.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L456
 
     Reserves room for an attribute in the specified Netlink message and fills in the attribute header (type, length).
@@ -377,6 +392,7 @@ def nla_reserve(msg, attrtype, attrlen):
 
 def nla_put(msg, attrtype, datalen, data):
     """Add a unspecific attribute to Netlink message.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L497
 
     Reserves room for an unspecific attribute and copies the provided data into the message as payload of the attribute.
@@ -405,6 +421,7 @@ def nla_put(msg, attrtype, datalen, data):
 
 def nla_put_data(msg, attrtype, data):
     """Add abstract data as unspecific attribute to Netlink message.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L527
 
     Equivalent to nla_put() except that the length of the payload is derived from the bytearray data object.
@@ -422,6 +439,7 @@ def nla_put_data(msg, attrtype, data):
 
 def nla_put_u8(msg, attrtype, value):
     """Add 8 bit integer attribute to Netlink message.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L563
 
     Positional arguments:
@@ -438,6 +456,7 @@ def nla_put_u8(msg, attrtype, value):
 
 def nla_get_u8(nla):
     """Return value of 8 bit integer attribute as an int().
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L574
 
     Positional arguments:
@@ -451,6 +470,7 @@ def nla_get_u8(nla):
 
 def nla_put_u16(msg, attrtype, value):
     """Add 16 bit integer attribute to Netlink message.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L588
 
     Positional arguments:
@@ -467,6 +487,7 @@ def nla_put_u16(msg, attrtype, value):
 
 def nla_get_u16(nla):
     """Return value of 16 bit integer attribute as an int().
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L599
 
     Positional arguments:
@@ -480,6 +501,7 @@ def nla_get_u16(nla):
 
 def nla_put_u32(msg, attrtype, value):
     """Add 32 bit integer attribute to Netlink message.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L613
 
     Positional arguments:
@@ -496,6 +518,7 @@ def nla_put_u32(msg, attrtype, value):
 
 def nla_get_u32(nla):
     """Return value of 32 bit integer attribute as an int().
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L624
 
     Positional arguments:
@@ -509,6 +532,7 @@ def nla_get_u32(nla):
 
 def nla_put_u64(msg, attrtype, value):
     """Add 64 bit integer attribute to Netlink message.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L638
 
     Positional arguments:
@@ -525,6 +549,7 @@ def nla_put_u64(msg, attrtype, value):
 
 def nla_get_u64(nla):
     """Return value of 64 bit integer attribute as an int().
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L649
 
     Positional arguments:
@@ -541,6 +566,7 @@ def nla_get_u64(nla):
 
 def nla_put_string(msg, attrtype, value):
     """Add string attribute to Netlink message.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L674
 
     Positional arguments:
@@ -557,6 +583,7 @@ def nla_put_string(msg, attrtype, value):
 
 def nla_get_string(nla):
     """Return string attribute.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L685
 
     Positional arguments:
@@ -570,6 +597,7 @@ def nla_get_string(nla):
 
 def nla_put_flag(msg, attrtype):
     """Add flag Netlink attribute to Netlink message.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L709
 
     Positional arguments:
@@ -584,6 +612,7 @@ def nla_put_flag(msg, attrtype):
 
 def nla_get_flag(nla):
     """Return True if flag attribute is set.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L720
 
     Positional arguments:
@@ -597,6 +626,7 @@ def nla_get_flag(nla):
 
 def nla_put_msecs(msg, attrtype, msecs):
     """Add msecs Netlink attribute to Netlink message.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L737
 
     Positional arguments:
@@ -618,6 +648,7 @@ def nla_put_msecs(msg, attrtype, msecs):
 
 def nla_get_msecs(nla):
     """Return payload of msecs attribute as an int().
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L748
 
     Positional arguments:
@@ -631,6 +662,7 @@ def nla_get_msecs(nla):
 
 def nla_put_nested(msg, attrtype, nested):
     """Add nested attributes to Netlink message.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L772
 
     Takes the attributes found in the `nested` message and appends them to the message `msg` nested in a container of
@@ -650,6 +682,7 @@ def nla_put_nested(msg, attrtype, nested):
 
 def nla_parse_nested(tb, maxtype, nla, policy):
     """Create attribute index based on nested attribute.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L885
 
     Feeds the stream of attributes nested into the specified attribute to nla_parse().
@@ -668,6 +701,7 @@ def nla_parse_nested(tb, maxtype, nla, policy):
 
 def nla_is_nested(attr):
     """Return True if attribute has NLA_F_NESTED flag set.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/attr.c#L897
 
     Positional arguments:

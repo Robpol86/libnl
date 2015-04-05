@@ -9,7 +9,7 @@ import subprocess
 import sys
 from distutils.spawn import find_executable
 
-import setuptools.command.sdist
+import setuptools
 from setuptools.command.test import test
 
 _PACKAGES = lambda: [os.path.join(r, s) for r, d, _ in os.walk(NAME_FILE) for s in d if s != '__pycache__']
@@ -43,7 +43,7 @@ def _requires(path):
     if not os.path.exists(os.path.join(HERE, path)):
         return list()
     file_handle = codecs.open(os.path.join(HERE, path), encoding='utf-8')
-    requirements = [i for i in file_handle if i[0] != '-']
+    requirements = [i.strip() for i in file_handle if i[0] != '-']
     file_handle.close()
     return requirements
 
@@ -122,6 +122,7 @@ ALL_DATA = dict(
 # noinspection PyTypeChecker
 ALL_DATA.update(dict(_VERSION_RE.findall(_safe_read(VERSION_FILE, 1500).replace('\r\n', '\n'))))
 ALL_DATA.update(dict(py_modules=[NAME_FILE]) if not PACKAGE else dict(packages=[NAME_FILE] + _PACKAGES()))
+ALL_DATA['requires'] = ALL_DATA['install_requires']
 
 
 if __name__ == '__main__':

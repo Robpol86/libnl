@@ -63,7 +63,7 @@ RTM_FAM = lambda cmd: (cmd - RTM_BASE) >> 2
 
 
 class rtattr(Struct):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/rtnetlink.h#L137
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/rtnetlink.h#L137.
 
     Generic structure for encapsulation of optional route information. It is reminiscent of sockaddr, but with sa_family
     replaced with attribute type.
@@ -118,7 +118,7 @@ RTA_PAYLOAD = lambda rta: rta.rta_len - RTA_LENGTH(0)
 
 
 class rtgenmsg(Struct):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/rtnetlink.h#L410
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/rtnetlink.h#L410.
 
     Instance variables:
     rtgen_family -- rtgen family (c_ubyte).

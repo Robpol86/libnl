@@ -17,6 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def nl_object_alloc(ops):
     """Allocate a new object of kind specified by the operations handle.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/object.c#L54
 
     Positional arguments:

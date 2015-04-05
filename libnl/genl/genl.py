@@ -22,6 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def genl_connect(sk):
     """Connect a Generic Netlink socket.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/genl.c#L45
 
     This function expects a nl_socket class instance previously allocated via nl_socket_alloc(). It calls nl_connect()
@@ -41,6 +42,7 @@ def genl_connect(sk):
 
 def genl_send_simple(sk, family, cmd, version, flags):
     """Send a Generic Netlink message consisting only of a header.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/genl.c#L84
 
     This function is a shortcut for sending a Generic Netlink message without any message payload. The message will only
@@ -63,6 +65,7 @@ def genl_send_simple(sk, family, cmd, version, flags):
 
 def genlmsg_valid_hdr(nlh, hdrlen):
     """Validate Generic Netlink message headers.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/genl.c#L117
 
     Verifies the integrity of the Netlink and Generic Netlink headers by enforcing the following requirements:
@@ -89,6 +92,7 @@ def genlmsg_valid_hdr(nlh, hdrlen):
 
 def genlmsg_parse(nlh, hdrlen, tb, maxtype, policy):
     """Parse Generic Netlink message including attributes.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/genl.c#L191
 
     Verifies the validity of the Netlink and Generic Netlink headers using genlmsg_valid_hdr() and calls nla_parse() on
@@ -113,6 +117,7 @@ def genlmsg_parse(nlh, hdrlen, tb, maxtype, policy):
 
 def genlmsg_hdr(nlh):
     """Return reference to Generic Netlink header.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/genl.c#L210
 
     Positional arguments:
@@ -126,6 +131,7 @@ def genlmsg_hdr(nlh):
 
 def genlmsg_len(gnlh):
     """Return length of message payload including user header.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/genl.c#L224
 
     Positional arguments:
@@ -140,6 +146,7 @@ def genlmsg_len(gnlh):
 
 def genlmsg_user_hdr(gnlh):
     """Return bytearray_ptr of the user header.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/genl.c#L242
 
     Calculates the bytearray_ptr of the user header based on the Generic Netlink message header.
@@ -155,6 +162,7 @@ def genlmsg_user_hdr(gnlh):
 
 def genlmsg_user_data(gnlh, hdrlen):
     """Return bytearray_ptr of the user data.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/genl.c#L259
 
     Calculates the bytearray_ptr of the user data based on the Generic Netlink message header.
@@ -171,6 +179,7 @@ def genlmsg_user_data(gnlh, hdrlen):
 
 def genlmsg_attrdata(gnlh, hdrlen):
     """Return nlattr at the start of message attributes.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/genl.c#L287
 
     Positional arguments:
@@ -185,6 +194,7 @@ def genlmsg_attrdata(gnlh, hdrlen):
 
 def genlmsg_attrlen(gnlh, hdrlen):
     """Return length of message attributes.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/genl.c#L302
 
     Positional arguments:
@@ -199,6 +209,7 @@ def genlmsg_attrlen(gnlh, hdrlen):
 
 def genlmsg_put(msg, port, seq, family, hdrlen, flags, cmd, version):
     """Add Generic Netlink headers to Netlink message.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/genl.c#L348
 
     Calls nlmsg_put() on the specified message object to reserve space for the Netlink header, the Generic Netlink

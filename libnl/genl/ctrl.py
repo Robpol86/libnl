@@ -62,7 +62,7 @@ family_grp_policy.update({  # https://github.com/thom311/libnl/blob/libnl3_2_25/
 
 
 def ctrl_request_update(_, nl_sock_h):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L37
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L37.
 
     Positional arguments:
     nl_sock_h -- nl_sock class instance.
@@ -74,7 +74,7 @@ def ctrl_request_update(_, nl_sock_h):
 
 
 def parse_mcast_grps(family, grp_attr):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L64
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L64.
 
     Positional arguments:
     family -- genl_family class instance.
@@ -106,7 +106,7 @@ def parse_mcast_grps(family, grp_attr):
 
 
 def ctrl_msg_parser(ops, cmd, info, arg):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L105
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L105.
 
     Positional arguments:
     ops -- nl_cache_ops class instance.
@@ -121,6 +121,7 @@ def ctrl_msg_parser(ops, cmd, info, arg):
 
 def probe_response(msg, arg):
     """Process responses from from the query sent by genl_ctrl_probe_by_name().
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L203
 
     Process returned messages, filling out the missing information in the genl_family structure.
@@ -146,6 +147,7 @@ def probe_response(msg, arg):
 
 def genl_ctrl_probe_by_name(sk, name):
     """Look up generic Netlink family by family name querying the kernel directly.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L237
 
     Directly query's the kernel for a given family name.
@@ -185,6 +187,7 @@ def genl_ctrl_probe_by_name(sk, name):
 
 def genl_ctrl_resolve(sk, name):
     """Resolve Generic Netlink family name to numeric identifier.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L429
 
     Resolves the Generic Netlink family name to the corresponding numeric family identifier. This function queries the
@@ -205,7 +208,7 @@ def genl_ctrl_resolve(sk, name):
 
 
 def genl_ctrl_grp_by_name(family, grp_name):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L446
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L446.
 
     Positional arguments:
     family -- genl_family class instance.
@@ -222,6 +225,7 @@ def genl_ctrl_grp_by_name(family, grp_name):
 
 def genl_ctrl_resolve_grp(sk, family_name, grp_name):
     """Resolve Generic Netlink family group name.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L471
 
     Looks up the family object and resolves the group name to the numeric group identifier.
@@ -263,5 +267,5 @@ genl_ctrl_ops = nl_cache_ops(  # https://github.com/thom311/libnl/blob/libnl3_2_
 
 @__init
 def ctrl_init():
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L536"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/ctrl.c#L536."""
     genl_register(genl_ctrl_ops)

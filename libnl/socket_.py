@@ -31,7 +31,7 @@ SOL_NETLINK = 270
 
 @__init
 def init_default_cb():
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L42"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L42."""
     global default_cb
     nlcb = os.environ.get('NLCB', '').lower()
     if not nlcb:
@@ -48,7 +48,7 @@ def init_default_cb():
 
 
 def generate_local_port():
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L63"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L63."""
     global _PREVIOUS_LOCAL_PORT
     if _PREVIOUS_LOCAL_PORT is None:
         try:
@@ -62,6 +62,7 @@ def generate_local_port():
 
 def nl_socket_alloc(cb=None):
     """Allocate new Netlink socket. Does not yet actually open a socket.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L206
 
     Also has code for generating local port once.
@@ -94,6 +95,7 @@ def nl_socket_alloc(cb=None):
 
 def nl_socket_free(sk):
     """Free a Netlink socket (closes the socket).
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L244
 
     Positional arguments:
@@ -104,7 +106,7 @@ def nl_socket_free(sk):
 
 
 def nl_socket_get_local_port(sk):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L357
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L357.
 
     Also https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L338
     """
@@ -118,6 +120,7 @@ def nl_socket_get_local_port(sk):
 
 def nl_socket_add_memberships(sk, *group):
     """Join groups.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L417
 
     Joins the specified groups using the modern socket option. The list of groups has to be terminated by 0.
@@ -148,6 +151,7 @@ def nl_socket_add_memberships(sk, *group):
 
 def nl_socket_add_membership(sk, group):
     """Join a group.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L448
 
     Positional arguments:
@@ -162,6 +166,7 @@ def nl_socket_add_membership(sk, group):
 
 def nl_socket_drop_memberships(sk, *group):
     """Leave groups.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L465
 
     Leaves the specified groups using the modern socket option. The list of groups has to terminated by 0.
@@ -189,6 +194,7 @@ def nl_socket_drop_memberships(sk, *group):
 
 def nl_socket_drop_membership(sk, group):
     """Leave a group.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L496
 
     Positional arguments:
@@ -231,6 +237,7 @@ def nl_socket_set_cb(sk, cb):
 
 def nl_socket_modify_cb(sk, type_, kind, func, arg):
     """Modify the callback handler associated with the socket.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L633
 
     Sets specific callback functions in the existing nl_cb class instance stored in the nl_sock socket.
@@ -250,6 +257,7 @@ def nl_socket_modify_cb(sk, type_, kind, func, arg):
 
 def nl_socket_modify_err_cb(sk, kind, func, arg):
     """Modify the error callback handler associated with the socket.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L649
 
     Positional arguments:
@@ -266,6 +274,7 @@ def nl_socket_modify_err_cb(sk, kind, func, arg):
 
 def nl_socket_set_buffer_size(sk, rxbuf, txbuf):
     """Set socket buffer size of Netlink socket.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L675
 
     Sets the socket buffer size of a Netlink socket to the specified values `rxbuf` and `txbuf`. Providing a value of 0

@@ -9,7 +9,7 @@ of the License.
 
 
 def __type2str(type_, buf, _, tbl):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/utils.c#L968
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/utils.c#L968.
 
     Positional arguments:
     type_ -- integer, key to lookup in `tbl`.

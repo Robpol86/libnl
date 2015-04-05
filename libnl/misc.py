@@ -150,6 +150,7 @@ class Struct(object):
 
 class ucred(Struct):
     """Ancillary message for passing credentials.
+
     http://linux.die.net/man/7/unix
     http://stackoverflow.com/questions/1922761/size-of-pid-t-uid-t-gid-t-on-linux
 

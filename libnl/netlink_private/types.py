@@ -23,6 +23,7 @@ NL_MSG_CRED_PRESENT = 1
 
 class nl_cb(object):
     """Netlink callback class.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L39
 
     Instance variables:
@@ -49,6 +50,7 @@ class nl_cb(object):
 
 class nl_sock(object):
     """Netlink socket class (C struct equivalent).
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L69
 
     Instance variables:
@@ -95,7 +97,7 @@ class nl_sock(object):
 
 
 class nl_msg(object):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L133
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L133.
 
     Client-side only. Never transmitted to the kernel.
 
@@ -132,7 +134,7 @@ class nl_msg(object):
 
 
 class genl_family_op(object):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L753"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L753."""
 
     def __init__(self, o_id=0, o_flags=0, o_list=None):
         self.o_id = o_id
@@ -141,7 +143,7 @@ class genl_family_op(object):
 
 
 class genl_family_grp(object):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L761"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L761."""
 
     def __init__(self, family=None, list_=None, name='', id_=0):
         self.family = family
@@ -151,7 +153,7 @@ class genl_family_grp(object):
 
 
 class genl_family(NLHDR_COMMON):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L768"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L768."""
     SIZEOF = NLHDR_COMMON.SIZEOF + 48
 
     def __init__(self, nlo=None):

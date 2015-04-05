@@ -70,7 +70,7 @@ OPTIONS = docopt(__doc__) if __name__ == '__main__' else dict()
 
 
 def error(message, code=1):
-    """Prints an error message to stderr and exits with a status of 1 by default."""
+    """Print an error message to stderr and exits with a status of 1 by default."""
     if message:
         print('ERROR: {0}'.format(message), file=sys.stderr)
     else:
@@ -79,7 +79,7 @@ def error(message, code=1):
 
 
 def ok(no_exit, func, *args, **kwargs):
-    """Exits if `ret` is not OK (a negative number)."""
+    """Exit if `ret` is not OK (a negative number)."""
     ret = func(*args, **kwargs)
     if no_exit or ret >= 0:
         return ret
@@ -88,13 +88,13 @@ def ok(no_exit, func, *args, **kwargs):
 
 
 def error_handler(_, err, arg):
-    """Updates the mutable integer `arg` with the error code."""
+    """Update the mutable integer `arg` with the error code."""
     arg.value = err.error
     return libnl.handlers.NL_STOP
 
 
 def ack_handler(_, arg):
-    """Updates the mutable integer `arg` with 0 as an acknowledgement."""
+    """Update the mutable integer `arg` with 0 as an acknowledgement."""
     arg.value = 0
     return libnl.handlers.NL_STOP
 
@@ -119,7 +119,7 @@ def callback_trigger(msg, arg):
 
 
 def callback_dump(msg, results):
-    """This is where SSIDs and their data is decoded from the binary data sent by the kernel.
+    """Here is where SSIDs and their data is decoded from the binary data sent by the kernel.
 
     This function is called once per SSID. Everything in `msg` pertains to just one SSID.
 
@@ -153,7 +153,7 @@ def callback_dump(msg, results):
 
 
 def do_scan_trigger(sk, if_index, driver_id, mcid):
-    """Issues a scan request to the kernel and waits for it to reply with a signal.
+    """Issue a scan request to the kernel and wait for it to reply with a signal.
 
     This function issues NL80211_CMD_TRIGGER_SCAN which requires root privileges.
 
@@ -255,7 +255,7 @@ def do_scan_results(sk, if_index, driver_id, results):
 
 
 def eta_letters(seconds):
-    """Converts seconds remaining into human readable strings.
+    """Convert seconds remaining into human readable strings.
 
     From https://github.com/Robpol86/etaprogress/blob/ad934d4/etaprogress/components/eta_conversions.py.
 
@@ -287,7 +287,7 @@ def eta_letters(seconds):
 
 
 def print_table(data):
-    """Prints the table of detected SSIDs and their data to screen.
+    """Print the table of detected SSIDs and their data to screen.
 
     Positional arguments:
     data -- list of dictionaries.

@@ -17,6 +17,7 @@ GENL_MAX_ID = 1023
 
 class genlmsghdr(Struct):
     """Generic Netlink message header (holds payload data).
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/genetlink.h#L12
 
     Instance variables:

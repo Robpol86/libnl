@@ -68,7 +68,7 @@ ht_secondary_offset = ('no secondary', 'above', '[reserved!]', 'below')
 
 
 class ieee80211_country_ie_triplet(object):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n60"""
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n60."""
 
     def __init__(self, data):
         self.first_channel = c_uint8.from_buffer(data[:SIZEOF_U8]).value
@@ -83,7 +83,7 @@ class ieee80211_country_ie_triplet(object):
 
 
 def get_supprates(_, data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n227
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n227.
 
     Positional arguments:
     data -- bytearray data to read.
@@ -96,13 +96,13 @@ def get_supprates(_, data):
         elif r == BSS_MEMBERSHIP_SELECTOR_HT_PHY and data[i] & 0x80:
             value = 'HT'
         else:
-            value = '{0}.{1}'.format(int(r/2), int(5 * (r & 1)))
+            value = '{0}.{1}'.format(int(r / 2), int(5 * (r & 1)))
         answer.append('{0}{1}'.format(value, '*' if data[i] & 0x80 else ''))
     return answer
 
 
 def get_country(_, data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n267
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n267.
 
     Positional arguments:
     data -- bytearray data to read.
@@ -133,7 +133,7 @@ def get_country(_, data):
 
 
 def get_erp(_, data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n323
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n323.
 
     Positional arguments:
     data -- bytearray data to read.
@@ -153,7 +153,7 @@ def get_erp(_, data):
 
 
 def get_cipher(data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n336
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n336.
 
     Positional arguments:
     data -- bytearray data to read.
@@ -171,7 +171,7 @@ def get_cipher(data):
 
 
 def get_auth(data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n393
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n393.
 
     Positional arguments:
     data -- bytearray data to read.
@@ -189,7 +189,7 @@ def get_auth(data):
 
 
 def get_rsn_ie(defcipher, defauth, data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n441
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n441.
 
     Positional arguments:
     defcipher -- default cipher if not in data (string).
@@ -275,7 +275,7 @@ def get_rsn_ie(defcipher, defauth, data):
 
 
 def get_ht_capa(_, data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n602
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n602.
 
     Positional arguments:
     data -- bytearray data to read.
@@ -293,7 +293,7 @@ def get_ht_capa(_, data):
 
 
 def get_interworking(type_, data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n645
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n645.
 
     Positional arguments:
     type_ -- corresponding `ieprinters` dictionary key for the instance.
@@ -303,7 +303,7 @@ def get_interworking(type_, data):
 
 
 def get_11u_advert(_, data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n676
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n676.
 
     Positional arguments:
     data -- bytearray data to read.
@@ -328,7 +328,7 @@ def get_11u_advert(_, data):
 
 
 def get_11u_rcon(type_, data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n708
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n708.
 
     Positional arguments:
     type_ -- corresponding `ieprinters` dictionary key for the instance.
@@ -338,7 +338,7 @@ def get_11u_rcon(type_, data):
 
 
 def get_ht_op(_, data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n766
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n766.
 
     Positional arguments:
     data -- bytearray data to read.
@@ -417,7 +417,7 @@ CAPA = {
 
 
 def get_capabilities(_, data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n796
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n796.
 
     Positional arguments:
     data -- bytearray data to read.
@@ -436,7 +436,7 @@ def get_capabilities(_, data):
 
 
 def get_tim(_, data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n874
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n874.
 
     Positional arguments:
     data -- bytearray data to read.
@@ -456,7 +456,7 @@ def get_tim(_, data):
 
 
 def get_vht_capa(type_, data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n889
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n889.
 
     Positional arguments:
     type_ -- corresponding `ieprinters` dictionary key for the instance.
@@ -466,7 +466,7 @@ def get_vht_capa(type_, data):
 
 
 def get_vht_oper(type_, data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n897
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n897.
 
     Positional arguments:
     type_ -- corresponding `ieprinters` dictionary key for the instance.
@@ -476,7 +476,7 @@ def get_vht_oper(type_, data):
 
 
 def get_obss_scan_params(_, data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n914
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n914.
 
     Positional arguments:
     data -- bytearray data to read.
@@ -497,7 +497,7 @@ def get_obss_scan_params(_, data):
 
 
 def get_secchan_offs(type_, data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n927
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n927.
 
     Positional arguments:
     type_ -- corresponding `ieprinters` dictionary key for the instance.
@@ -507,7 +507,7 @@ def get_secchan_offs(type_, data):
 
 
 def get_bss_load(_, data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n935
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n935.
 
     Positional arguments:
     data -- bytearray data to read.
@@ -524,7 +524,7 @@ def get_bss_load(_, data):
 
 
 def get_mesh_conf(type_, data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n943
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n943.
 
     Positional arguments:
     type_ -- corresponding `ieprinters` dictionary key for the instance.
@@ -534,7 +534,7 @@ def get_mesh_conf(type_, data):
 
 
 class ie_print(object):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n974
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n974.
 
     Instance variables:
     name -- printer label (string).
@@ -553,7 +553,7 @@ class ie_print(object):
 
 
 def get_ie(instance, key, data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n981
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n981.
 
     Positional arguments:
     instance -- `ie_print` class instance.
@@ -602,7 +602,7 @@ ieprinters = {  # http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/
 
 
 def get_wifi_wmm_param(data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n1046
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n1046.
 
     Positional arguments:
     data -- bytearray data to read.
@@ -632,7 +632,7 @@ def get_wifi_wmm_param(data):
 
 
 def get_wifi_wmm(_, data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n1088
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n1088.
 
     Positional arguments:
     data -- bytearray data to read.
@@ -658,7 +658,7 @@ def get_wifi_wmm(_, data):
 
 
 def get_wifi_wps(_, data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n1130
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n1130.
 
     Positional arguments:
     data -- bytearray data to read.
@@ -739,7 +739,7 @@ wifiprinters = {  # http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tre
 
 
 def get_p2p(type_, data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n1306
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n1306.
 
     Positional arguments:
     type_ -- corresponding `ieprinters` dictionary key for the instance.
@@ -749,7 +749,7 @@ def get_p2p(type_, data):
 
 
 def get_hs20_ind(type_, data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n1386
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n1386.
 
     Positional arguments:
     type_ -- corresponding `ieprinters` dictionary key for the instance.
@@ -765,7 +765,7 @@ wfa_printers = {  # http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tre
 
 
 def get_vendor(data):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n1401
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n1401.
 
     Positional arguments:
     data -- bytearray data to read.
@@ -793,7 +793,7 @@ def get_vendor(data):
 
 
 def get_ies(ie):
-    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n1456
+    """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n1456.
 
     Positional arguments:
     ie -- bytearray data to read.

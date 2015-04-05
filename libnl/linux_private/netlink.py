@@ -34,6 +34,7 @@ NLM_F_APPEND = 0x800  # Add to end of list.
 
 class sockaddr_nl(Struct):
     """Netlink sockaddr class (C struct equivalent).
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/netlink.h#L31
 
     Instance variables:
@@ -96,6 +97,7 @@ class sockaddr_nl(Struct):
 
 class nlmsghdr(Struct):
     """Netlink message header (holds actual payload of Netlink message).
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/netlink.h#L38
 
      <------- NLMSG_ALIGN(hlen) ------> <---- NLMSG_ALIGN(len) --->
@@ -195,7 +197,7 @@ NLMSG_MIN_TYPE = 0x10  # < 0x10: reserved control messages.
 
 
 class nlmsgerr(Struct):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/netlink.h#L95
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/netlink.h#L95.
 
     Instance variables:
     error -- c_int.
@@ -222,7 +224,7 @@ NETLINK_NO_ENOBUFS = 5
 
 
 class nlattr(Struct):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/netlink.h#L126
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/netlink.h#L126.
 
     Holds a Netlink attribute along with a payload/data (such as a c_uint32 instance).
 

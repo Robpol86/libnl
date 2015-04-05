@@ -9,7 +9,7 @@ of the License.
 
 
 class nl_list_head(object):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/list.h#L15
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/list.h#L15.
 
     Instance variables:
     next_ -- reference to the next nl_list_head instance.
@@ -24,7 +24,7 @@ class nl_list_head(object):
 
 
 def _nl_list_add(obj, prev, next_):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/list.h#L27
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/list.h#L27.
 
     Positional arguments:
     obj -- nl_list_head class instance.
@@ -38,7 +38,7 @@ def _nl_list_add(obj, prev, next_):
 
 
 def nl_list_add_tail(obj, head):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/list.h#L37
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/list.h#L37.
 
     Positional arguments:
     obj -- nl_list_head class instance.
@@ -48,7 +48,7 @@ def nl_list_add_tail(obj, head):
 
 
 def nl_list_add_head(obj, head):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/list.h#L43
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/list.h#L43.
 
     Positional arguments:
     obj -- nl_list_head class instance.
@@ -58,7 +58,7 @@ def nl_list_add_head(obj, head):
 
 
 def nl_list_del(obj):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/list.h#L49
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/list.h#L49.
 
     Positional arguments:
     obj -- nl_list_head class instance.
@@ -68,7 +68,7 @@ def nl_list_del(obj):
 
 
 def nl_list_entry(ptr, type_, member):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/list.h#L64"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/list.h#L64."""
     if ptr.container_of:
         return ptr.container_of
     null_data = type_()
@@ -77,7 +77,7 @@ def nl_list_entry(ptr, type_, member):
 
 
 def nl_list_for_each_entry(pos, head, member):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/list.h#L79
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/list.h#L79.
 
     Positional arguments:
     pos -- class instance holding an nl_list_head instance.
@@ -97,7 +97,7 @@ def nl_list_for_each_entry(pos, head, member):
 
 
 def nl_list_for_each_entry_safe(pos, n, head, member):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/list.h#L84
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/list.h#L84.
 
     Positional arguments:
     pos -- class instance holding an nl_list_head instance.
@@ -120,6 +120,6 @@ def nl_list_for_each_entry_safe(pos, n, head, member):
 
 
 def nl_init_list_head(head):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/list.h#L90"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/list.h#L90."""
     head.next_ = head
     head.prev = head

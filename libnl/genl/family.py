@@ -23,7 +23,7 @@ FAMILY_ATTR_OPS = 0x20
 
 
 def family_constructor(c):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/family.c#L37
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/family.c#L37.
 
     Positional arguments:
     c -- nl_object-derived class instance.
@@ -38,7 +38,7 @@ def family_constructor(c):
 
 
 def family_free_data(c):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/family.c#L45
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/family.c#L45.
 
     Positional arguments:
     c -- nl_object-derived class instance.
@@ -59,7 +59,7 @@ def family_free_data(c):
 
 
 def family_clone(dst, src):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/family.c#L66
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/family.c#L66.
 
     Positional arguments:
     dst -- nl_object class instance.
@@ -72,7 +72,7 @@ def family_clone(dst, src):
 
 
 def family_dump_line(obj, p):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/family.c#L90
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/family.c#L90.
 
     Positional arguments:
     obj -- nl_object class instance.
@@ -82,7 +82,7 @@ def family_dump_line(obj, p):
 
 
 def family_dump_details(obj, p):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/family.c#L110
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/family.c#L110.
 
     Positional arguments:
     obj -- nl_object class instance.
@@ -92,7 +92,7 @@ def family_dump_details(obj, p):
 
 
 def family_dump_stats(obj, p):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/family.c#L145
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/family.c#L145.
 
     Positional arguments:
     obj -- nl_object class instance.
@@ -102,7 +102,7 @@ def family_dump_stats(obj, p):
 
 
 def family_compare(a, b, attrs, flags):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/family.c#L150
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/family.c#L150.
 
     Positional arguments:
     a -- nl_object class instance.
@@ -118,6 +118,7 @@ def family_compare(a, b, attrs, flags):
 
 def genl_family_alloc():
     """Instantiate new Generic Netlink family object.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/family.c#L181
 
     Returns:
@@ -128,6 +129,7 @@ def genl_family_alloc():
 
 def genl_family_get_id(family):
     """Return numeric identifier.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/family.c#L213
 
     Positional arguments:
@@ -141,6 +143,7 @@ def genl_family_get_id(family):
 
 def genl_family_set_id(family, id_):
     """Set the numeric identifier.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/family.c#L226
 
     Positional arguments:
@@ -153,6 +156,7 @@ def genl_family_set_id(family, id_):
 
 def genl_family_set_name(family, name):
     """Set human readable name.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/family.c#L258
 
     Positional arguments:
@@ -164,7 +168,7 @@ def genl_family_set_name(family, name):
 
 
 def genl_family_add_grp(family, id_, name):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/family.c#L366
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/genl/family.c#L366.
 
     Positional arguments:
     family -- Generic Netlink family object (genl_family class instance).

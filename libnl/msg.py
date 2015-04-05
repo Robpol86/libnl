@@ -35,6 +35,7 @@ NL_AUTO_SEQ = 0
 
 def nlmsg_size(payload):
     """Calculates size of Netlink message based on payload length.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L54
 
     Positional arguments:
@@ -51,6 +52,7 @@ nlmsg_msg_size = nlmsg_size  # Alias. https://github.com/thom311/libnl/blob/libn
 
 def nlmsg_total_size(payload):
     """Calculates size of Netlink message including padding based on payload length.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L72
 
     This function is identical to nlmsg_size() + nlmsg_padlen().
@@ -66,6 +68,7 @@ def nlmsg_total_size(payload):
 
 def nlmsg_for_each_attr(nlh, hdrlen, rem):
     """Iterate over a stream of attributes in a message.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/msg.h#L123
 
     Positional arguments:
@@ -81,6 +84,7 @@ def nlmsg_for_each_attr(nlh, hdrlen, rem):
 
 def nlmsg_attrdata(nlh, hdrlen):
     """Head of attributes data.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L143
 
     Positional arguments:
@@ -96,6 +100,7 @@ def nlmsg_attrdata(nlh, hdrlen):
 
 def nlmsg_attrlen(nlh, hdrlen):
     """Length of attributes data.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L154
 
     nlh -- Netlink message header (nlmsghdr class instance).
@@ -108,7 +113,7 @@ def nlmsg_attrlen(nlh, hdrlen):
 
 
 def nlmsg_valid_hdr(nlh, hdrlen):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L166
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L166.
 
     Positional arguments:
     nlh -- Netlink message header (nlmsghdr class instance).
@@ -121,6 +126,7 @@ def nlmsg_valid_hdr(nlh, hdrlen):
 
 def nlmsg_ok(nlh, remaining):
     """Check if the Netlink message fits into the remaining bytes.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L179
 
     Positional arguments:
@@ -136,6 +142,7 @@ def nlmsg_ok(nlh, remaining):
 
 def nlmsg_next(nlh, remaining):
     """Next Netlink message in message stream.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L194
 
     Positional arguments:
@@ -152,6 +159,7 @@ def nlmsg_next(nlh, remaining):
 
 def nlmsg_parse(nlh, hdrlen, tb, maxtype, policy):
     """Parse attributes of a Netlink message.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L213
 
     Positional arguments:
@@ -171,6 +179,7 @@ def nlmsg_parse(nlh, hdrlen, tb, maxtype, policy):
 
 def nlmsg_find_attr(nlh, hdrlen, attrtype):
     """Find a specific attribute in a Netlink message.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L231
 
     Positional arguments:
@@ -186,6 +195,7 @@ def nlmsg_find_attr(nlh, hdrlen, attrtype):
 
 def nlmsg_alloc(len_=default_msg_size):
     """Allocate a new Netlink message with maximum payload size specified.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L299
 
     Allocates a new Netlink message without any further payload. The maximum payload size defaults to
@@ -210,6 +220,7 @@ nlmsg_alloc_size = nlmsg_alloc  # Alias. https://github.com/thom311/libnl/blob/l
 
 def nlmsg_inherit(hdr=None):
     """Allocate a new Netlink message and inherit Netlink message header.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L322
 
     Allocates a new Netlink message and inherits the original message header. If `hdr` is not None it will be used as a
@@ -233,6 +244,7 @@ def nlmsg_inherit(hdr=None):
 
 def nlmsg_alloc_simple(nlmsgtype, flags):
     """Allocate a new Netlink message.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L346
 
     Positional arguments:
@@ -250,6 +262,7 @@ def nlmsg_alloc_simple(nlmsgtype, flags):
 
 def nlmsg_set_default_size(max_):
     """Set the default maximum message payload size for allocated messages.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L365
 
     Positional arguments:
@@ -261,6 +274,7 @@ def nlmsg_set_default_size(max_):
 
 def nlmsg_convert(hdr):
     """Convert a Netlink message received from a Netlink socket to an nl_msg.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L382
 
     Allocates a new Netlink message and copies all of the data in `hdr` into the new message object.
@@ -280,6 +294,7 @@ def nlmsg_convert(hdr):
 
 def nlmsg_reserve(n, len_, pad):
     """Reserve room for additional data in a Netlink message.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L407
 
     Reserves room for additional data at the tail of the an existing netlink message. Eventual padding required will be
@@ -304,6 +319,7 @@ def nlmsg_reserve(n, len_, pad):
 
 def nlmsg_append(n, data, len_, pad):
     """Append data to tail of a Netlink message.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L442
 
     Extends the Netlink message as needed and appends the data of given length to the message.
@@ -327,6 +343,7 @@ def nlmsg_append(n, data, len_, pad):
 
 def nlmsg_put(n, pid, seq, type_, payload, flags):
     """Add a Netlink message header to a Netlink message.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L503
 
     Adds or overwrites the Netlink message header in an existing message object.
@@ -361,6 +378,7 @@ def nlmsg_put(n, pid, seq, type_, payload, flags):
 
 def nlmsg_hdr(msg):
     """Return actual Netlink message.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L536
 
     Returns the actual Netlink message casted to a nlmsghdr class instance.
@@ -375,7 +393,7 @@ def nlmsg_hdr(msg):
 
 
 def nlmsg_set_proto(msg, protocol):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L584
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L584.
 
     Positional arguments:
     msg -- Netlink message (nl_msg class instance).
@@ -385,17 +403,17 @@ def nlmsg_set_proto(msg, protocol):
 
 
 def nlmsg_set_src(msg, addr):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L599"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L599."""
     msg.nm_src = addr
 
 
 def nlmsg_get_dst(msg):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L614"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L614."""
     return msg.nm_dst
 
 
 def nlmsg_get_creds(msg):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L625"""
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L625."""
     if msg.nm_flags & NL_MSG_CRED_PRESENT:
         return msg.nm_creds
     return None
@@ -410,7 +428,7 @@ nl_msgtypes = {
 
 
 def nl_nlmsgtype2str(type_, buf, size):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L646
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L646.
 
     Positional arguments:
     type_ -- integer (e.g. nlh.nlmsg_type).
@@ -425,6 +443,7 @@ def nl_nlmsgtype2str(type_, buf, size):
 
 def nl_nlmsg_flags2str(flags, buf, _=None):
     """Netlink Message Flags Translations.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L664
 
     Positional arguments:
@@ -478,7 +497,7 @@ def dump_hex(ofd, start, len_, prefix=0):
     prefix_whitespaces = '  ' * prefix
     limit = 16 - (prefix * 2)
     start_ = start[:len_]
-    for line in (start_[i:i+limit] for i in range(0, len(start_), limit)):  # http://stackoverflow.com/a/9475354/1198943
+    for line in (start_[i:i + limit] for i in range(0, len(start_), limit)):  # stackoverflow.com/a/9475354/1198943
         hex_lines, ascii_lines = list(), list()
         for c in line:
             hex_lines.append('{0:02x}'.format(c if hasattr(c, 'real') else ord(c)))
@@ -490,7 +509,7 @@ def dump_hex(ofd, start, len_, prefix=0):
 
 
 def print_hdr(ofd, msg):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L793
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L793.
 
     Positional arguments:
     ofd -- function to call with arguments similar to `logging.debug`.
@@ -517,7 +536,7 @@ def print_hdr(ofd, msg):
 
 
 def print_genl_hdr(ofd, start):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L821
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L821.
 
     Positional arguments:
     ofd -- function to call with arguments similar to `logging.debug`.
@@ -531,7 +550,7 @@ def print_genl_hdr(ofd, start):
 
 
 def print_genl_msg(_, ofd, hdr, ops, payloadlen):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L831
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L831.
 
     Positional arguments:
     _ -- unused.
@@ -565,7 +584,7 @@ def print_genl_msg(_, ofd, hdr, ops, payloadlen):
 
 
 def dump_attr(ofd, attr, prefix=0):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L862
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L862.
 
     Positional arguments:
     ofd -- function to call with arguments similar to `logging.debug`.
@@ -578,7 +597,7 @@ def dump_attr(ofd, attr, prefix=0):
 
 
 def dump_attrs(ofd, attrs, attrlen, prefix=0):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L869
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L869.
 
     Positional arguments:
     ofd -- function to call with arguments similar to `logging.debug`.
@@ -599,7 +618,7 @@ def dump_attrs(ofd, attrs, attrlen, prefix=0):
             ofd('%s  [ATTR %02d%s] %d octets', prefix_whitespaces, nla.nla_type, is_nested, alen)
 
         if nla_is_nested(nla):
-            dump_attrs(ofd, nla_data(nla), alen, prefix+1)
+            dump_attrs(ofd, nla_data(nla), alen, prefix + 1)
         else:
             dump_attr(ofd, nla, prefix)
 
@@ -613,7 +632,7 @@ def dump_attrs(ofd, attrs, attrlen, prefix=0):
 
 
 def dump_error_msg(msg, ofd=_LOGGER.debug):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L908
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L908.
 
     Positional arguments:
     msg -- message to print (nl_msg class instance).
@@ -634,7 +653,7 @@ def dump_error_msg(msg, ofd=_LOGGER.debug):
 
 
 def print_msg(msg, ofd, hdr):
-    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L929
+    """https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L929.
 
     Positional arguments:
     msg -- Netlink message (nl_msg class instance).
@@ -661,6 +680,7 @@ def print_msg(msg, ofd, hdr):
 
 def nl_msg_dump(msg, ofd=_LOGGER.debug):
     """Dump message in human readable format to callable.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L970
 
     Positional arguments:

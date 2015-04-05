@@ -1,6 +1,6 @@
-=======
- libnl
-=======
+=====
+libnl
+=====
 
 A port of `libnl <http://www.infradead.org/~tgr/libnl/>`_, a collection of libraries providing APIs to the Netlink
 protocol based Linux kernel interfaces. This library is API-equivalent to the original C library, and should make it
@@ -11,33 +11,27 @@ sockets between the Python process and the Linux kernel. The main driver for por
 `nl80211 <https://wireless.wiki.kernel.org/en/developers/documentation/nl80211>`_ in Python to scan for wireless access
 points natively, without having to run an external program and parse its output.
 
-* Python 2.6, 2.7, PyPy, PyPy3, 3.3, and 3.4 supported on Linux
+* Python 2.6, 2.7, PyPy, PyPy3, 3.3, and 3.4 supported on Linux.
 
-.. |buildWercker| image:: https://img.shields.io/wercker/ci/54f908261d0e8d4b221bfc9d.svg?style=flat-square
+.. image:: https://img.shields.io/wercker/ci/54f908261d0e8d4b221bfc9d.svg?style=flat-square&label=Wercker%20CI
    :target: https://app.wercker.com/#applications/54f908261d0e8d4b221bfc9d
    :alt: Build Status WiFi
 
-.. |buildTravis| image:: https://img.shields.io/travis/Robpol86/libnl/master.svg?style=flat-square
+.. image:: https://img.shields.io/travis/Robpol86/libnl/master.svg?style=flat-square&label=Travis%20CI
    :target: https://travis-ci.org/Robpol86/libnl
    :alt: Build Status
 
-.. |coverage| image:: https://img.shields.io/codecov/c/github/Robpol86/libnl/master.svg?style=flat-square
+.. image:: https://img.shields.io/codecov/c/github/Robpol86/libnl/master.svg?style=flat-square&label=Codecov
    :target: https://codecov.io/github/Robpol86/libnl
    :alt: Coverage Status
 
-.. |latestVersion| image:: https://img.shields.io/pypi/v/libnl.svg?style=flat-square
+.. image:: https://img.shields.io/pypi/v/libnl.svg?style=flat-square&label=Latest
    :target: https://pypi.python.org/pypi/libnl/
    :alt: Latest Version
 
-.. |downloads| image:: https://img.shields.io/pypi/dm/libnl.svg?style=flat-square
+.. image:: https://img.shields.io/pypi/dm/libnl.svg?style=flat-square&label=PyPI%20Downloads
    :target: https://pypi.python.org/pypi/libnl/
    :alt: Downloads
-
-============== ================ ============= =============== ===========
-WiFi           Linux            Coverage      Latest          Downloads
-============== ================ ============= =============== ===========
-|buildWercker| |buildTravis|    |coverage|    |latestVersion| |downloads|
-============== ================ ============= =============== ===========
 
 `Quickstart`_
 =============

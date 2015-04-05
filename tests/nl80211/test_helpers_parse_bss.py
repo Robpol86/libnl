@@ -10,7 +10,9 @@ from libnl.nl80211.nl80211 import NL80211_ATTR_BSS, NL80211_ATTR_MAX, NL80211_BS
 
 
 def test_no_security():
-    """BSS 00:0d:67:23:b8:46(on wlan0)
+    """iw output to test against.
+
+    BSS 00:0d:67:23:b8:46(on wlan0)
     TSF: 1680943821184 usec (19d, 10:55:43)
     freq: 2412
     beacon interval: 100 TUs

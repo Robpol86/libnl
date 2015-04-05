@@ -20,7 +20,9 @@ def match(expected, log, is_regex=False):
 
 @pytest.mark.usefixtures('nlcb_debug')
 def test_error(log):
-    """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && NLDBG=4 NLCB=debug ./a.out
+    """C code to test against.
+
+    // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && NLDBG=4 NLCB=debug ./a.out
     #include <netlink/msg.h>
     struct nl_sock {
         struct sockaddr_nl s_local; struct sockaddr_nl s_peer; int s_fd; int s_proto; unsigned int s_seq_next;
@@ -143,7 +145,9 @@ def test_error(log):
 
 @pytest.mark.usefixtures('nlcb_debug')
 def test_multipart(log, ifaces):
-    """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && NLDBG=4 NLCB=debug ./a.out
+    """C code to test against.
+
+    // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && NLDBG=4 NLCB=debug ./a.out
     #include <netlink/msg.h>
     struct nl_sock {
         struct sockaddr_nl s_local; struct sockaddr_nl s_peer; int s_fd; int s_proto; unsigned int s_seq_next;
@@ -343,7 +347,8 @@ def test_multipart(log, ifaces):
 
 @pytest.mark.usefixtures('nlcb_verbose')
 def test_multipart_verbose(log, ifaces):
-    """Expected output (trimmed):
+    """Expected output (trimmed).
+
     // nl_cache_mngt_register: Registered cache operations genl/family
     // Begin main()
     // Allocated socket.

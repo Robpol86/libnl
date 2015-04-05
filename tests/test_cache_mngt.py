@@ -10,7 +10,9 @@ from libnl.socket_ import nl_socket_alloc
 
 
 def test_nl_cache_ops_associate_safe():
-    """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && ./a.out
+    """C code to test against.
+
+    // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && ./a.out
     #include <netlink/genl/family.h>
     struct nl_sock {
         struct sockaddr_nl s_local; struct sockaddr_nl s_peer; int s_fd; int s_proto; unsigned int s_seq_next;

@@ -1,4 +1,4 @@
-"""http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/util.c?id=v3.17
+"""http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/util.c?id=v3.17.
 
 Copyright (c) 2015		Robert Pooley
 Copyright (c) 2007, 2008	Johannes Berg

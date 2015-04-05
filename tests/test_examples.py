@@ -6,7 +6,7 @@ import pytest
 
 
 def check_output(cmd):
-    """Python 2.6 subprocess.check_output() stand-in."""
+    """Python 2.6 subprocess.check_output stand-in."""
     if hasattr(subprocess, 'check_output'):
         return subprocess.check_output(cmd)
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)

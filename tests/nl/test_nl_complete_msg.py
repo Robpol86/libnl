@@ -10,7 +10,9 @@ from libnl.socket_ import nl_socket_alloc, nl_socket_free, nl_socket_get_local_p
 
 @pytest.mark.usefixtures('nlcb_debug')
 def test_defaults(log):
-    """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && NLDBG=4 ./a.out
+    """C code to test against.
+
+    // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && NLDBG=4 ./a.out
     #include <netlink/msg.h>
     struct ucred { __u32 pid; __u32 uid; __u32 gid; };
     struct nl_msg {

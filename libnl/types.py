@@ -1,4 +1,5 @@
-"""Definition of public types (netlink/types.h)
+"""Definition of public types (netlink/types.h).
+
 https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink/types.h
 
 This library is free software; you can redistribute it and/or

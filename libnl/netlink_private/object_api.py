@@ -1,4 +1,5 @@
 """Object API (netlink-private/object-api.c).
+
 https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/object-api.h
 
 This library is free software; you can redistribute it and/or
@@ -11,7 +12,8 @@ from libnl.list_ import nl_list_head
 
 
 class NLHDR_COMMON(object):
-    """Common Object Header
+    """Common Object Header.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/object-api.h#L185
 
     Must be used by every "object" definition to allow objects to be cached.

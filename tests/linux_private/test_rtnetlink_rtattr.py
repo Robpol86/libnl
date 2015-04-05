@@ -11,7 +11,9 @@ from libnl.socket_ import nl_socket_alloc, nl_socket_free, nl_socket_modify_cb
 
 
 def test_list_interfaces(ifacesi):
-    """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && ./a.out
+    """C code to test against.
+
+    // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && ./a.out
     #include <netlink/msg.h>
     static int callback(struct nl_msg *msg, void *arg) {
         struct nlmsghdr *nlh = nlmsg_hdr(msg);

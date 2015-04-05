@@ -26,7 +26,9 @@ def match(expected, log, is_regex=False):
 
 @pytest.mark.skipif('not os.path.exists("/sys/module/mac80211")')
 def test_ctrl_cmd_getfamily_hex_dump(log):
-    """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && NLDBG=4 ./a.out
+    """C code to test against.
+
+    // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && NLDBG=4 ./a.out
     #include <netlink/msg.h>
     struct nl_sock {
         struct sockaddr_nl s_local; struct sockaddr_nl s_peer; int s_fd; int s_proto; unsigned int s_seq_next;
@@ -295,7 +297,9 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
 
 @pytest.mark.skipif('not os.path.exists("/sys/module/mac80211")')
 def test_genl_ctrl_probe_by_name():
-    """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && ./a.out
+    """C code to test against.
+
+    // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && ./a.out
     #include <netlink/msg.h>
     #define NL_NO_AUTO_ACK (1<<4)
     struct nl_sock {
@@ -433,7 +437,9 @@ def test_genl_ctrl_probe_by_name():
 @pytest.mark.skipif('not os.path.exists("/sys/module/mac80211")')
 @pytest.mark.usefixtures('nlcb_debug')
 def test_genl_ctrl_resolve(log):
-    """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && NLDBG=4 NLCB=debug ./a.out
+    """C code to test against.
+
+    // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && NLDBG=4 NLCB=debug ./a.out
     #include <netlink/msg.h>
     int main() {
         struct nl_sock *sk = nl_socket_alloc();

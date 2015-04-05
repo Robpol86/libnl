@@ -17,7 +17,9 @@ if sys.version_info[:2] >= (2, 7):
 
 
 def test_nla_put_get_u32():
-    """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && ./a.out
+    """C code to test against.
+
+    // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && ./a.out
     #include <netlink/msg.h>
     int main() {
         int rem, i, range[] = { 0, 1, 2, 19, 20, 50 };
@@ -51,7 +53,9 @@ def test_nla_put_get_u32():
 
 
 def test_socket(tcp_server):
-    """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && (nc -l 2000 |base64 &) && sleep 0.1 && ./a.out
+    """C code to test against.
+
+    // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && (nc -l 2000 |base64 &) && sleep 0.1 && ./a.out
     #include <netlink/msg.h>
     struct nl_sock {
         struct sockaddr_nl s_local; struct sockaddr_nl s_peer; int s_fd; int s_proto; unsigned int s_seq_next;
@@ -212,7 +216,9 @@ def test_string_long():
 
 
 def test_nested():
-    """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && ./a.out
+    """C code to test against.
+
+    // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && ./a.out
     #include <netlink/msg.h>
     int main() {
         int i, rem1, rem2;

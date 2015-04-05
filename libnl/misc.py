@@ -199,7 +199,8 @@ class ucred(Struct):
 
 
 class msghdr(object):
-    """msghdr struct from sys/socket.h
+    """msghdr struct from sys/socket.h.
+
     http://pubs.opengroup.org/onlinepubs/7908799/xns/syssocket.h.html
 
     Instance variables:

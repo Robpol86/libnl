@@ -28,7 +28,9 @@ def match(expected, log, is_regex=False):
 @pytest.mark.skipif('not os.path.exists("/sys/class/net/wlan0")')
 @pytest.mark.usefixtures('nlcb_debug')
 def test_cmd_get_interface(log, wlan0_info, ifacesi):
-    """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && NLDBG=4 NLCB=debug ./a.out
+    """C code to test against.
+
+    // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && NLDBG=4 NLCB=debug ./a.out
     #include <netlink/netlink.h>
     #include <netlink/genl/genl.h>
     #include <linux/nl80211.h>
@@ -351,7 +353,9 @@ def test_cmd_get_interface(log, wlan0_info, ifacesi):
 @pytest.mark.skipif('not os.path.exists("/sys/class/net/wlan0") or os.getuid() != 0')
 @pytest.mark.usefixtures('nlcb_debug')
 def test_cmd_trigger_scan(log, ifacesi):
-    """// gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && sudo NLDBG=4 NLCB=debug ./a.out
+    """C code to test against.
+
+    // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && sudo NLDBG=4 NLCB=debug ./a.out
     #include <netlink/genl/genl.h>
     #include <linux/nl80211.h>
     static int error_handler(struct sockaddr_nl *nla, struct nlmsgerr *err, void *arg) {

@@ -1,4 +1,5 @@
-"""if_link.h
+"""if_link.h.
+
 https://github.com/thom311/libnl/blob/d6f761b/include/linux-private/linux/if_link.h
 
 This library is free software; you can redistribute it and/or

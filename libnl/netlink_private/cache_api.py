@@ -1,4 +1,5 @@
 """Caching API (netlink-private/cache-api.h).
+
 https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/cache-api.h
 
 This library is free software; you can redistribute it and/or
@@ -34,7 +35,8 @@ class nl_msgtype(object):
 
 
 class nl_cache_ops(object):
-    """Cache Operations
+    """Cache Operations.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/cache-api.h#L165
 
     This class defines the characteristics of a cache type. It contains references to functions which implement the

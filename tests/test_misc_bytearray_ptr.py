@@ -1,3 +1,5 @@
+"""Tests for libnl/misc:bytearray_ptr."""
+
 import pytest
 
 from libnl.misc import bytearray_ptr
@@ -5,6 +7,7 @@ from libnl.misc import bytearray_ptr
 
 @pytest.mark.parametrize('bytearray_obj', (bytearray, bytearray_ptr))
 def test_one_dimension_allowed(bytearray_obj):
+    """Test single bytearray_obj."""
     ba = bytearray_obj(bytearray(b'The quick brown fox jumps over the lazy dog.'))
     assert bytearray(b'uick bro') == ba[5:13]
 
@@ -48,6 +51,7 @@ def test_one_dimension_allowed(bytearray_obj):
 
 
 def test_one_dimension_forbidden():
+    """Test single bytearray_obj with invalid operations."""
     ba = bytearray_ptr(bytearray(b'The quick brown fox jumps over the lazy dog.'))
     ba[40:] = bytearray(b'\0\0\0\0')  # Allowed because same length.
     ba[:-40] = bytearray(b'\0\0\0\0')  # Allowed because same length.
@@ -75,6 +79,7 @@ def test_one_dimension_forbidden():
 
 
 def test_two_dimension():
+    """Test nested bytearray_obj."""
     pointee = bytearray(b'The quick brown fox jumps over the lazy dog.')
     ba = bytearray_ptr(pointee, 4, 15)
     assert bytearray(b'quick brown') == bytearray(ba)
@@ -136,6 +141,7 @@ def test_two_dimension():
 
 
 def test_three_dimension():
+    """Test double-nested bytearray_obj."""
     origin = bytearray(b"All letters: The quick brown fox jumps over the lazy dog.\nIsn't it cool?")
     pointee = bytearray_ptr(origin, 13, -15)
     ba = bytearray_ptr(pointee, 4, 15)
@@ -210,6 +216,7 @@ def test_three_dimension():
 
 
 def test_oob_negative():
+    """Test out of bounds slicing."""
     origin = bytearray(b'!') * 30
     parent = bytearray_ptr(origin, 5, -5)
     infant = bytearray_ptr(parent, 5, -5)

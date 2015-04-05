@@ -85,6 +85,7 @@ def nl_connect(sk, protocol):
 
 def nl_sendmsg(sk, msg, hdr):
     """Transmit Netlink message using socket.sendmsg|sendto|send().
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/nl.c#L299
 
     Transmits the message specified in `hdr` over the Netlink socket using Python's socket.sendmsg().

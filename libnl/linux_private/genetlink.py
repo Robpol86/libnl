@@ -27,6 +27,7 @@ class genlmsghdr(Struct):
     reserved -- c_uint16
     payload -- payload and padding at the end (bytearay).
     """
+
     _REPR = '<{0}.{1} cmd={2[cmd]} version={2[version]} reserved={2[reserved]} payload={2[payload]}>'
     SIGNATURE = (SIZEOF_U8, SIZEOF_U8, SIZEOF_U16)
     SIZEOF = sum(SIGNATURE)

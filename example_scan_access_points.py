@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Performs a scan for wireless access points and prints them in a table.
+"""Perform a scan for wireless access points and prints them in a table.
 
 Root access is required to issue a scan request to the kernel.
 

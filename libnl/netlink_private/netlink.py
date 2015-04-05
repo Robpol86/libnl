@@ -11,11 +11,12 @@ of the License.
 
 class BUG(Exception):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/netlink.h#L99."""
+
     pass
 
 
 def nl_cb_call(cb, type_, msg):
-    """Calls a callback function.
+    """Call a callback function.
 
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/netlink.h#L136
 

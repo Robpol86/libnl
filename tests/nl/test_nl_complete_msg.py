@@ -1,3 +1,5 @@
+"""Tests for libnl/nl:nl_complete_msg."""
+
 import re
 
 import pytest
@@ -10,7 +12,7 @@ from libnl.socket_ import nl_socket_alloc, nl_socket_free, nl_socket_get_local_p
 
 @pytest.mark.usefixtures('nlcb_debug')
 def test_defaults(log):
-    """C code to test against.
+    r"""C code to test against.
 
     // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && NLDBG=4 ./a.out
     #include <netlink/msg.h>
@@ -127,6 +129,7 @@ def test_defaults(log):
 
 
 def test_nlmsg_pid():
+    """Test pid."""
     sk = nl_socket_alloc()
     msg = nlmsg_alloc_simple(0, 0)
     assert 0 == msg.nm_nlh.nlmsg_pid
@@ -138,6 +141,7 @@ def test_nlmsg_pid():
 
 
 def test_nm_protocol():
+    """Test protocol."""
     sk = nl_socket_alloc()
     msg = nlmsg_alloc_simple(0, 0)
     assert -1 == msg.nm_protocol
@@ -149,6 +153,7 @@ def test_nm_protocol():
 
 
 def test_s_proto():
+    """Test socket protocol."""
     sk = nl_socket_alloc()
     nl_connect(sk, NETLINK_ROUTE)
     msg = nlmsg_alloc_simple(0, 0)

@@ -1,3 +1,5 @@
+"""Tests for libnl/nl80211:parse_bss."""
+
 import base64
 from datetime import timedelta
 

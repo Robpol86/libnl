@@ -8,7 +8,7 @@ from libnl.nl80211 import nl80211
 
 
 def _get(out_parsed, in_bss, key, parser_func):
-    """Handles calling the parser function to convert bytearray data into Python data types.
+    """Handle calling the parser function to convert bytearray data into Python data types.
 
     Positional arguments:
     out_parsed -- dictionary to update with parsed data and string keys.
@@ -27,7 +27,7 @@ def _get(out_parsed, in_bss, key, parser_func):
 
 
 def _fetch(in_parsed, *keys):
-    """Retrieves nested dict data from either information elements or beacon IES dicts.
+    """Retrieve nested dict data from either information elements or beacon IES dicts.
 
     Positional arguments:
     in_parsed -- dictionary to read from.
@@ -46,7 +46,7 @@ def _fetch(in_parsed, *keys):
 
 
 def parse_bss(bss):
-    """Parses data prepared by nla_parse() and nla_parse_nested() into Python-friendly formats.
+    """Parse data prepared by nla_parse() and nla_parse_nested() into Python-friendly formats.
 
     Automatically chooses the right data-type for each attribute and converts it into Python integers, strings, unicode,
     etc objects.

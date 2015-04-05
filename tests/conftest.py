@@ -1,3 +1,5 @@
+"""Plugins for pytest."""
+
 import fcntl
 import imp
 import logging
@@ -17,7 +19,7 @@ import pytest
 
 @pytest.fixture(scope='function')
 def tcp_server(request):
-    """Starts up a TCP server in a thread."""
+    """Start a TCP server in a thread."""
     data = list()
 
     class Getter(object):
@@ -58,7 +60,7 @@ def tcp_server(request):
 
 @pytest.fixture(scope='session', autouse=True)
 def log():
-    """Stores libnl log statements in a list."""
+    """Store libnl log statements in a list."""
     log_statements = list()
 
     class ListHandler(logging.StreamHandler):
@@ -74,7 +76,7 @@ def log():
 
 @pytest.fixture(scope='function')
 def nlcb_debug(request):
-    """Sets the NLCB environment variable to 'debug' and reloads libnl.handlers to take effect."""
+    """Set the NLCB environment variable to 'debug' and reloads libnl.handlers to take effect."""
     os.environ['NLCB'] = 'debug'
     __import__('libnl').socket_.init_default_cb()
     imp.reload(__import__('libnl').handlers)
@@ -88,7 +90,7 @@ def nlcb_debug(request):
 
 @pytest.fixture(scope='function')
 def nlcb_verbose(request):
-    """Sets the NLCB environment variable to 'verbose' and reloads libnl.handlers to take effect."""
+    """Set the NLCB environment variable to 'verbose' and reloads libnl.handlers to take effect."""
     os.environ['NLCB'] = 'verbose'
     __import__('libnl').socket_.init_default_cb()
     imp.reload(__import__('libnl').handlers)
@@ -101,7 +103,7 @@ def nlcb_verbose(request):
 
 
 def all_indexes():
-    """Returns dictionary of network interface names (values) and their indexes (keys)."""
+    """Return dictionary of network interface names (values) and their indexes (keys)."""
     mapping = dict()
     sk = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     for if_name in os.listdir('/sys/class/net'):
@@ -114,19 +116,19 @@ def all_indexes():
 
 @pytest.fixture(scope='session')
 def ifaces():
-    """Returns tuple of network interfaces (by name)."""
+    """Return tuple of network interfaces (by name)."""
     return tuple(i[1] for i in sorted(all_indexes().items()))
 
 
 @pytest.fixture(scope='session')
 def ifacesi():
-    """Returns tuple of tuples of network interfaces (by name) (second item) and their indexes (first item)."""
+    """Return tuple of tuples of network interfaces (by name) (second item) and their indexes (first item)."""
     return tuple(sorted(all_indexes().items()))
 
 
 @pytest.fixture(scope='session')
 def wlan0_info():
-    """Returns a dict of data about the wlan0 interface, or an empty dict."""
+    """Return a dict of data about the wlan0 interface, or an empty dict."""
     if not os.path.exists('/sys/class/net/wlan0'):
         return dict()
     data = dict()

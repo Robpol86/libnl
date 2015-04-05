@@ -1,3 +1,5 @@
+"""Tests for libnl/socket_."""
+
 import re
 import socket
 
@@ -12,6 +14,7 @@ from libnl.socket_ import nl_socket_alloc, nl_socket_free, nl_socket_modify_cb, 
 
 
 def match(expected, log, is_regex=False):
+    """AssertionError if first log statement doesn't match expected. Supports regex."""
     log_statement = log.pop(0)
     if is_regex:
         assert re.match(expected + '$', log_statement)
@@ -21,7 +24,7 @@ def match(expected, log, is_regex=False):
 
 
 def test_nl_socket_alloc():
-    """C code to test against.
+    r"""C code to test against.
 
     // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && ./a.out
     #include <netlink/msg.h>
@@ -116,7 +119,7 @@ def test_nl_socket_alloc():
 
 
 def test_nl_socket_modify_cb(log, ifaces):
-    """C code to test against.
+    r"""C code to test against.
 
     // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && NLDBG=4 ./a.out
     #include <netlink/msg.h>
@@ -277,7 +280,7 @@ def test_nl_socket_modify_cb(log, ifaces):
 
 @pytest.mark.usefixtures('nlcb_verbose')
 def test_nl_socket_modify_cb_error_verbose(log):
-    """C code to test against.
+    r"""C code to test against.
 
     // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && NLDBG=4 NLCB=verbose ./a.out
     #include <netlink/msg.h>

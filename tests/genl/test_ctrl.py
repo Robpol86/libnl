@@ -1,3 +1,5 @@
+"""Tests for libnl/genl/ctrl."""
+
 import logging
 import re
 
@@ -16,6 +18,7 @@ from libnl.socket_ import nl_socket_alloc, nl_socket_free, nl_socket_modify_cb
 
 
 def match(expected, log, is_regex=False):
+    """AssertionError if first log statement doesn't match expected. Supports regex."""
     log_statement = log.pop(0)
     if is_regex:
         assert re.match(expected + '$', log_statement)
@@ -26,7 +29,7 @@ def match(expected, log, is_regex=False):
 
 @pytest.mark.skipif('not os.path.exists("/sys/module/mac80211")')
 def test_ctrl_cmd_getfamily_hex_dump(log):
-    """C code to test against.
+    r"""C code to test against.
 
     // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && NLDBG=4 ./a.out
     #include <netlink/msg.h>
@@ -297,7 +300,7 @@ def test_ctrl_cmd_getfamily_hex_dump(log):
 
 @pytest.mark.skipif('not os.path.exists("/sys/module/mac80211")')
 def test_genl_ctrl_probe_by_name():
-    """C code to test against.
+    r"""C code to test against.
 
     // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && ./a.out
     #include <netlink/msg.h>
@@ -437,7 +440,7 @@ def test_genl_ctrl_probe_by_name():
 @pytest.mark.skipif('not os.path.exists("/sys/module/mac80211")')
 @pytest.mark.usefixtures('nlcb_debug')
 def test_genl_ctrl_resolve(log):
-    """C code to test against.
+    r"""C code to test against.
 
     // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && NLDBG=4 NLCB=debug ./a.out
     #include <netlink/msg.h>

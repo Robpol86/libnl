@@ -209,7 +209,7 @@ def nl_socket_drop_membership(sk, group):
 
 
 def nl_socket_get_cb(sk):
-    """Gets the current nl_cb callback handler stored in the nl_sock socket.
+    """Get the current nl_cb callback handler stored in the nl_sock socket.
 
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L609
 
@@ -223,7 +223,7 @@ def nl_socket_get_cb(sk):
 
 
 def nl_socket_set_cb(sk, cb):
-    """Stores nl_cb callback handler in the nl_sock socket, overwriting the previous callbacks.
+    """Store nl_cb callback handler in the nl_sock socket, overwriting the previous callbacks.
 
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/socket.c#L614
 

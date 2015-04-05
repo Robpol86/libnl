@@ -35,7 +35,7 @@ NL_AUTO_SEQ = 0
 
 
 def nlmsg_size(payload):
-    """Calculates size of Netlink message based on payload length.
+    """Calculate size of Netlink message based on payload length.
 
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L54
 
@@ -52,7 +52,7 @@ nlmsg_msg_size = nlmsg_size  # Alias. https://github.com/thom311/libnl/blob/libn
 
 
 def nlmsg_total_size(payload):
-    """Calculates size of Netlink message including padding based on payload length.
+    """Calculate size of Netlink message including padding based on payload length.
 
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L72
 
@@ -484,7 +484,8 @@ def nl_nlmsg_flags2str(flags, buf, _=None):
 
 
 def dump_hex(ofd, start, len_, prefix=0):
-    """Converts `start` to hex and logs it, 16 bytes per log statement.
+    """Convert `start` to hex and logs it, 16 bytes per log statement.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/msg.c#L760
 
     Positional arguments:

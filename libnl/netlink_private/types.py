@@ -155,6 +155,7 @@ class genl_family_grp(object):
 
 class genl_family(NLHDR_COMMON):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L768."""
+
     SIZEOF = NLHDR_COMMON.SIZEOF + 48
 
     def __init__(self, nlo=None):

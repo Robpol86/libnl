@@ -1,3 +1,5 @@
+"""Tests for libnl/linux_private/netlink."""
+
 import base64
 import socket
 import sys
@@ -15,7 +17,7 @@ if sys.version_info[:2] >= (2, 7):
 
 
 def test_socket(tcp_server):
-    """C code to test against.
+    r"""C code to test against.
 
     // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && (nc -l 2000 |base64 &) && sleep 0.1 && ./a.out
     #include <netlink/msg.h>
@@ -92,6 +94,7 @@ def test_socket(tcp_server):
 
 
 def test_seq():
+    """Test sequences."""
     msg = nlmsg_alloc()
     nlh = nlmsg_hdr(msg)
     assert 16 == nlh.nlmsg_len
@@ -114,6 +117,7 @@ def test_seq():
 
 
 def test_two_attrs():
+    """Test with two attributes."""
     msg = nlmsg_alloc()
     assert 0 == nla_put_u32(msg, 4, 8)
     nlh = nlmsg_hdr(msg)

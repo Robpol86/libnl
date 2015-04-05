@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Prints some basic information about wireless interfaces on the host.
+"""Print some basic information about wireless interfaces on the host.
 
 This is a pure-Python port of the C program available here:
     github.com/Robpol86/libnl/blob/7186e04/example_c/show_wifi_interface.c

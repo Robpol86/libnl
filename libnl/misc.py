@@ -109,11 +109,11 @@ class Struct(object):
         self.bytearray = ba or (bytearray(b'\0') * self.SIZEOF)
 
     def __bool__(self):
-        """Returns True if self.bytearray is more than just null bytes."""
+        """Return True if self.bytearray is more than just null bytes."""
         return not not bytearray(self.bytearray).strip(b'\0')
 
     def __bytes__(self):
-        """Returns a bytes object."""
+        """Return a bytes object."""
         return bytes(self.bytearray)
 
     def __nonzero__(self):
@@ -121,17 +121,17 @@ class Struct(object):
         return self.__bool__()
 
     def __repr__(self):
-        """Returns a repr of the subclass instance with property values."""
+        """Return a repr of the subclass instance with property values."""
         dynamic_dict = _DynamicDict(self)
         answer = self._REPR.format(self.__class__.__module__, self.__class__.__name__, dynamic_dict)
         return answer
 
     def __str__(self):
-        """Returns a hex dump (space delimited per byte) of the data."""
+        """Return a hex dump (space delimited per byte) of the data."""
         return ' '.join(format(c, '02x') for c in self.bytearray)
 
     def _get_slicers(self, index):
-        """Returns a slice object to slice a list/bytearray by.
+        """Return a slice object to slice a list/bytearray by.
 
         Positional arguments:
         index -- index of self.SIGNATURE to target self.bytearray by.
@@ -218,7 +218,7 @@ class msghdr(object):
 
 
 def __init(func):
-    """Implements the equivalent of the GNU C __init initializer function.
+    """Implement the equivalent of the GNU C __init initializer function.
 
     https://gcc.gnu.org/onlinedocs/gccint/Initialization.html
 
@@ -325,7 +325,7 @@ class bytearray_ptr(object):
 
 
 def get_string(stream):
-    """Use this to grab a "string" from a bytearray() stream.
+    r"""Use this to grab a "string" from a bytearray() stream.
 
     C's printf() prints until it encounters a null byte (b'\0'). This function behaves the same.
 

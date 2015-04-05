@@ -1,3 +1,5 @@
+"""Tests looking for TODOs and prints."""
+
 import json
 import os
 import re
@@ -14,7 +16,7 @@ from pygments.lexers import get_lexer_by_name
 
 @pytest.mark.skipif('"TRAVIS_REPO_SLUG" not in os.environ')
 def test_todo_issue_validator():
-    """Verifies that each T.O.D.O is associated with an open GitHub issue."""
+    """Verify that each T.O.D.O is associated with an open GitHub issue."""
     root_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     assert 'tests' in os.listdir(root_directory)
     generator = (os.path.join(r, s) for r, d, f in os.walk(root_directory)
@@ -64,7 +66,7 @@ def test_todo_issue_validator():
 
 
 def test_print_hunter():
-    """Verifies that there are no print statements in the codebase."""
+    """Verify that there are no print statements in the codebase."""
     root_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     assert 'tests' in os.listdir(root_directory)
     generator = (os.path.join(r, s) for r, d, f in os.walk(root_directory) if '.egg/' not in r and '/.tox/' not in r

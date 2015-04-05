@@ -1,3 +1,5 @@
+"""Tests for libnl/nl:nl_send_simple."""
+
 import base64
 import socket
 import sys
@@ -15,7 +17,7 @@ if sys.version_info[:2] >= (2, 7):
 
 
 def test_bare(tcp_server, monkeypatch):
-    """C code to test against.
+    r"""C code to test against.
 
     // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && (nc -l 2000 |base64 &) && sleep 0.1 && ./a.out
     #include <netlink/msg.h>
@@ -61,7 +63,7 @@ def test_bare(tcp_server, monkeypatch):
 
 
 def test_dissect(monkeypatch):
-    """Diff of C code (from test_bare()) to test against.
+    r"""Diff of C code (from test_bare()) to test against.
 
     --- test_bare.c	2015-02-08 12:43:15.543135855 -0800
     +++ test_dissect.c	2015-02-08 13:25:31.375715668 -0800
@@ -115,7 +117,7 @@ def test_dissect(monkeypatch):
 
 
 def test_full(tcp_server, monkeypatch):
-    """Diff of C code (from test_bare()) to test against.
+    r"""Diff of C code (from test_bare()) to test against.
 
     --- test_bare.c	2015-02-08 12:43:15.543135855 -0800
     +++ test_full.c	2015-02-08 12:43:08.533183752 -0800

@@ -1,3 +1,5 @@
+"""Tests for libnl/nl:nl_sendmsg."""
+
 import socket
 
 from libnl.linux_private.netlink import NETLINK_ROUTE
@@ -8,7 +10,7 @@ from libnl.socket_ import nl_socket_alloc, nl_socket_free
 
 
 def test_default(tcp_server):
-    """C code to test against.
+    r"""C code to test against.
 
     // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0)
     // (nc -l 2000 &); sleep 0.1; ./a.out
@@ -61,6 +63,7 @@ def test_default(tcp_server):
 
 
 def test_error_nle_bad_sock():
+    """Test for NLE_BAD_SOCK."""
     sk = nl_socket_alloc()
     msg = nlmsg_alloc_simple(0, 0)
     nl_connect(sk, NETLINK_ROUTE)

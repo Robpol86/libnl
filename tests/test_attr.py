@@ -1,3 +1,5 @@
+"""Tests for libnl/attr."""
+
 import base64
 import socket
 import string
@@ -17,7 +19,7 @@ if sys.version_info[:2] >= (2, 7):
 
 
 def test_nla_put_get_u32():
-    """C code to test against.
+    r"""C code to test against.
 
     // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && ./a.out
     #include <netlink/msg.h>
@@ -53,7 +55,7 @@ def test_nla_put_get_u32():
 
 
 def test_socket(tcp_server):
-    """C code to test against.
+    r"""C code to test against.
 
     // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && (nc -l 2000 |base64 &) && sleep 0.1 && ./a.out
     #include <netlink/msg.h>
@@ -123,6 +125,7 @@ def test_socket(tcp_server):
 
 
 def test_ints():
+    """Test integer attributes."""
     msg = nlmsg_alloc()
     assert 0 == libnl.attr.nla_put_u8(msg, 2, 10)
     assert 0 == libnl.attr.nla_put_u16(msg, 3, 11)
@@ -155,6 +158,7 @@ def test_ints():
 
 
 def test_flag():
+    """Test flags."""
     msg = nlmsg_alloc()
     assert 0 == libnl.attr.nla_put_flag(msg, 7)
 
@@ -166,6 +170,7 @@ def test_flag():
 
 
 def test_msecs():
+    """Test milliseconds."""
     msg = nlmsg_alloc()
     assert 0 == libnl.attr.nla_put_msecs(msg, 12, 99)
 
@@ -177,6 +182,7 @@ def test_msecs():
 
 
 def test_string_short():
+    """Test string attributes with a short string."""
     payload = bytes('test'.encode('ascii'))
     msg = nlmsg_alloc()
     assert 0 == libnl.attr.nla_put_string(msg, 6, payload)
@@ -189,6 +195,7 @@ def test_string_short():
 
 
 def test_string_medium():
+    """Test string attributes with a longer string."""
     payload = bytes('The quick br()wn f0x jumps over the l@zy dog!'.encode('ascii'))
     msg = nlmsg_alloc()
     assert 0 == libnl.attr.nla_put_string(msg, 6, payload)
@@ -202,6 +209,7 @@ def test_string_medium():
 
 
 def test_string_long():
+    """Test string attributes with a long string."""
     payload = bytes(string.printable[:-2].encode('ascii'))
     msg = nlmsg_alloc()
     assert 0 == libnl.attr.nla_put_string(msg, 6, payload)
@@ -216,7 +224,7 @@ def test_string_long():
 
 
 def test_nested():
-    """C code to test against.
+    r"""C code to test against.
 
     // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && ./a.out
     #include <netlink/msg.h>

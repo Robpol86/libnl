@@ -45,7 +45,8 @@ NL_CB_TYPE_MAX = NL_CB_DUMP_INTR
 
 
 def print_header_content(nlh):
-    """Returns header content (doesn't actually print like the C library does).
+    """Return header content (doesn't actually print like the C library does).
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L34
 
     Positional arguments:
@@ -189,6 +190,7 @@ def nl_cb_get(cb):
 
 def nl_cb_set(cb, type_, kind, func, arg):
     """Set up a callback. Updates `cb` in place.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L293
 
     Positional arguments:
@@ -216,6 +218,7 @@ def nl_cb_set(cb, type_, kind, func, arg):
 
 def nl_cb_err(cb, kind, func, arg):
     """Set up an error callback. Updates `cb` in place.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/lib/handlers.c#L343
 
     Positional arguments:

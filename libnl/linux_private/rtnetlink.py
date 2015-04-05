@@ -74,6 +74,7 @@ class rtattr(Struct):
     rta_type -- attribute type (c_ushort).
     payload -- payload and padding at the end (bytearay).
     """
+
     _REPR = '<{0}.{1} rta_len={2[rta_len]} rta_type={2[rta_type]} payload={2[payload]}>'
     SIGNATURE = (SIZEOF_USHORT, SIZEOF_USHORT)
     SIZEOF = sum(SIGNATURE)
@@ -124,6 +125,7 @@ class rtgenmsg(Struct):
     Instance variables:
     rtgen_family -- rtgen family (c_ubyte).
     """
+
     _REPR = '<{0}.{1} rtgen_family={2[rtgen_family]}>'
     SIGNATURE = (SIZEOF_UBYTE, )
     SIZEOF = sum(SIGNATURE)
@@ -144,7 +146,8 @@ class rtgenmsg(Struct):
 
 
 class ifinfomsg(Struct):
-    """Passes link level specific information, not dependent on network protocol.
+    """Pass link level specific information, not dependent on network protocol.
+
     https://github.com/thom311/libnl/blob/libnl3_2_25/include/linux/rtnetlink.h#L423
 
     Instance variables:
@@ -156,6 +159,7 @@ class ifinfomsg(Struct):
     ifi_change -- IFF_* change mask (c_uint).
     payload -- payload and padding at the end (bytearay).
     """
+
     _REPR = ('<{0}.{1} ifi_family={2[ifi_family]} ifi_type={2[ifi_type]} ifi_index={2[ifi_index]} '
              'ifi_flags={2[ifi_flags]} ifi_change={2[ifi_change]} payload={2[payload]}>')
     SIGNATURE = (SIZEOF_UBYTE, SIZEOF_UBYTE, SIZEOF_USHORT, SIZEOF_INT, SIZEOF_UINT, SIZEOF_UINT)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Shows all Netlink-compatible network interfaces on the host.
+"""Show all Netlink-compatible network interfaces on the host.
 
 This is a pure-Python port of the C program available here:
     github.com/Robpol86/libnl/blob/7186e04/example_c/list_network_interfaces.c

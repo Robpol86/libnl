@@ -1,3 +1,5 @@
+"""Tests for all examples."""
+
 import os
 import subprocess
 import sys
@@ -18,6 +20,7 @@ def check_output(cmd):
 
 
 def test_list_network_interfaces(ifacesi):
+    """Test example_list_network_interfaces.py."""
     path = os.path.join(os.path.dirname(__file__), '..', 'example_list_network_interfaces.py')
     stdout = check_output([sys.executable, path, 'print'])
     if hasattr(stdout, 'decode'):
@@ -31,6 +34,7 @@ def test_list_network_interfaces(ifacesi):
 
 @pytest.mark.skipif('not os.path.exists("/sys/class/net/wlan0")')
 def test_show_wifi_interface_all():
+    """Test example_show_wifi_interface.py showing all interfaces."""
     path = os.path.join(os.path.dirname(__file__), '..', 'example_show_wifi_interface.py')
     stdout = check_output([sys.executable, path, 'print'])
     if hasattr(stdout, 'decode'):
@@ -40,6 +44,7 @@ def test_show_wifi_interface_all():
 
 @pytest.mark.skipif('not os.path.exists("/sys/class/net/wlan0")')
 def test_show_wifi_interface_wlan0():
+    """Test example_show_wifi_interface.py showing just wlan0."""
     path = os.path.join(os.path.dirname(__file__), '..', 'example_show_wifi_interface.py')
     stdout = check_output([sys.executable, path, 'print', 'wlan0'])
     if hasattr(stdout, 'decode'):
@@ -49,6 +54,7 @@ def test_show_wifi_interface_wlan0():
 
 @pytest.mark.skipif('not os.path.exists("/sys/class/net/wlan0")')
 def test_scan_access_points_no_sudo():
+    """Test example_scan_access_points.py without root privileges."""
     path = os.path.join(os.path.dirname(__file__), '..', 'example_scan_access_points.py')
     stdout = check_output([sys.executable, path, '-n', 'wlan0'])
     if hasattr(stdout, 'decode'):
@@ -58,6 +64,7 @@ def test_scan_access_points_no_sudo():
 
 @pytest.mark.skipif('not os.path.exists("/sys/class/net/wlan0") or os.getuid() != 0')
 def test_scan_access_points():
+    """Test example_scan_access_points.py with root privileges."""
     path = os.path.join(os.path.dirname(__file__), '..', 'example_scan_access_points.py')
     stdout = check_output([sys.executable, path, 'wlan0'])
     if hasattr(stdout, 'decode'):

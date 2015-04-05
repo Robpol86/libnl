@@ -1,3 +1,5 @@
+"""Tests for pseudo ctypes in libnl/misc."""
+
 import sys
 
 import pytest
@@ -7,6 +9,7 @@ from libnl.misc import (c_byte, c_int, c_int8, c_long, c_longlong, c_ubyte, c_ui
 
 
 def test_sizes():
+    """Test sizeof()."""
     assert 1 == sizeof(c_byte)
     assert 4 == sizeof(c_int)
     assert 1 == sizeof(c_int8)
@@ -24,6 +27,7 @@ def test_sizes():
 
 
 def test_minimum():
+    """Test minimum valid integer value."""
     assert -128 == c_byte.from_buffer(bytearray(c_byte(-128))).value
     assert -2147483648 == c_int.from_buffer(bytearray(c_int(-2147483648))).value
     assert -128 == c_int8.from_buffer(bytearray(c_int8(-128))).value
@@ -35,6 +39,7 @@ def test_minimum():
 
 
 def test_zero():
+    """Test zero integer value."""
     assert 0 == c_byte.from_buffer(bytearray(c_byte())).value
     assert 0 == c_int.from_buffer(bytearray(c_int())).value
     assert 0 == c_int8.from_buffer(bytearray(c_int8())).value
@@ -52,6 +57,7 @@ def test_zero():
 
 
 def test_middle():
+    """Test with arbitrary positive value."""
     assert 123 == c_byte.from_buffer(bytearray(c_byte(123))).value
     assert 1234567890 == c_int.from_buffer(bytearray(c_int(1234567890))).value
     assert 123 == c_int8.from_buffer(bytearray(c_int8(123))).value
@@ -69,6 +75,7 @@ def test_middle():
 
 
 def test_maximum():
+    """Test maximum valid integer value."""
     assert 127 == c_byte.from_buffer(bytearray(c_byte(127))).value
     assert 2147483647 == c_int.from_buffer(bytearray(c_int(2147483647))).value
     assert 127 == c_int8.from_buffer(bytearray(c_int8(127))).value
@@ -92,6 +99,7 @@ def test_maximum():
 
 
 def test_minimum_overflow():
+    """Test negative overflow value."""
     assert 127 == c_byte(-129).value
     assert 2147483647 == c_int(-2147483649).value
     assert 127 == c_int8(-129).value
@@ -115,6 +123,7 @@ def test_minimum_overflow():
 
 
 def test_minimum_overflow_more():
+    """Test negative overflow value with even lower numbers."""
     assert 27 == c_byte(-229).value
     assert 2147383647 == c_int(-2147583649).value
     assert 117 == c_int8(-139).value
@@ -138,6 +147,7 @@ def test_minimum_overflow_more():
 
 
 def test_maximum_overflow():
+    """Test positive overflow value."""
     assert -128 == c_byte(128).value
     assert -2147483648 == c_int(2147483648).value
     assert -128 == c_int8(128).value
@@ -161,6 +171,7 @@ def test_maximum_overflow():
 
 
 def test_maximum_overflow_more():
+    """Test positive overflow value with even greater numbers."""
     assert -118 == c_byte(138).value
     assert -2147482548 == c_int(2147484748).value
     assert -118 == c_int8(138).value
@@ -184,6 +195,7 @@ def test_maximum_overflow_more():
 
 
 def test_repr():
+    """Test repr() of instances."""
     assert 'c_byte(123)' == repr(c_byte(123))
     if sys.maxsize > 2 ** 32:  # 64-bit.
         assert 'c_int(1234567890)' == repr(c_int(1234567890))
@@ -219,6 +231,7 @@ def test_repr():
 
 
 def test_from_buffer_large():
+    """Test .from_buffer attribute."""
     data = b'\xb8~?./3\x02\x14\xb2\x89\xfc6A\xa4\x02\x05f\xdb\xb1\x04\xc3\x891\xad\x8cW\xcd\xda\x04A'
     assert -72 == c_byte.from_buffer(bytearray(data)).value
     assert 775913144 == c_int.from_buffer(bytearray(data)).value
@@ -243,6 +256,7 @@ def test_from_buffer_large():
 
 
 def test_from_buffer_error():
+    """Test .from_buffer attribute with invalid arguments."""
     all_types = (c_byte, c_int, c_int8, c_long, c_longlong, c_uint16, c_uint32, c_uint64, c_uint8, c_ubyte, c_uint,
                  c_ulong, c_ulonglong, c_ushort)
     for ctype in all_types:
@@ -255,6 +269,7 @@ def test_from_buffer_error():
 
 
 def test_set_from_value():
+    """Test .value attribute, read and write."""
     all_types = (c_byte, c_int, c_int8, c_long, c_longlong, c_uint16, c_uint32, c_uint64, c_uint8, c_ubyte, c_uint,
                  c_ulong, c_ulonglong, c_ushort)
     instances = list()

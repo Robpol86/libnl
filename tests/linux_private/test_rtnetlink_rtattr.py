@@ -1,3 +1,5 @@
+"""Tests for libnl/linux_private/rtnetlink."""
+
 import socket
 
 from libnl.handlers import NL_CB_CUSTOM, NL_CB_VALID, NL_OK
@@ -11,7 +13,7 @@ from libnl.socket_ import nl_socket_alloc, nl_socket_free, nl_socket_modify_cb
 
 
 def test_list_interfaces(ifacesi):
-    """C code to test against.
+    r"""C code to test against.
 
     // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && ./a.out
     #include <netlink/msg.h>

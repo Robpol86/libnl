@@ -44,6 +44,7 @@ class sockaddr_nl(Struct):
     nl_pid -- port ID (c_uint32).
     nl_groups -- multicast groups mask (c_uint32).
     """
+
     _REPR = '<{0}.{1} nl_family={2[nl_family]} nl_pad={2[nl_pad]} nl_pid={2[nl_pid]} nl_groups={2[nl_groups]}>'
     SIGNATURE = (SIZEOF_UINT, SIZEOF_USHORT, SIZEOF_U32, SIZEOF_U32)
     SIZEOF = sum(SIGNATURE)
@@ -116,6 +117,7 @@ class nlmsghdr(Struct):
     nlmsg_pid -- sending process port ID (c_uint32).
     payload -- payload and padding at the end (bytearay).
     """
+
     _REPR = ('<{0}.{1} nlmsg_len={2[nlmsg_len]} nlmsg_type={2[nlmsg_type]} nlmsg_flags={2[nlmsg_flags]} '
              'nlmsg_seq={2[nlmsg_seq]} nlmsg_pid={2[nlmsg_pid]} payload={2[payload]}>')
     SIGNATURE = (SIZEOF_U32, SIZEOF_U16, SIZEOF_U16, SIZEOF_U32, SIZEOF_U32)
@@ -204,6 +206,7 @@ class nlmsgerr(Struct):
     error -- c_int.
     msg -- nlmsghdr class instance.
     """
+
     _REPR = '<{0}.{1} error={2[error]} msg={2[msg]}>'
     SIGNATURE = (SIZEOF_INT, nlmsghdr.SIZEOF)
     SIZEOF = sum(SIGNATURE)
@@ -247,6 +250,7 @@ class nlattr(Struct):
     nla_type -- attribute type (e.g. NL80211_ATTR_SCAN_SSIDS) (c_uint16).
     payload -- payload and padding at the end (bytearay_ptr).
     """
+
     _REPR = '<{0}.{1} nla_len={2[nla_len]} nla_type={2[nla_type]} payload={2[payload]}>'
     SIGNATURE = (SIZEOF_U16, SIZEOF_U16)
     SIZEOF = sum(SIGNATURE)

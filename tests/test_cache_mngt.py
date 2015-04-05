@@ -1,3 +1,5 @@
+"""Tests for libnl/cache_mngt."""
+
 from libnl.cache_mngt import nl_cache_ops_associate_safe, nl_msgtype_lookup
 from libnl.genl.family import genl_family_alloc, genl_family_set_name
 from libnl.genl.genl import genlmsg_put
@@ -10,7 +12,7 @@ from libnl.socket_ import nl_socket_alloc
 
 
 def test_nl_cache_ops_associate_safe():
-    """C code to test against.
+    r"""C code to test against.
 
     // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && ./a.out
     #include <netlink/genl/family.h>

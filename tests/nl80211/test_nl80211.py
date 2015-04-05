@@ -1,3 +1,5 @@
+"""Tests for libnl/nl80211/nl80211.py."""
+
 import re
 
 import pytest
@@ -17,6 +19,7 @@ from libnl.nl80211 import nl80211
 
 
 def match(expected, log, is_regex=False):
+    """AssertionError if first log statement doesn't match expected. Supports regex."""
     log_statement = log.pop(0)
     if is_regex:
         assert re.match(expected + '$', log_statement)
@@ -28,7 +31,7 @@ def match(expected, log, is_regex=False):
 @pytest.mark.skipif('not os.path.exists("/sys/class/net/wlan0")')
 @pytest.mark.usefixtures('nlcb_debug')
 def test_cmd_get_interface(log, wlan0_info, ifacesi):
-    """C code to test against.
+    r"""C code to test against.
 
     // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && NLDBG=4 NLCB=debug ./a.out
     #include <netlink/netlink.h>
@@ -353,7 +356,7 @@ def test_cmd_get_interface(log, wlan0_info, ifacesi):
 @pytest.mark.skipif('not os.path.exists("/sys/class/net/wlan0") or os.getuid() != 0')
 @pytest.mark.usefixtures('nlcb_debug')
 def test_cmd_trigger_scan(log, ifacesi):
-    """C code to test against.
+    r"""C code to test against.
 
     // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && sudo NLDBG=4 NLCB=debug ./a.out
     #include <netlink/genl/genl.h>

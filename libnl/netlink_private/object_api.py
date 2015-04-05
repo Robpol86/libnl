@@ -27,6 +27,7 @@ class NLHDR_COMMON(object):
     ce_flags -- c_int.
     ce_mask -- c_uint32.
     """
+
     SIZEOF = 32
 
     def __init__(self):
@@ -41,6 +42,7 @@ class NLHDR_COMMON(object):
 
 class nl_object(NLHDR_COMMON):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/object-api.h#L194."""
+
     pass
 
 

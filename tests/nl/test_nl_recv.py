@@ -1,3 +1,5 @@
+"""Tests for libnl/nl:nl_recv."""
+
 import binascii
 import re
 import sys
@@ -12,7 +14,7 @@ if sys.version_info[:2] >= (2, 7):
 
 
 def test_nl_recv():
-    """C code to test against.
+    r"""C code to test against.
 
     // gcc a.c $(pkg-config --cflags --libs libnl-genl-3.0) && ./a.out
     #include <netlink/msg.h>

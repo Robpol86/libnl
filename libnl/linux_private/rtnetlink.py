@@ -80,6 +80,7 @@ class rtattr(Struct):
     SIZEOF = sum(SIGNATURE)
 
     def __init__(self, ba, rta_len=None, rta_type=None):
+        """Constructor."""
         super(rtattr, self).__init__(ba)
         if rta_len is not None:
             self.rta_len = rta_len
@@ -88,18 +89,22 @@ class rtattr(Struct):
 
     @property
     def rta_len(self):
+        """Attribute length."""
         return c_ushort.from_buffer(self.bytearray[self._get_slicers(0)]).value
 
     @rta_len.setter
     def rta_len(self, value):
+        """Length setter."""
         self.bytearray[self._get_slicers(0)] = bytearray(c_ushort(value or 0))
 
     @property
     def rta_type(self):
+        """Attribute type."""
         return c_ushort.from_buffer(self.bytearray[self._get_slicers(1)]).value
 
     @rta_type.setter
     def rta_type(self, value):
+        """Type setter."""
         self.bytearray[self._get_slicers(1)] = bytearray(c_ushort(value or 0))
 
     @property
@@ -131,6 +136,7 @@ class rtgenmsg(Struct):
     SIZEOF = sum(SIGNATURE)
 
     def __init__(self, rtgen_family=None):
+        """Constructor."""
         super(rtgenmsg, self).__init__()
         if rtgen_family is not None:
             self.rtgen_family = rtgen_family
@@ -142,6 +148,7 @@ class rtgenmsg(Struct):
 
     @rtgen_family.setter
     def rtgen_family(self, value):
+        """Family setter."""
         self.bytearray[self._get_slicers(0)] = bytearray(c_ubyte(value or 0))
 
 
@@ -166,6 +173,7 @@ class ifinfomsg(Struct):
     SIZEOF = sum(SIGNATURE)
 
     def __init__(self, ba, ifi_family=None, ifi_type=None, ifi_index=None, ifi_flags=None, ifi_change=None):
+        """Constructor."""
         super(ifinfomsg, self).__init__(ba)
         if ifi_family is not None:
             self.ifi_family = ifi_family
@@ -180,42 +188,52 @@ class ifinfomsg(Struct):
 
     @property
     def ifi_family(self):
+        """Message family."""
         return c_ubyte.from_buffer(self.bytearray[self._get_slicers(0)]).value
 
     @ifi_family.setter
     def ifi_family(self, value):
+        """Family setter."""
         self.bytearray[self._get_slicers(0)] = bytearray(c_ubyte(value or 0))
 
     @property
     def ifi_type(self):
+        """Message type."""
         return c_ushort.from_buffer(self.bytearray[self._get_slicers(2)]).value
 
     @ifi_type.setter
     def ifi_type(self, value):
+        """Type setter."""
         self.bytearray[self._get_slicers(2)] = bytearray(c_ushort(value or 0))
 
     @property
     def ifi_index(self):
+        """Message index."""
         return c_int.from_buffer(self.bytearray[self._get_slicers(3)]).value
 
     @ifi_index.setter
     def ifi_index(self, value):
+        """Index setter."""
         self.bytearray[self._get_slicers(3)] = bytearray(c_int(value or 0))
 
     @property
     def ifi_flags(self):
+        """Message flags."""
         return c_uint.from_buffer(self.bytearray[self._get_slicers(4)]).value
 
     @ifi_flags.setter
     def ifi_flags(self, value):
+        """Message flags setter."""
         self.bytearray[self._get_slicers(4)] = bytearray(c_uint(value or 0))
 
     @property
     def ifi_change(self):
+        """Message change."""
         return c_uint.from_buffer(self.bytearray[self._get_slicers(5)]).value
 
     @ifi_change.setter
     def ifi_change(self, value):
+        """Change setter."""
         self.bytearray[self._get_slicers(5)] = bytearray(c_uint(value or 0))
 
     @property

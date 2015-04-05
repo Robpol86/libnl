@@ -33,6 +33,7 @@ class genlmsghdr(Struct):
     SIZEOF = sum(SIGNATURE)
 
     def __init__(self, ba=None, cmd=None, version=None, reserved=None):
+        """Constructor."""
         super(genlmsghdr, self).__init__(ba)
         if cmd is not None:
             self.cmd = cmd
@@ -43,26 +44,32 @@ class genlmsghdr(Struct):
 
     @property
     def cmd(self):
+        """Return command integer."""
         return c_uint8.from_buffer(self.bytearray[self._get_slicers(0)]).value
 
     @cmd.setter
     def cmd(self, value):
+        """Command setter."""
         self.bytearray[self._get_slicers(0)] = bytearray(c_uint8(value or 0))
 
     @property
     def version(self):
+        """Return version integer."""
         return c_uint8.from_buffer(self.bytearray[self._get_slicers(1)]).value
 
     @version.setter
     def version(self, value):
+        """Version setter."""
         self.bytearray[self._get_slicers(1)] = bytearray(c_uint8(value or 0))
 
     @property
     def reserved(self):
+        """Return reserved integer."""
         return c_uint16.from_buffer(self.bytearray[self._get_slicers(2)]).value
 
     @reserved.setter
     def reserved(self, value):
+        """Reserved setter."""
         self.bytearray[self._get_slicers(2)] = bytearray(c_uint16(value or 0))
 
     @property

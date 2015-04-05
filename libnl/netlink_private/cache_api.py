@@ -21,11 +21,13 @@ class nl_msgtype(object):
     """
 
     def __init__(self, mt_id, mt_act, mt_name):
+        """Constructor."""
         self.mt_id = mt_id
         self.mt_act = mt_act
         self.mt_name = mt_name
 
     def __repr__(self):
+        """repr() handler."""
         answer = "<{0}.{1} mt_id={2} mt_act={3} mt_name='{4}'>".format(
             self.__class__.__module__,
             self.__class__.__name__,
@@ -78,6 +80,7 @@ class nl_cache_ops(object):
 
     def __init__(self, co_name='', co_hdrsize=0, co_protocol=0, co_request_update=None, co_obj_ops=None, co_genl=None,
                  co_msgtypes=None):
+        """Constructor."""
         self.co_name = co_name
         self.co_hdrsize = co_hdrsize
         self.co_protocol = co_protocol
@@ -103,6 +106,7 @@ class nl_cache_ops(object):
         self.co_msgtypes = co_msgtypes or list()
 
     def __repr__(self):
+        """repr() handler."""
         answer_base = ("<{0}.{1} co_name='{2}' co_hdrsize={3} co_protocol={4} co_hash_size={5} co_flags={6} "
                        "co_groups='{7}' co_request_update='{8}' co_msg_parser='{9}' co_event_filter='{10}' "
                        "co_include_event='{11}' reserved_#={12} co_obj_ops='{13}' co_next='{14}' "

@@ -50,6 +50,7 @@ class sockaddr_nl(Struct):
     SIZEOF = sum(SIGNATURE)
 
     def __init__(self, nl_family=0, nl_pad=0, nl_pid=0, nl_groups=0):
+        """Constructor."""
         super(sockaddr_nl, self).__init__()
         self.nl_family = nl_family
         self.nl_pad = nl_pad
@@ -57,6 +58,7 @@ class sockaddr_nl(Struct):
         self.nl_groups = nl_groups
 
     def __iter__(self):
+        """Yield pid and groups."""
         yield self.nl_pid
         yield self.nl_groups
 
@@ -67,6 +69,7 @@ class sockaddr_nl(Struct):
 
     @nl_family.setter
     def nl_family(self, value):
+        """Family setter."""
         self.bytearray[self._get_slicers(0)] = bytearray(c_uint(value or 0))
 
     @property
@@ -76,6 +79,7 @@ class sockaddr_nl(Struct):
 
     @nl_pad.setter
     def nl_pad(self, value):
+        """Pad setter."""
         self.bytearray[self._get_slicers(1)] = bytearray(c_ushort(value or 0))
 
     @property
@@ -85,6 +89,7 @@ class sockaddr_nl(Struct):
 
     @nl_pid.setter
     def nl_pid(self, value):
+        """Port ID setter."""
         self.bytearray[self._get_slicers(2)] = bytearray(c_uint32(value or 0))
 
     @property
@@ -94,6 +99,7 @@ class sockaddr_nl(Struct):
 
     @nl_groups.setter
     def nl_groups(self, value):
+        """Group setter."""
         self.bytearray[self._get_slicers(3)] = bytearray(c_uint32(value or 0))
 
 
@@ -124,6 +130,7 @@ class nlmsghdr(Struct):
     SIZEOF = sum(SIGNATURE)
 
     def __init__(self, ba=None, nlmsg_len=None, nlmsg_type=None, nlmsg_flags=None, nlmsg_seq=None, nlmsg_pid=None):
+        """Constructor."""
         super(nlmsghdr, self).__init__(ba)
         if nlmsg_len is not None:
             self.nlmsg_len = nlmsg_len
@@ -143,6 +150,7 @@ class nlmsghdr(Struct):
 
     @nlmsg_len.setter
     def nlmsg_len(self, value):
+        """Length setter."""
         self.bytearray[self._get_slicers(0)] = bytearray(c_uint32(value or 0))
 
     @property
@@ -152,6 +160,7 @@ class nlmsghdr(Struct):
 
     @nlmsg_type.setter
     def nlmsg_type(self, value):
+        """Message content setter."""
         self.bytearray[self._get_slicers(1)] = bytearray(c_uint16(value or 0))
 
     @property
@@ -161,6 +170,7 @@ class nlmsghdr(Struct):
 
     @nlmsg_flags.setter
     def nlmsg_flags(self, value):
+        """Message flags setter."""
         self.bytearray[self._get_slicers(2)] = bytearray(c_uint16(value or 0))
 
     @property
@@ -170,6 +180,7 @@ class nlmsghdr(Struct):
 
     @nlmsg_seq.setter
     def nlmsg_seq(self, value):
+        """Sequence setter."""
         self.bytearray[self._get_slicers(3)] = bytearray(c_uint32(value or 0))
 
     @property
@@ -179,6 +190,7 @@ class nlmsghdr(Struct):
 
     @nlmsg_pid.setter
     def nlmsg_pid(self, value):
+        """Port ID setter."""
         self.bytearray[self._get_slicers(4)] = bytearray(c_uint32(value or 0))
 
     @property
@@ -213,10 +225,12 @@ class nlmsgerr(Struct):
 
     @property
     def error(self):
+        """Error integer value."""
         return c_int.from_buffer(self.bytearray[self._get_slicers(0)]).value
 
     @property
     def msg(self):
+        """Payload and padding at the end (nlmsghdr class instance)."""
         return nlmsghdr(self.bytearray[self._get_slicers(1).start:])
 
 
@@ -256,6 +270,7 @@ class nlattr(Struct):
     SIZEOF = sum(SIGNATURE)
 
     def __init__(self, ba, nla_len=None, nla_type=None):
+        """Constructor."""
         super(nlattr, self).__init__(ba)
         if nla_len is not None:
             self.nla_len = nla_len
@@ -264,18 +279,22 @@ class nlattr(Struct):
 
     @property
     def nla_len(self):
+        """Attribute length."""
         return c_uint16.from_buffer(self.bytearray[self._get_slicers(0)]).value
 
     @nla_len.setter
     def nla_len(self, value):
+        """Length setter."""
         self.bytearray[self._get_slicers(0)] = bytearray(c_uint16(value or 0))
 
     @property
     def nla_type(self):
+        """Attribute type."""
         return c_uint16.from_buffer(self.bytearray[self._get_slicers(1)]).value
 
     @nla_type.setter
     def nla_type(self, value):
+        """Type setter."""
         self.bytearray[self._get_slicers(1)] = bytearray(c_uint16(value or 0))
 
     @property

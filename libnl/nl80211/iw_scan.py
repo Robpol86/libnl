@@ -71,6 +71,7 @@ class ieee80211_country_ie_triplet(object):
     """http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/scan.c?id=v3.17#n60."""
 
     def __init__(self, data):
+        """Constructor."""
         self.first_channel = c_uint8.from_buffer(data[:SIZEOF_U8]).value
         self.reg_extension_id = self.first_channel
         data = data[SIZEOF_U8:]
@@ -545,6 +546,7 @@ class ie_print(object):
     """
 
     def __init__(self, name, print_, minlen, maxlen, flags):
+        """Constructor."""
         self.name = name
         self.print_ = print_
         self.minlen = minlen

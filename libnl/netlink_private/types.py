@@ -39,6 +39,7 @@ class nl_cb(object):
     """
 
     def __init__(self):
+        """Constructor."""
         self.cb_set = dict()
         self.cb_args = dict()
         self.cb_err = None
@@ -68,6 +69,7 @@ class nl_sock(object):
     """
 
     def __init__(self):
+        """Constructor."""
         self.s_local = sockaddr_nl()
         self.s_peer = sockaddr_nl()
         self.s_proto = 0
@@ -79,6 +81,7 @@ class nl_sock(object):
         self.socket_instance = None
 
     def __repr__(self):
+        """repr() handler."""
         answer_base = ("<{0}.{1} s_local='{2}' s_peer='{3}' s_fd={4} s_proto={5} s_seq_next={6} s_seq_expect={7} "
                        "s_flags={8} s_cb='{9}' s_bufsize={10}>")
         answer = answer_base.format(
@@ -91,6 +94,7 @@ class nl_sock(object):
 
     @property
     def s_fd(self):
+        """Return the file descriptor number of the open socket or -1."""
         try:
             return -1 if self.socket_instance is None else self.socket_instance.fileno()
         except socket.error:
@@ -114,6 +118,7 @@ class nl_msg(object):
     """
 
     def __init__(self):
+        """Constructor."""
         self.nm_protocol = 0
         self.nm_flags = 0
         self.nm_src = sockaddr_nl()
@@ -124,6 +129,7 @@ class nl_msg(object):
         self.nm_refcnt = 1
 
     def __repr__(self):
+        """repr() handler."""
         answer_base = ("<{0}.{1} nm_protocol={2} nm_flags={3} nm_src='{4}' nm_dst='{5}' nm_creds='{6}' nm_nlh='{7}' "
                        "nm_size='{8}'>")
         answer = answer_base.format(
@@ -138,6 +144,7 @@ class genl_family_op(object):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L753."""
 
     def __init__(self, o_id=0, o_flags=0, o_list=None):
+        """Constructor."""
         self.o_id = o_id
         self.o_flags = o_flags
         self.o_list = o_list
@@ -147,6 +154,7 @@ class genl_family_grp(object):
     """https://github.com/thom311/libnl/blob/libnl3_2_25/include/netlink-private/types.h#L761."""
 
     def __init__(self, family=None, list_=None, name='', id_=0):
+        """Constructor."""
         self.family = family
         self.list_ = list_ or nl_list_head(container_of=self)
         self.name = name
@@ -159,6 +167,7 @@ class genl_family(NLHDR_COMMON):
     SIZEOF = NLHDR_COMMON.SIZEOF + 48
 
     def __init__(self, nlo=None):
+        """Constructor."""
         super(genl_family, self).__init__()
         self.gf_id = 0
         self.gf_name = None

@@ -87,10 +87,12 @@ class _DynamicDict(dict):
     """A dict to be used in str.format() in Struct."""
 
     def __init__(self, instance):
+        """Constructor."""
         super(_DynamicDict, self).__init__()
         self._instance = instance
 
     def __missing__(self, key):
+        """Return dynamic value for 'payload' key."""
         value = getattr(self._instance, key)
         if key == 'payload':
             value = len(value)
@@ -106,6 +108,7 @@ class Struct(object):
     SIZEOF = 0
 
     def __init__(self, ba=None):
+        """Constructor."""
         self.bytearray = ba or (bytearray(b'\0') * self.SIZEOF)
 
     def __bool__(self):
@@ -165,6 +168,7 @@ class ucred(Struct):
     SIZEOF = sum(SIGNATURE)
 
     def __init__(self, pid=0, uid=0, gid=0):
+        """Constructor."""
         super(ucred, self).__init__()
         self.pid = pid
         self.uid = uid
@@ -177,6 +181,7 @@ class ucred(Struct):
 
     @pid.setter
     def pid(self, value):
+        """Process ID setter."""
         self.bytearray[self._get_slicers(0)] = bytearray(c_int32(value or 0))
 
     @property
@@ -186,6 +191,7 @@ class ucred(Struct):
 
     @uid.setter
     def uid(self, value):
+        """User ID setter."""
         self.bytearray[self._get_slicers(1)] = bytearray(c_int32(value or 0))
 
     @property
@@ -195,6 +201,7 @@ class ucred(Struct):
 
     @gid.setter
     def gid(self, value):
+        """Group ID setter."""
         self.bytearray[self._get_slicers(2)] = bytearray(c_int32(value or 0))
 
 
@@ -211,6 +218,7 @@ class msghdr(object):
     """
 
     def __init__(self, msg_name=None, msg_iov=None, msg_control=None, msg_flags=0):
+        """Constructor."""
         self.msg_name = msg_name
         self.msg_iov = msg_iov
         self.msg_control = msg_control
@@ -251,6 +259,7 @@ class bytearray_ptr(object):
     """
 
     def __init__(self, pointee, start=None, stop=None, oob=False):
+        """Constructor."""
         # Hard-code borders.
         start = start or 0
         stop = stop or (start if stop == 0 else len(pointee))
@@ -269,18 +278,23 @@ class bytearray_ptr(object):
         self.slice = slice(start, stop)
 
     def __repr__(self):
+        """Make this class' repr() look similar to bytearray's."""
         return "{0}(b'{1}')".format(self.__class__.__name__, ''.join(r'\x{0:02x}'.format(c) for c in bytearray(self)))
 
     def __delitem__(self, key):
+        """Raise TypeError on delete attempt."""
         raise TypeError("'{0}' object doesn't support item deletion".format(self.__class__.__name__))
 
     def __getitem__(self, item):
+        """Handle indexing."""
         return self.pointee[self.slice][item]
 
     def __len__(self):
+        """Implement length of class instance."""
         return len(self.pointee[self.slice])
 
     def __setitem__(self, key, value):
+        """Set value in the correct index of the parent bytearray."""
         # Handle integer keys (lookup).
         try:
             int(key)
@@ -321,6 +335,7 @@ class bytearray_ptr(object):
             raise RuntimeError('Bug in {0} found! Please report this.'.format(self.__class__.__name__))
 
     def copy(self):
+        """Create a bytearray instance (new bytearray pointing to same data)."""
         return bytearray(self.pointee[self.slice])
 
 

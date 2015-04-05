@@ -31,6 +31,7 @@ class NLHDR_COMMON(object):
     SIZEOF = 32
 
     def __init__(self):
+        """Constructor."""
         self.ce_refcnt = 0
         self.ce_ops = None
         self.ce_cache = None
@@ -81,6 +82,7 @@ class nl_object_ops(object):
 
     def __init__(self, oo_name, oo_size=None, oo_constructor=None, oo_free_data=None, oo_clone=None, oo_dump=None,
                  oo_compare=None, oo_id_attrs=None):
+        """Constructor."""
         self.oo_name = oo_name
         self.oo_size = oo_size
         self.oo_id_attrs = oo_id_attrs

@@ -56,6 +56,7 @@ class genl_info(object):
     """
 
     def __init__(self, who=None, nlh=None, genlhdr=None, userhdr=None, attrs=None):
+        """Constructor."""
         self.who = who
         self.nlh = nlh
         self.genlhdr = genlhdr
@@ -124,6 +125,7 @@ class genl_cmd(object):
     """
 
     def __init__(self, c_id=0, c_name='', c_maxattr=0, c_msg_parser=None, c_attr_policy=None):
+        """Constructor."""
         self.c_id = c_id
         self.c_name = c_name
         self.c_maxattr = c_maxattr
@@ -178,6 +180,7 @@ class genl_ops(object):
     """
 
     def __init__(self, o_hdrsize=0, o_id=0, o_name='', o_cache_ops=None, o_cmds=None, o_ncmds=0, o_list=None):
+        """Constructor."""
         self.o_hdrsize = o_hdrsize
         self.o_id = o_id
         self.o_name = o_name
@@ -188,6 +191,7 @@ class genl_ops(object):
         self.o_list.container_of = self
 
     def __repr__(self):
+        """repr() handler."""
         answer_base = ("<{0}.{1} o_hdrsize={2} o_id={3} o_name='{4}' o_cache_ops={5} o_cmds='{6}' o_ncmds={7} "
                        "o_list='{8}'>")
         answer = answer_base.format(

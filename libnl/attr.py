@@ -62,11 +62,13 @@ class nla_policy(object):
     """
 
     def __init__(self, type_=0, minlen=0, maxlen=0):
+        """Constructor."""
         self.type_ = type_
         self.minlen = minlen
         self.maxlen = maxlen
 
     def __repr__(self):
+        """repr() handler."""
         answer = '<{0}.{1} type_={2} minlen={3} maxlen={4}>'.format(
             self.__class__.__module__,
             self.__class__.__name__,

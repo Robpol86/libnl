@@ -19,6 +19,7 @@ class nl_list_head(object):
     """
 
     def __init__(self, next_=None, prev=None, container_of=None):
+        """Constructor."""
         self.next_ = next_
         self.prev = prev
         self.container_of = container_of

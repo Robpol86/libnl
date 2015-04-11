@@ -12,15 +12,16 @@ build:
         name: YAML - Install
         code: |
             sudo add-apt-repository -y ppa:fkrull/deadsnakes
+            sudo add-apt-repository -y ppa:pypy/ppa
             sudo apt-get update -y
-            sudo apt-get install -y python-pip python3.4 python2.6
+            sudo apt-get install -y python-pip python3.4 python2.6 pypy
             sudo pip install codecov tox
 
     - script:
         name: YAML - Test
         code: |
             sudo tox
-            sudo tox -e combine py34 py33 py27 py26
+            sudo tox -e combine py34 py33 pypy py27 py26
 
     - script:
         name: YAML - Coverage

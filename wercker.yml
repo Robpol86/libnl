@@ -20,11 +20,10 @@ build:
         name: YAML - Test
         code: |
             sudo tox
-            (cd ./tests && ls .coverage.py34 .coverage.py33 .coverage.py27 .coverage.py26)
+            sudo tox -e combine py34 py33 py27 py26
 
     - script:
         name: YAML - Coverage
         code: |
-            mv tests/.coverage* .
-            coverage combine
+            mv tests/.coverage .
             codecov

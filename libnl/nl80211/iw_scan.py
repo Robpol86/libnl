@@ -504,7 +504,14 @@ def get_secchan_offs(type_, data):
     type_ -- corresponding `ieprinters` dictionary key for the instance.
     data -- bytearray data to read.
     """
-    raise NotImplementedError
+    chans = [
+        "no secondary",
+        "above",
+        "[reserved!]",
+        "below"]
+    if data[0] < len(chans):
+        return chans[data[0]]
+    return str(data[0])
 
 
 def get_bss_load(_, data):

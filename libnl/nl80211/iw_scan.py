@@ -504,14 +504,9 @@ def get_secchan_offs(type_, data):
     type_ -- corresponding `ieprinters` dictionary key for the instance.
     data -- bytearray data to read.
     """
-    chans = [
-        "no secondary",
-        "above",
-        "[reserved!]",
-        "below"]
-    if data[0] < len(chans):
-        return chans[data[0]]
-    return str(data[0])
+    if data[0] < len(ht_secondary_offset):
+        return "{0} ({1})".format(ht_secondary_offset[data[0]], data[0])
+    return "{0}".format(data[0])
 
 
 def get_bss_load(_, data):
